@@ -370,6 +370,14 @@ class Surrogate_Plugin_Base {
   }
 
   /**
+   * @param string $url_name
+   *
+   * @return bool
+   */
+  function has_url( $url_name ) {
+    return isset( $this->_urls[$url_name] );
+  }
+  /**
    * Get by name a previously registered URL with optional variable value replacement
    *
    * @param             $url_name
@@ -613,6 +621,26 @@ class Surrogate_Plugin_Base {
       }
 //      $this->initialize_all_settings();
     }
+  }
+
+  /**
+   * @param $property_name
+   * @return bool|string
+   */
+  function __get( $property_name ) {
+    $value = false;
+    if ( preg_match( '#^(.+?)_url$#', $property_name, $match ) && $this->has_url( $match[1] ) ) {
+      /**
+       * Allows magic property syntax for any registered URL
+       * @example: $this->foobar_url calls $this-get_url( 'foobar' )
+       * Enables embedding in a HEREDOC or other doublequoted string
+       * without requiring an intermediate variable.
+       */
+      $value = call_user_func( array( $this, "get_url" ), $match[1] );
+    } else {
+      Surrogate::show_error( 'No property named %s on %s class.', $property_name, get_class( $this ) );
+    }
+    return $value;
   }
 }
 
