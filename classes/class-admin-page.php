@@ -248,10 +248,12 @@ HTML;
  	}
 
   /**
-   * @param $tab
-   * @param $content_type
+   * @param string $tab
+   * @param string $content_type
+   * @param array $args
    */
-  function the_tab_specific_content( $tab, $content_type ) {
+  function the_tab_specific_content( $tab, $content_type, $args = array() ) {
+    $args = wp_parse_args( $args, array( 'wrap' => true ) );
     $content = false;
     if ( ! $tab || ! isset( $tab->{$content_type} ) )
       return;
@@ -270,13 +272,15 @@ HTML;
       }
     }
     if ( $content ) {
-      $content_type_slug = str_replace( '_', '-', $content_type );
-      $html =<<< HTML
-<div class="tab-{$content_type_slug}">
+      if ( $args['wrap'] ) {
+        $content_type_slug = str_replace( '_', '-', $content_type );
+        $content =<<< HTML
+<div id="tab-{$content_type_slug}">
 {$content}
 </div>
 HTML;
-      echo $html;
+      }
+      echo $content;
     }
   }
   /**
@@ -289,9 +293,11 @@ HTML;
      */
     $current_tab = $this->has_tabs() ? $this->get_current_tab() : false;
 
-    if ( $current_tab && $current_tab->tab_header ) {
-      echo "<h1 class=\"plugin-tab-page-title\">";
-      echo "\n" . $current_tab->tab_header;
+    $this->the_tab_specific_content( $current_tab, 'before_page_title', array( 'wrap' => false ) );
+
+    if ( $current_tab && $current_tab->page_title ) {
+      echo "<h1 class=\"admin-page-title\">";
+      echo "\n" . $current_tab->page_title;
       echo "\n" . '</h1>';
     }
 
@@ -411,7 +417,7 @@ HTML;
     if ( $current_tab ) {
       foreach ( $this->get_tabs() as $tab_slug => $tab ) {
         $class = ( $tab_slug == $current_tab->tab_slug ) ? ' nav-tab-active' : '';
-        $url = $this->get_page_url( $tab_slug );
+        $url = $this->get_tab_url( $tab_slug );
         $links_html[] =<<<HTML
   <a class="nav-tab{$class}" href="{$url}">{$tab->tab_text}</a>
 HTML;
@@ -422,10 +428,16 @@ HTML;
 
 
   /**
+   * @return string|void
+   */
+  function get_page_url() {
+    return $this->get_tab_url();
+ 	}
+  /**
    * @param bool|string|Surrogate_Admin_Tab $tab
    * @return string|void
    */
-  function get_page_url( $tab = false ) {
+  function get_tab_url( $tab = false ) {
     if ( ! $this->_initialized ) {
       $message = __( '%s->get_page_url() cannot be called prior to %s->initialize_admin_page() being called.', 'surrogate' );
       Surrogate::show_error( $message, __CLASS__, $this->plugin->plugin_class );
@@ -567,14 +579,14 @@ HTML;
  				 * If authenticated we redirect with a "301 - This URL has changed" status code so the browser can know
  				 * to go to 'usage' whenever is sees this URL and avoid the round trip next time.
  				 */
- 				wp_safe_redirect( $this->get_page_url( $this->get_default_tab()->tab_slug ), 301 );
+ 				wp_safe_redirect( $this->get_tab_url( $this->get_default_tab()->tab_slug ), 301 );
  			} else if ( $auth_tab = $this->get_authentication_tab() ) {
  				/**
  				 * If not authenticated we redirect with a "302 - This URL has moved temporarily" status code
  				 * because normally we'd want to go to usage, so don't cause browser to thing this URL w/o a
  				 * valid tab should always go to 'account.'
  				 */
- 				wp_safe_redirect( $this->get_page_url( $auth_tab->tab_slug ), 302 );
+ 				wp_safe_redirect( $this->get_tab_url( $auth_tab->tab_slug ), 302 );
  			}
  			/**
  			 * Stop processing PHP so we can send the HTTP Location header back the browser to trigger a redirect.
@@ -592,7 +604,7 @@ HTML;
  				 * We redirect with a "302 - This URL has moved temporarily" because it's still a good URL and
  				 * we want the browser to be happy to return here later.
  				 */
- 				wp_safe_redirect( $this->get_page_url( $auth_tab ), 302 );
+ 				wp_safe_redirect( $this->get_tab_url( $auth_tab ), 302 );
  				exit;
  			} else {
  				/**
@@ -607,4 +619,24 @@ HTML;
  		}
  		return true;
  	}
+  /**
+   * @param $property_name
+   * @return bool|string
+   */
+  function __get( $property_name ) {
+    $value = false;
+    if ( preg_match( '#^(.+?)_tab_url$#', $property_name, $match ) && $this->has_tab( $match[1] ) ) {
+      /**
+       * Allows magic property syntax for any registered URL
+       * @example: $this->foobar_url calls $this-get_url( 'foobar' )
+       * Enables embedding in a HEREDOC or other doublequoted string
+       * without requiring an intermediate variable.
+       */
+      $value = call_user_func( array( $this, "get_tab_url" ), $match[1] );
+    } else {
+      Surrogate::show_error( 'No property named %s on %s class.', $property_name, get_class( $this ) );
+    }
+    return $value;
+  }
+
 }
