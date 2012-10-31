@@ -14,11 +14,15 @@ class Surrogate_Admin_Tab {
   /**
    * @var bool|string
    */
-  var $tab_header = false;
+  var $page_title = false;
   /**
    * @var bool|callable
    */
   var $tab_handler = false;
+  /**
+   * @var bool|string
+   */
+  var $before_page_title = false;
   /**
    * @var bool|string
    */
