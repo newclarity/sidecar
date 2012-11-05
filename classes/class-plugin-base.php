@@ -88,9 +88,19 @@ class Surrogate_Plugin_Base {
   protected $_shortcodes = array();
 
   /**
+   * @var Surrogate_Admin_Page
+   */
+  var $current_page;
+
+  /**
    * @var Surrogate_Admin_Form
    */
   var $current_form;
+
+  /**
+   * @var Surrogate_Settings
+   */
+  var $current_settings;
 
   /**
    * @param array $args
@@ -310,6 +320,15 @@ class Surrogate_Plugin_Base {
      */
     return $this->_admin_pages[$page_name] = new $admin_page_class( $page_name, $args );
   }
+
+  /**
+   * @param string $page_name
+   *
+   * @return Surrogate_Admin_Page
+   */
+  function get_admin_page( $page_name ) {
+    return $this->_admin_pages[$page_name];
+  }
   function add_default_shortcode() {
     $this->add_shortcode( $this->plugin_slug );
   }
@@ -510,24 +529,21 @@ class Surrogate_Plugin_Base {
     return isset( $this->_settings[$setting_name] );
   }
   /**
-   * @param   string $form_name
+   * @param   string|Surrogate_Admin_Form $admin_form
    * @return  array|Surrogate_Admin_Form
    */
-  function get_admin_form( $form_name ) {
-    $admin_form = $this->_admin_forms[$form_name];
+  function get_admin_form( $admin_form ) {
+    /*
+     * Could be a string or already Surrogate_Admin_Form.
+     */
+    $admin_form = is_string( $admin_form ) && isset( $this->_admin_forms[$admin_form] ) ? $this->_admin_forms[$admin_form] : $admin_form;
     if ( is_array( $admin_form ) ) {
+      /**
+       * Convert the form from array to object.
+       */
       $admin_form = $this->promote_admin_form( $admin_form );
       $this->initialize_admin_form( $admin_form );
       $admin_form->initialize( $this );
-      if ( ! $this->has_setting( $admin_form->form_name ) ) {
-        if ( ! $admin_form->has_fields()  )
-          Surrogate::show_error( 'Form %s for Plugin %s has no fields registered.', $admin_form->form_name, $this->plugin_name );
-        $settings = $admin_form->get_sections();
-        $section = reset( $settings );
-        $this->register_settings( $admin_form->form_name, $admin_form->get_field_names( $section->section_name ) );
-        $this->initialize_settings( $this->get_settings( $admin_form->form_name ) );
-
-      }
     }
     return $admin_form;
   }
@@ -565,44 +581,120 @@ class Surrogate_Plugin_Base {
    */
   /**
    * @param string $settings_name
-   */
-  function initialize_settings( $settings_name ) {
-    register_setting( $this->get_settings_group_name(), $this->get_settings_name($settings_name) );
-  }
-  /**
-   * @param string $settings_name
    * @param array  $args
    */
   function register_settings( $settings_name, $args = array() ) {
-    $this->_settings[$this->get_settings_name($settings_name)] = new Surrogate_Settings( $settings_name, $args );
+    $this->_settings[$settings_name] = new Surrogate_Settings( $settings_name, $args );
   }
   /**
    * @param string $settings_name
    * @return Surrogate_Settings
    */
   function get_settings( $settings_name ) {
-    return $this->_settings[$this->get_settings_name($settings_name)];
+    return $this->_settings[$settings_name];
   }
   /**
-   * @return string
-   */
-  function get_settings_group_name() {
-    return "{$this->plugin_name}_settings";
-  }
-  /**
-   * @param string $maybe_short_name
+   * @param array $input
    *
-   * @return string
+   * @return array
    */
-  function get_settings_name( $maybe_short_name ) {
-    if ( ! preg_match( "#^{$this->plugin_name}#", $maybe_short_name, $m ) )
-      $settings_name = "{$this->plugin_name}_{$maybe_short_name}";
-    else
-      $settings_name = $maybe_short_name;
-    return $settings_name;
+  function filter_postback( $input ) {
+    if ( ! current_user_can( 'manage_options' ) ) {
+      /**
+       * TODO: Verify someone without proper options can actually get here.
+       */
+      wp_die( __( 'Sorry, you do not have sufficient priviledges.' ) );
+    }
+    /**
+     * Get the array that contains names of 'plugin', 'page', 'tab', 'form' and 'settings'
+     * as well as special 'clear' and 'reset' for clearing and resetting the form respectively.
+     */
+    $control = $_POST[$_POST['option_page']];
+    $page = $this->current_page = $this->get_admin_page( $control['page'] );
+    $form = $this->current_form = $this->get_admin_form( $control['form'] );
+    $settings = $this->current_settings = $this->get_settings( $control['settings'] );
+    if ( isset( $control['clear'] ) ) {
+      $input = $settings->get_empty_settings();
+      $message = __( 'Form values cleared.%s%sNOTE:%s Your browser may still be displaying values from its cache but this plugin has indeed cleared these values.%s', 'surrogate' );
+      add_settings_error( $page->get_settings_group_name(), "surrogate-clear", sprintf( $message, "<br/><br/>&nbsp;&nbsp;&nbsp;", '<em>', '</em>', '<br/><br/>' ), 'updated' );
+    } else if ( isset( $control['reset'] ) ) {
+      $input = $this->current_settings->get_new_settings();
+      add_settings_error( $page->get_settings_group_name(), 'surrogate-reset', __( 'Defaults reset.', 'surrogate' ), 'updated' );
+    } else if ( method_exists( $this, 'validate_settings' ) ) {
+      $input = array_map( 'rtrim', (array)$input );
+      add_filter( $action_key = "pre_update_option_{$this->current_settings->option_name}", array( $this, 'pre_update_option' ), 10, 2 );
+      /**
+       * @todo How to signal a failed validation?
+       */
+      $input = call_user_func( array( $this, 'validate_settings' ), $input, $this->current_settings );
+      /**
+       * @var Surrogate_Admin_Field $field
+       */
+      foreach( $form->get_fields() as $field_name => $field ) {
+        $validation_options = false;
+   			/**
+   			 * Default to FILTER_SANITIZE_STRING if ['validator'] not set.
+   			 */
+   			if ( $field->field_options ) {
+          $validated_value = isset( $field->field_options[$input[$field_name]] ) ? $input[$field_name] : false;
+        } else if ( isset( $field->field_validator['filter'] ) ) {
+           $validated_value = filter_var( $input[$field_name], $field->field_validator['filter'] );
+           if ( isset( $field->field_validator['options'] ) ) {
+            $validation_options = $field->field_validator['options'];
+           }
+        } else {
+          $validator = $field->field_validator ? $field->field_validator : FILTER_SANITIZE_STRING;
+          $validated_value = filter_var( $input[$field_name], $validator );
+        }
+        if ( method_exists( $this, $method = "sanitize_setting_{$field_name}" ) ) {
+          $validated_value = call_user_func( array( $this, $method ), $validated_value, $field, $settings );
+        }
+        if ( $validation_options || $validated_value != $input[$field_name] ) {
+          if ( ! $validation_options ) {
+            add_settings_error( $page->get_settings_group_name(), 'surrogate-value', sprintf(
+              __( 'You need to enter a valid value for "%s."', 'surrogate' ), $field->field_label
+            ));
+          } else {
+            if ( isset( $validation_options['min'] ) && $validation_options['min'] > intval( $input[$field_name] ) ) {
+              add_settings_error( $page->get_settings_group_name(), 'surrogate-min', sprintf(
+                __( 'You need to enter a value greater than or equal to %d for "%s."', 'surrogate' ),
+                  $validation_options['min'],
+                  $field->field_label
+              ));
+            }
+            if ( isset( $validation_options['max'] ) && $validation_options['max'] < intval( $input[$field_name] ) ) {
+              add_settings_error( $page->get_settings_group_name(), 'surrogate-max', sprintf(
+                __( 'You need to enter a value less than or equal to %d for "%s."', 'surrogate' ),
+                  $validation_options['max'],
+                  $field->field_label
+              ));
+              $continue = true;
+            }
+          }
+        }
+      }
+    }
+    return $input;
   }
 
+
   /**
+   * @param array $newvalue
+   * @param array $oldvalue
+   * @return array
+   */
+  function pre_update_option( $newvalue, $oldvalue ) {
+    if ( method_exists( $this, 'encrypt_settings' ) ) {
+      /**
+       * @todo auto-encrypt credentials
+       */
+      $newvalue = call_user_func( array( $this, 'encrypt_settings' ), $newvalue, $this->current_settings );
+    }
+    remove_filter( current_filter(), array( $this, 'pre_update_option' ) );
+    return $newvalue;
+  }
+  /**
+
    * @todo Decide if trigger_error() is the best for error messages
    */
   function activate() {

@@ -35,6 +35,16 @@ class Surrogate_Admin_Tab {
    * @var bool
    */
   var $auth_tab = false;
+  /**
+   * @var string|Surrogate_Admin_Form
+   */
+  var $admin_forms = false;
+  /**
+   * @return bool
+   */
+  function has_forms() {
+    return is_array( $this->admin_forms );
+  }
 
   /**
    * @param string $tab_slug
@@ -55,5 +65,14 @@ class Surrogate_Admin_Tab {
         $this->$property = $value;
       }
     }
+
+    if ( ! $this->admin_forms ) {
+      /**
+       * Is 'admin_form' passed in (singluar) grab it, otherwise grab the tab slug.
+       * Later convert the current tab's form to an object.
+       */
+      $this->admin_forms = array( isset( $args['admin_form'] ) ? $args['admin_form'] : $tab_slug );
+    }
+
   }
 }

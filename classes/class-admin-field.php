@@ -47,7 +47,7 @@ class Surrogate_Admin_Field {
   /**
    * @var int|array
    */
-  var $field_sanitizer;
+  var $field_validator;
 
   /**
    * @var string
@@ -100,9 +100,9 @@ class Surrogate_Admin_Field {
     /**
      * @todo: Get options with all expected elements initialized
      */
-    $settings = get_option( $settings_name = $this->admin_form->settings_name );
-    $value = isset( $settings[$this->field_name] ) ? esc_attr( $settings[$this->field_name] ) : false;
-    $input_name = "{$settings_name}[{$this->field_name}]";
+    $settings = $this->plugin->get_settings( $settings_name = $this->admin_form->settings_name );
+    $value = esc_attr( $settings->get_setting( $this->field_name ) );
+    $input_name = "{$settings->option_name}[{$this->field_name}]";
     $input_id = str_replace( '_', '-', $input_name );
     $size_html = $this->field_size ? " size=\"{$this->field_size}\"" : '';
     $css_base = $this->plugin->css_base;
@@ -110,8 +110,9 @@ class Surrogate_Admin_Field {
 
     if ( 'radio' == $this->field_type ) {
       $html = array( "<ul id=\"{$input_id}-radio-field-options\" class=\"radio-field-options\">" );
+      $this_value = $settings->get_setting( $this->field_name );
       foreach( $this->field_options as $value => $label ) {
-        $checked = ( $value == $settings[$this->field_name] ) ? 'checked="checked" ' : '';
+        $checked = ( ! empty( $this_value ) && $value == $this_value ) ? 'checked="checked" ' : '';
         $value = esc_attr( $value );
         $html[] =<<<HTML
 <li><input type="radio" id="{$input_id}" class="{$css_base}-field" name="{$input_name}" value="{$value}" {$checked}/>
@@ -120,12 +121,10 @@ HTML;
       }
       $html = implode( "\n", $html ) . "</ul>{$help_html}";
     } else if ( 'hidden' == $this->field_type ) {
-      $value = esc_attr( $settings[$this->field_name] );
       $html =<<<HTML
 <input type="hidden" id="{$input_id}" name="{$input_name}" value="{$value}" />
 HTML;
     } else {
-      $value = esc_attr( $settings[$this->field_name] );
       $html =<<<HTML
 <input type="{$this->field_type}" id="{$input_id}" name="{$input_name}" value="{$value}" class="{$css_base}-field"{$size_html}/>{$help_html}
 HTML;

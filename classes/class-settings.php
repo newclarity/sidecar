@@ -4,27 +4,35 @@
  */
 class Surrogate_Settings {
   /**
-   * @var array
-   */
-  protected $_defined_settings = array();
-  /**
-   * @var array
-   */
-  protected $_settings;
-  /**
    * @var Surrogate_Plugin_Base
    */
   var $plugin;
   /**
+   * @var Surrogate_Admin_Form
+   */
+  var $admin_form;
+  /**
+   * @var string
+   */
+  var $option_name;
+  /**
    * @var string
    */
   var $settings_name;
+  /**
+   * @var array
+   */
+  protected $_default_settings = array();
+  /**
+   * @var array
+   */
+  protected $_settings;
 
   /**
-   * @param string $setting_name
+   * @param string $settings_name
    * @param array $args
    */
-  function __construct( $setting_name, $args = array() ) {
+  function __construct( $settings_name, $args = array() ) {
     /**
      * Copy properties in from $args, if they exist.
      */
@@ -32,17 +40,14 @@ class Surrogate_Settings {
       if ( property_exists(  $this, $property ) )
         $this->$property = $value;
 
-    $this->setting_name = $setting_name;
+    $this->settings_name = $settings_name;
+
+    if ( ! isset( $this->plugin ) )
+      $this->plugin = $this->admin_form->plugin;
+
+    $this->option_name = "{$this->plugin->plugin_name}_{$this->settings_name}";
 
   }
-
-  /**
-   * @param       $setting_name
-   * @param array $args
-   */
-  function add_setting( $setting_name, $args = array() ) {
- 		$this->_defined_settings[$setting_name] = (object)$args;
- 	}
   /**
    * Get an array of new settings (empty string; '').
    *
@@ -50,20 +55,73 @@ class Surrogate_Settings {
    * @return array
    */
   function get_new_settings() {
-    $new_settings = array();
-    foreach( $this->_defined_settings as $name => $setting ) {
-      $new_settings[$name] = isset( $setting['default'] ) ? $setting['default'] : '';
-    }
- 		return $new_settings;
+    if ( 0 == count( $this->_default_settings ) ) {
+      foreach( $this->admin_form->get_sections() as $form_section ) {
+        foreach( $form_section->fields as $field ) {
+          $this->_default_settings[$field->field_name] = isset( $field->field_default ) ? $field->field_default : '';
+        }
+      }
+     }
+ 		return $this->_default_settings;
+ 	}
+
+  /**
+   * @return array
+   */
+  function get_empty_settings() {
+    $new_settings = $this->get_new_settings();
+ 		return array_fill_keys( array_keys( $new_settings ), '' );
  	}
 
   /**
    * @return array
    */
   function get_settings() {
-    if ( ! isset( $this->_settings ) )
-      $this->_settings = array_merge( $this->get_new_settings(), get_option( $this->settings_name ) );
+    if ( ! isset( $this->_settings ) ) {
+      $option = get_option( $this->option_name );
+      if ( method_exists( $this->plugin, 'decrypt_settings' ) ) {
+        $this->plugin->current_settings = $this;
+        /**
+         * @todo auto-decrypt credentials
+         */
+        $option = call_user_func( array( $this->plugin, 'decrypt_settings' ), $option, $this );
+      }
+      $this->_settings = array_merge( $this->get_new_settings(), $option );
+    }
     return $this->_settings;
+  }
+
+  /**
+   * @param string $setting_name
+   *
+   * @return bool
+   */
+  function has_setting( $setting_name ) {
+    if ( ! isset( $this->_settings ) )
+      /*
+       * This will initialize settings
+       */
+      $this->get_settings();
+    return isset( $this->_settings[$setting_name] );
+  }
+
+  /**
+   * @param string $setting_name
+   *
+   * @return mixed
+   */
+  function get_setting( $setting_name ) {
+    $value = false;
+    if ( $this->has_setting( $setting_name ) )
+      $value = $this->_settings[$setting_name];
+    return $value;
  	}
+
+  /**
+   * @param array $new_settings
+   */
+  function set_settings( $new_settings ) {
+ 	  $this->_settings = $new_settings;
+  }
 
 }

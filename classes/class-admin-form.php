@@ -18,6 +18,30 @@ class Surrogate_Admin_Form {
   var $_buttons = array();
 
   /**
+   * @param string $form_name
+   * @param array $args
+   */
+  function __construct( $form_name, $args = array() ) {
+    $this->form_name = $form_name;
+    /**
+     * Copy properties in from $args, if they exist.
+     */
+    foreach( $args as $property => $value ) {
+      if ( property_exists( $this, $property ) ) {
+        $this->$property = $value;
+      } else if ( property_exists( $this, $property = "form_{$property}" ) ) {
+        $this->$property = $value;
+      }
+    }
+    if ( ! $this->settings_name ) {
+      /**
+       * @todo Create register settings here is one does not exist for this form.
+       */
+      $this->settings_name = $this->form_name;
+    }
+  }
+
+  /**
    * @return array
    */
   function get_sections() {
@@ -70,6 +94,23 @@ class Surrogate_Admin_Form {
     return $has_fields;
   }
   /**
+   * @param bool|string $section_name
+   *
+   * @return array
+   */
+  function get_fields( $section_name = false ) {
+    if ( $section_name && $this->has_section( $section_name ) ) {
+      $fields = $this->_sections[$section_name]->fields;
+    } else {
+      $fields = array();
+      foreach( $this->_sections as $section )
+        if ( is_array( $section->fields ) ) {
+          $fields = array_merge( $section->fields, $fields );
+        }
+    }
+    return $fields;
+  }
+  /**
    * @return array
    */
   function the_form() {
@@ -84,7 +125,7 @@ class Surrogate_Admin_Form {
     /**
      * Get the HTML for the hidden fields from the Settings API
      */
-    settings_fields( $settings_group = $this->plugin->get_settings_group_name() );
+    settings_fields( $settings_group = $this->admin_page->get_settings_group_name() );
 
     /**
      * Hide hidden fields from Settings API by removing them from global $wp_settings_fields
@@ -92,11 +133,12 @@ class Surrogate_Admin_Form {
      */
     global $wp_settings_fields;
     $hidden_fields = array();
-    foreach( $wp_settings_fields[$this->settings_name] as $section_name => $section ) {
+    $settings = $this->plugin->get_settings( $this->settings_name );
+    foreach( $wp_settings_fields[$settings->option_name] as $section_name => $section ) {
       foreach( $section as $field_name => $field ) {
         if ( 'hidden' == $field['args']['field']->field_type ) {
           $hidden_fields[] = $field['args']['field'];
-          unset( $wp_settings_fields[$this->settings_name][$section_name][$field_name] );
+          unset( $wp_settings_fields[$settings->option_name][$section_name][$field_name] );
         }
       }
     }
@@ -113,7 +155,7 @@ class Surrogate_Admin_Form {
     /**
      * Output each of the sections.
      */
-    do_settings_sections( $this->settings_name );
+    do_settings_sections( $settings->option_name );
 
     $form_fields_html = ob_get_clean();
 
@@ -123,7 +165,14 @@ class Surrogate_Admin_Form {
       $hidden_section_input_html = '';
     } else {
       $tab_slug = $this->admin_page->get_current_tab()->tab_slug;
-      $hidden_section_input_html = "<input type=\"hidden\" name=\"{$settings_group}[section]\" value=\"{$tab_slug}\" />";
+
+      $hidden_section_input_html = <<<HTML
+<input type="hidden" name="{$settings_group}[plugin]" value="{$this->plugin->plugin_name}" />
+<input type="hidden" name="{$settings_group}[page]" value="{$this->admin_page->page_name}" />
+<input type="hidden" name="{$settings_group}[tab]" value="{$tab_slug}" />
+<input type="hidden" name="{$settings_group}[form]" value="{$this->form_name}" />
+<input type="hidden" name="{$settings_group}[settings]" value="{$settings->settings_name}" />
+HTML;
     }
     $buttons_html = array();
     foreach( $this->_buttons as $button ) {
@@ -175,9 +224,16 @@ HTML;
   }
 
   /**
-   * @param $plugin
+   * @param Surrogate_Plugin_Base $plugin
    */
   function initialize( $plugin ) {
+    if ( ! $this->plugin->has_setting( $this->form_name ) ) {
+      if ( ! $this->has_fields()  )
+        Surrogate::show_error( 'Form %s for Plugin %s has no fields registered.', $this->form_name, $this->plugin->plugin_name );
+      $this->plugin->register_settings( $this->form_name, array( 'admin_form' => $this ) );
+      $settings = $this->plugin->get_settings( $this->form_name );
+      register_setting( $this->admin_page->get_settings_group_name(), $settings->option_name, array( $this->plugin, 'filter_postback' ) );
+    }
     $this->initialize_sections( $plugin );
     $this->initialize_buttons( $plugin );
   }
@@ -186,31 +242,25 @@ HTML;
    * @param Surrogate_Plugin_Base $plugin
    */
   function initialize_sections( $plugin ) {
-    if ( ! $this->settings_name ) {
-      /**
-       * @todo Create register settings here is one does not exist for this form.
-       */
-      $this->settings_name = $plugin->get_settings_name( $this->form_name );
-    }
     foreach( $this->get_sections() as $section_name => $section ) {
       if ( ! $section->section_handler )
         $section->section_handler = array( $plugin, 'the_form_section' );
-      //$page_slug = $section->admin_form->admin_page->page_slug;
-      add_settings_section( $section_name, $section->section_title, $section->section_handler, $this->settings_name, array(
+      $settings =  $this->plugin->get_settings( $this->settings_name );
+      add_settings_section( $section_name, $section->section_title, $section->section_handler, $settings->option_name, array(
         'section' => $section,
         'form' => $this,
         'plugin' => $plugin,
-        'settings_name' => $this->settings_name,
+        'settings' => $settings,
         ));
       foreach( $section->fields as $field_name => $field ) {
         if ( ! $field->field_handler )
           $field->field_handler = array( $plugin, 'the_form_field' );
-        add_settings_field( $field_name, $field->field_label, $field->field_handler, $this->settings_name, $section_name, array(
+        add_settings_field( $field_name, $field->field_label, $field->field_handler, $settings->option_name, $section_name, array(
           'field' => $field,
           'section' => $section,
           'form' => $this,
           'plugin' => $plugin,
-          'settings_name' => $this->settings_name,
+          'settings' => $settings,
         ));
       }
     }
@@ -228,7 +278,7 @@ HTML;
         if ( 'primary' == $button->button_type ) {
           $button->input_name = 'submit';
         } else {
-          $button->input_name = $plugin->get_settings_group_name() . "[{$button_name}]";
+          $button->input_name = $this->admin_page->get_settings_group_name() . "[{$button_name}]";
         }
 
       if ( ! isset( $button->button_wrap ) )
@@ -256,23 +306,6 @@ HTML;
     return $this->_sections[$args['section_name']]->fields[$field_name];
   }
 
-  /**
-   * @param string $form_name
-   * @param array $args
-   */
-  function __construct( $form_name, $args = array() ) {
-    $this->form_name = $form_name;
-    /**
-     * Copy properties in from $args, if they exist.
-     */
-    foreach( $args as $property => $value ) {
-      if ( property_exists( $this, $property ) ) {
-        $this->$property = $value;
-      } else if ( property_exists( $this, $property = "form_{$property}" ) ) {
-        $this->$property = $value;
-      }
-    }
-  }
   /**
    * @param string  $section_name
    * @param array   $args
