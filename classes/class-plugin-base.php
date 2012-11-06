@@ -652,19 +652,19 @@ class Surrogate_Plugin_Base {
         if ( $validation_options || $validated_value != $input[$field_name] ) {
           if ( ! $validation_options ) {
             add_settings_error( $page->get_settings_group_name(), 'surrogate-value', sprintf(
-              __( 'You need to enter a valid value for "%s."', 'surrogate' ), $field->field_label
+              __( 'Please enter a valid value for "%s."', 'surrogate' ), $field->field_label
             ));
           } else {
             if ( isset( $validation_options['min'] ) && $validation_options['min'] > intval( $input[$field_name] ) ) {
               add_settings_error( $page->get_settings_group_name(), 'surrogate-min', sprintf(
-                __( 'You need to enter a value greater than or equal to %d for "%s."', 'surrogate' ),
+                __( 'Please enter a value greater than or equal to %d for "%s."', 'surrogate' ),
                   $validation_options['min'],
                   $field->field_label
               ));
             }
             if ( isset( $validation_options['max'] ) && $validation_options['max'] < intval( $input[$field_name] ) ) {
               add_settings_error( $page->get_settings_group_name(), 'surrogate-max', sprintf(
-                __( 'You need to enter a value less than or equal to %d for "%s."', 'surrogate' ),
+                __( 'Please enter a value less than or equal to %d for "%s."', 'surrogate' ),
                   $validation_options['max'],
                   $field->field_label
               ));
