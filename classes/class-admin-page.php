@@ -583,11 +583,16 @@ HTML;
     if ( isset( $_POST['action'] ) && 'update' == $_POST['action'] && '/wp-admin/options.php' == $_SERVER['REQUEST_URI'] ) {
       $this->initialize();
       $is_postback_update = false;
-      foreach( $this->_admin_forms as $admin_form )
-        if ( isset( $_POST[$admin_form->settings_name] ) ) {
+      /**
+       * @var Surrogate_Admin_Form $admin_form
+       */
+      foreach( $this->_admin_forms as $admin_form ) {
+        $settings = $this->plugin->get_settings( $admin_form->settings_name );
+        if ( isset( $_POST[$settings->option_name] ) ) {
           $is_postback_update = true;
           break;
         }
+      }
     }
     return $is_postback_update;
   }

@@ -32,10 +32,6 @@ class Surrogate_Admin_Tab {
    */
   var $after_content = false;
   /**
-   * @var bool
-   */
-  var $auth_tab = false;
-  /**
    * @var string|Surrogate_Admin_Form
    */
   var $admin_forms = false;

@@ -14,6 +14,10 @@ class Surrogate_Admin_Form {
   var $admin_page;
   var $form_name;
   var $settings_name;
+  /**
+   * @var bool
+   */
+  var $is_auth_form = false;
   var $_sections = array();
   var $_buttons = array();
 

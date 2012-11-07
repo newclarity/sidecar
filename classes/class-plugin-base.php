@@ -103,6 +103,11 @@ class Surrogate_Plugin_Base {
   var $current_settings;
 
   /**
+   * @var RESTian_Client
+   */
+  var $api = false;
+
+  /**
    * @param array $args
    */
   function __construct( $args = array() ) {
@@ -613,6 +618,22 @@ class Surrogate_Plugin_Base {
     $page = $this->current_page = $this->get_admin_page( $control['page'] );
     $form = $this->current_form = $this->get_admin_form( $control['form'] );
     $settings = $this->current_settings = $this->get_settings( $control['settings'] );
+
+    /**
+     * Check with the API to see if we are authenticated
+     */
+    if ( $this->api && $form->is_auth_form ) {
+      if ( ! $this->api->assumed_authenticated( $input ) ) {
+        add_settings_error( $page->get_settings_group_name(), 'surrogate-no-credentials', __( 'You must enter both a username and a password', 'surrogate' ) );
+      } else if ( $this->api->authenticate( $input ) ) {
+        $input['authenticated'] = true;
+        add_settings_error( $page->get_settings_group_name(), 'surrogate-updated', __( 'Authentication successful. Settings saved.', 'surrogate' ), 'updated' );
+      } else {
+        $input['authenticated'] = false;
+        add_settings_error( $page->get_settings_group_name(), 'surrogate-login-failed', __( 'Authentication Failed. Please try again.', 'surrogate' ) );
+      }
+    }
+
     if ( isset( $control['clear'] ) ) {
       $input = $settings->get_empty_settings();
       $message = __( 'Form values cleared.%s%sNOTE:%s Your browser may still be displaying values from its cache but this plugin has indeed cleared these values.%s', 'surrogate' );
