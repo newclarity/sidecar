@@ -86,6 +86,12 @@ class Surrogate_Admin_Page {
   var $icon = 'options-general';  // Default
 
   /**
+   * @var string
+   */
+  protected $_auth_form = false;
+
+
+  /**
    * @param $page_name
    * @param array $args
    */
@@ -137,10 +143,40 @@ class Surrogate_Admin_Page {
   }
 
   /**
+   * Test the credentials for the pluginsauth form
    * @return bool
    */
   function is_authenticated() {
-    return true;
+    $credentials = $this->get_auth_credentials();
+    return isset( $credentials['authenticated'] ) && $credentials['authenticated'];
+  }
+  /**
+   * @return array
+   */
+  function get_auth_credentials() {
+    $auth_form = $this->get_auth_form();
+    $settings = $this->plugin->get_settings( $auth_form->settings_name );
+    return $settings->get_settings();
+  }
+  /**
+   * @return Surrogate_Admin_Form
+   */
+  function get_auth_form() {
+    return $this->plugin->get_admin_form( $this->_auth_form );
+  }
+
+  /**
+   * @param string|Surrogate_Admin_Form $form
+   */
+  function set_auth_form( $form ) {
+    if ( is_string( $form ) ) {
+      $this->_auth_form = $form;
+    } else if ( isset( $form->form_name ) ) {
+      $this->_auth_form = $form->form_name;
+    } else if ( WP_DEBUG ) {
+      $message = __( '%s->set_auth_form() must be passed a string, an array with a \'form_name\' element or an object with a \'form_name\' property.', 'surrogate' );
+      trigger_error( sprintf( $message, $this->plugin_class ) );
+    }
   }
 
   /**
@@ -163,9 +199,14 @@ class Surrogate_Admin_Page {
    */
   function get_authentication_tab() {
     if ( ! $this->_authentication_tab ) {
-      foreach( $this->_tabs as $tab )
-        if ( $tab->auth_tab )
+      /**
+       * @var Surrogate_Admin_Tab $tab
+       */
+      foreach( $this->_tabs as $tab ) {
+        if ( in_array( $this->_auth_form, $tab->admin_forms ) ) {
           $this->_authentication_tab = $tab;
+        }
+      }
     }
     return $this->_authentication_tab;
   }
@@ -535,12 +576,13 @@ HTML;
   /**
  	 * Check if the passed $tab variable matches the URL's tab parameter.
  	 *
- 	 * @param string $tab
+ 	 * @param string|Surrogate_Admin_Tab $tab
  	 * @return bool
  	 */
  	function has_tab( $tab ) {
- 	  if ( $tab instanceof Surrogate_Admin_Tab )
+ 	  if ( isset( $tab->tab_slug ) ) {
  	    $tab = $tab->tab_slug;
+     }
  		return isset( $this->_tabs[$tab] );
  	}
 
@@ -611,7 +653,7 @@ HTML;
      /*
       * If we have no tabs trying to verify is a moot point. Punt.
       */
-     if ( ! $this->has_tabs() )
+    if ( ! $this->has_tabs() )
       return true;
 
  		if ( ! $this->is_current_tab_valid() ) {

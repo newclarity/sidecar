@@ -17,7 +17,6 @@ class Surrogate_Admin_Form {
   /**
    * @var bool
    */
-  var $is_auth_form = false;
   var $_sections = array();
   var $_buttons = array();
 

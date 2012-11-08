@@ -581,10 +581,6 @@ class Surrogate_Plugin_Base {
     return $form->add_field( $form_name, $args );
   }
   /**
-   * @param       $form_name
-   * @param array $args
-   */
-  /**
    * @param string $settings_name
    * @param array  $args
    */
@@ -622,7 +618,7 @@ class Surrogate_Plugin_Base {
     /**
      * Check with the API to see if we are authenticated
      */
-    if ( $this->api && $form->is_auth_form ) {
+    if ( $this->api && $page->is_authenticated() ) {
       if ( ! $this->api->assumed_authenticated( $input ) ) {
         add_settings_error( $page->get_settings_group_name(), 'surrogate-no-credentials', __( 'You must enter both a username and a password', 'surrogate' ) );
       } else if ( $this->api->authenticate( $input ) ) {
