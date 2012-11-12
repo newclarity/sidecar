@@ -3,21 +3,37 @@
  *
  */
 class Surrogate_Admin_Form {
-
   /**
-   * @var Surrogate_Plugin_Base
+   * @var Surrogate_Plugin
    */
   var $plugin;
   /**
    * @var Surrogate_Admin_Page
    */
   var $admin_page;
-  var $form_name;
-  var $settings_name;
   /**
-   * @var bool
+   * @var string
+   */
+  var $form_name;
+  /**
+   * @var string
+   */
+  var $option_name;
+  /**
+   * @var array
+   */
+  protected $_default_settings = array();
+  /**
+   * @var array
+   */
+  protected $_settings;
+  /**
+   * @var array
    */
   var $_sections = array();
+  /**
+   * @var array
+   */
   var $_buttons = array();
 
   /**
@@ -36,14 +52,22 @@ class Surrogate_Admin_Form {
         $this->$property = $value;
       }
     }
-    if ( ! $this->settings_name ) {
-      /**
-       * @todo Create register settings here is one does not exist for this form.
-       */
-      $this->settings_name = $this->form_name;
-    }
+    $this->option_name = "{$this->plugin->plugin_name}_{$this->form_name}";
+
   }
 
+  /**
+   * @return array
+   */
+  function get_field_defaults() {
+    $field_defaults = array();
+    foreach( $this->get_sections() as $form_section ) {
+      foreach( $form_section->fields as $field ) {
+        $field_defaults[$field->field_name] = isset( $field->field_default ) ? $field->field_default : '';
+      }
+    }
+    return $field_defaults;
+  }
   /**
    * @return array
    */
@@ -136,12 +160,12 @@ class Surrogate_Admin_Form {
      */
     global $wp_settings_fields;
     $hidden_fields = array();
-    $settings = $this->plugin->get_settings( $this->settings_name );
-    foreach( $wp_settings_fields[$settings->option_name] as $section_name => $section ) {
+    $settings = $this->get_settings( $this->form_name );
+    foreach( $wp_settings_fields[$this->option_name] as $section_name => $section ) {
       foreach( $section as $field_name => $field ) {
         if ( 'hidden' == $field['args']['field']->field_type ) {
           $hidden_fields[] = $field['args']['field'];
-          unset( $wp_settings_fields[$settings->option_name][$section_name][$field_name] );
+          unset( $wp_settings_fields[$this->option_name][$section_name][$field_name] );
         }
       }
     }
@@ -158,7 +182,7 @@ class Surrogate_Admin_Form {
     /**
      * Output each of the sections.
      */
-    do_settings_sections( $settings->option_name );
+    do_settings_sections( $this->option_name );
 
     $form_fields_html = ob_get_clean();
 
@@ -174,7 +198,6 @@ class Surrogate_Admin_Form {
 <input type="hidden" name="{$settings_group}[page]" value="{$this->admin_page->page_name}" />
 <input type="hidden" name="{$settings_group}[tab]" value="{$tab_slug}" />
 <input type="hidden" name="{$settings_group}[form]" value="{$this->form_name}" />
-<input type="hidden" name="{$settings_group}[settings]" value="{$settings->settings_name}" />
 HTML;
     }
     $buttons_html = array();
@@ -227,29 +250,26 @@ HTML;
   }
 
   /**
-   * @param Surrogate_Plugin_Base $plugin
+   * @param Surrogate_Plugin $plugin
    */
   function initialize( $plugin ) {
-    if ( ! $this->plugin->has_setting( $this->form_name ) ) {
-      if ( ! $this->has_fields()  )
-        Surrogate::show_error( 'Form %s for Plugin %s has no fields registered.', $this->form_name, $this->plugin->plugin_name );
-      $this->plugin->register_settings( $this->form_name, array( 'admin_form' => $this ) );
-      $settings = $this->plugin->get_settings( $this->form_name );
-      register_setting( $this->admin_page->get_settings_group_name(), $settings->option_name, array( $this->plugin, 'filter_postback' ) );
-    }
+    if ( ! $this->has_fields()  )
+      Surrogate::show_error( 'Form %s for Plugin %s has no fields registered.', $this->form_name, $this->plugin->plugin_name );
+    $settings = $this->get_settings( $this->form_name );
+    register_setting( $this->admin_page->get_settings_group_name(), $this->option_name, array( $this->plugin, 'filter_postback' ) );
     $this->initialize_sections( $plugin );
     $this->initialize_buttons( $plugin );
   }
 
   /**
-   * @param Surrogate_Plugin_Base $plugin
+   * @param Surrogate_Plugin $plugin
    */
   function initialize_sections( $plugin ) {
     foreach( $this->get_sections() as $section_name => $section ) {
       if ( ! $section->section_handler )
         $section->section_handler = array( $plugin, 'the_form_section' );
-      $settings =  $this->plugin->get_settings( $this->settings_name );
-      add_settings_section( $section_name, $section->section_title, $section->section_handler, $settings->option_name, array(
+      $settings =  $this->get_settings( $this->form_name );
+      add_settings_section( $section_name, $section->section_title, $section->section_handler, $this->option_name, array(
         'section' => $section,
         'form' => $this,
         'plugin' => $plugin,
@@ -258,7 +278,7 @@ HTML;
       foreach( $section->fields as $field_name => $field ) {
         if ( ! $field->field_handler )
           $field->field_handler = array( $plugin, 'the_form_field' );
-        add_settings_field( $field_name, $field->field_label, $field->field_handler, $settings->option_name, $section_name, array(
+        add_settings_field( $field_name, $field->field_label, $field->field_handler, $this->option_name, $section_name, array(
           'field' => $field,
           'section' => $section,
           'form' => $this,
@@ -269,7 +289,7 @@ HTML;
     }
   }
   /**
-   * @param Surrogate_Plugin_Base $plugin
+   * @param Surrogate_Plugin $plugin
    */
   function initialize_buttons( $plugin ) {
     foreach( $this->_buttons as $button_name => $button ) {
@@ -362,5 +382,78 @@ HTML;
     $args['admin_form'] = $this;
     $args['plugin'] = $this->plugin;
     return $this->_sections[$section_name]->fields[$field_name] = new Surrogate_Admin_Field( $field_name, $args );
+  }
+  /**
+   * Get an array of new settings (empty string; '').
+   *
+   * Override in subclass to add more specific setting defaults.
+   * @return array
+   *
+   * @todo Cache new settings in a setting so that loading from front end does...
+   * @todo ...require setting the admin form and traversing through these fields.
+   */
+  function get_new_settings() {
+    if ( 0 == count( $this->_default_settings ) ) {
+      $this->_default_settings = $this->get_field_defaults();
+    }
+ 		return $this->_default_settings;
+ 	}
+
+  /**
+   * @return array
+   */
+  function get_empty_settings() {
+    $new_settings = $this->get_new_settings();
+ 		return array_fill_keys( array_keys( $new_settings ), '' );
+ 	}
+
+  /**
+   * @return array
+   */
+  function get_settings() {
+    if ( ! isset( $this->_settings ) ) {
+      $option = get_option( $this->option_name );
+      if ( method_exists( $this->plugin, 'decrypt_settings' ) ) {
+        /**
+         * @todo auto-decrypt credentials
+         */
+        $option = call_user_func( array( $this->plugin, 'decrypt_settings' ), $option, $this );
+      }
+      $this->_settings = array_merge( $this->get_new_settings(), $option );
+    }
+    return $this->_settings;
+  }
+
+  /**
+   * @param string $setting_name
+   *
+   * @return bool
+   */
+  function has_setting( $setting_name ) {
+    if ( ! isset( $this->_settings ) )
+      /*
+       * This will initialize settings
+       */
+      $this->get_settings();
+    return isset( $this->_settings[$setting_name] );
+  }
+
+  /**
+   * @param string $setting_name
+   *
+   * @return mixed
+   */
+  function get_setting( $setting_name ) {
+    $value = false;
+    if ( $this->has_setting( $setting_name ) )
+      $value = $this->_settings[$setting_name];
+    return $value;
+ 	}
+
+  /**
+   * @param array $new_settings
+   */
+  function set_settings( $new_settings ) {
+ 	  $this->_settings = $new_settings;
   }
 }

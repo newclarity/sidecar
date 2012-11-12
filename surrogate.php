@@ -2,7 +2,7 @@
 /*
  * Plugin Name: Surrogate for WordPress
  * Plugin URI: http://github.com/newclarity/surrogate
- * Description: 
+ * Description:
  * Version: 0.1
  * Author: NewClarity, MikeSchinkel
  * Author URI: http://newclarity.net
@@ -36,12 +36,11 @@ define( 'SURROGATE_MIN_WP', '3.2' );
  * TODO: Change this to use a class auto-loader (maybe)
  */
 
-require( SURROGATE_DIR . '/classes/class-plugin-base.php' );
+require( SURROGATE_DIR . '/classes/class-plugin.php' );
 require( SURROGATE_DIR . '/classes/class-admin-page.php' );
 require( SURROGATE_DIR . '/classes/class-admin-tab.php' );
 require( SURROGATE_DIR . '/classes/class-admin-form.php' );
 require( SURROGATE_DIR . '/classes/class-admin-field.php' );
-require( SURROGATE_DIR . '/classes/class-settings.php' );
 require( SURROGATE_DIR . '/classes/class-shortcode.php' );
 
 /**

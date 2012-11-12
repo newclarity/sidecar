@@ -2,7 +2,7 @@
 /**
  *
  */
-class Surrogate_Plugin_Base {
+class Surrogate_Plugin {
   /**
    * @var array
    */
@@ -77,15 +77,17 @@ class Surrogate_Plugin_Base {
    */
   protected $_urls = array();
   /**
-   * @var bool|Surrogate_Settings
+   * @var bool|array
    */
-  protected $_settings = false;
+  protected $_shortcodes = false;
   /**
    * @var bool|array
    */
   protected $_admin_forms = false;
+  /**
+   * @var bool|array
+   */
   protected $_admin_pages = array();
-  protected $_shortcodes = array();
 
   /**
    * @var Surrogate_Admin_Page
@@ -98,14 +100,14 @@ class Surrogate_Plugin_Base {
   var $current_form;
 
   /**
-   * @var Surrogate_Settings
-   */
-  var $current_settings;
-
-  /**
    * @var RESTian_Client
    */
   var $api = false;
+  /**
+   * @var bool
+   */
+  protected $_initialized = false;
+
 
   /**
    * @param array $args
@@ -126,6 +128,7 @@ class Surrogate_Plugin_Base {
         $this->$property = $value;
 
     add_action( 'init', array( $this, 'init' ) );
+    add_action( 'wp_loaded', array( $this, 'wp_loaded' ) );
 
     $this->plugin_class_base = preg_replace( '#^(.*?)_Plugin$#', '$1', $this->plugin_class );
 
@@ -145,6 +148,13 @@ class Surrogate_Plugin_Base {
   }
 
   /**
+   * @return Surrogate_Plugin
+   */
+  static function me() {
+    return self::$_me;
+  }
+
+  /**
    * @return bool
    */
   function has_admin_pages() {
@@ -160,6 +170,13 @@ class Surrogate_Plugin_Base {
   }
 
   function initialize() {
+    if ( $this->_initialized )
+      return;
+
+    /*
+     * Avoid potential infinite loop.
+     */
+    $this->_initialized = true;
 
     if ( ! $this->plugin_title )
       /*
@@ -190,6 +207,36 @@ class Surrogate_Plugin_Base {
 
   }
 
+  /**
+   *
+   */
+  function wp_loaded() {
+    if ( ! is_admin() ) {
+      if ( method_exists( $this->plugin_class, 'initialize_shortcodes' ) ) {
+        // @todo Should we always initialize or only when we need it?
+        $this->initialize();
+        $this->initialize_shortcodes();
+        add_filter( 'the_content', array( $this, 'the_content' ), -1000 );
+      }
+    }
+  }
+  /**
+   * @param $content
+   */
+  function the_content( $content ) {
+    foreach( $this->get_shortcodes() as $shortcode_name => $shortcode ) {
+      if ( method_exists( $this, 'initialize_shortcode' ) ) {
+        $this->initialize_shortcode( $shortcode );
+      }
+      add_shortcode( $shortcode_name, array( $shortcode, 'do_shortcode' ) );
+    }
+    /*
+     * We only need to do the first time.
+     */
+    remove_action( 'the_content', array( $this, 'the_content' ), -1000 );
+    return $content;
+  }
+
   function init() {
     add_action( 'cron_schedules', array( $this, 'cron_schedules' ) );
     add_action( 'cron', array( $this, 'cron' ) );
@@ -199,6 +246,7 @@ class Surrogate_Plugin_Base {
     load_plugin_textdomain( $this->plugin_slug, false, '/' . basename( dirname( $this->plugin_file ) ) . '/languages' );
 
     if ( is_admin() ) {
+
       /**
        * @todo Can we initialize only what's needed if it is not using one of the pages
        */
@@ -216,20 +264,16 @@ class Surrogate_Plugin_Base {
         if ( $this->plugin_version )
           $this->plugin_title .= sprintf( ' v%s', $this->plugin_version );
 
-        /**
-         *
-         * @todo Find a way to avoid initializing if not needed.
-         *
-         */
-        if ( 0 == count( $this->_admin_pages ) )
-          $this->add_default_admin_page();
-
-        if ( 0 == count( $this->_shortcodes ) )
-          $this->add_default_shortcode();
-
       }
     }
   }
+  /**
+   *
+   */
+  function initialize_shortcodes() {
+    // Only here to keep PhpStorm from complaining that it's not defined.
+  }
+
   /**
    * @throws Exception
    */
@@ -248,24 +292,29 @@ class Surrogate_Plugin_Base {
    */
   function initialize_admin_page( $admin_page ) {
     throw new Exception( 'Class ' . get_class($this) . ' [subclass of ' . __CLASS__ . '] must define an initialize_admin_page() method.' );
-
   }
-
+  /**
+   * @param Surrogate_Shortcode $shortcode
+   * @throws Exception
+   */
+  function initialize_shortcode( $shortcode ) {
+    throw new Exception( 'Class ' . get_class($this) . ' [subclass of ' . __CLASS__ . '] must define an initialize_shortcode() method.' );
+  }
 
   /**
-   * @param array $args
+   * @param Surrogate_Shortcode $shortcode
+   * @param array() $attributes
+   * @param string $content
    *
-   * @return mixed
+   * @throws Exception
+   * @return string
    */
-  function add_default_admin_page( $args = array() ) {
-    /**
-     * If we subclass, we'll need these:
-     *
-     * "{$this->plugin_class_base}_Admin_Page",    // Default admin page class
-     * "{$this->plugin_file_base}-admin-page.php",  // Default admin page class filepath
-     */
-    return $this->add_admin_page( "settings", 'Surrogate_Admin_Page', null, $args );
+  function do_shortcode( $shortcode, $attributes, $content = null ) {
+    if (1) // Only here to keep PhpStorm from flagging the return as an error.
+      throw new Exception( 'Class ' . get_class($this) . ' [subclass of ' . __CLASS__ . '] must define an do_shortcode() method.' );
+    return '';
   }
+
   /**
    * @param array $args
    *
@@ -295,35 +344,19 @@ class Surrogate_Plugin_Base {
 
   /**
    * @param       $page_name
-   * @param       $admin_page_class
-   * @param       $admin_page_filepath
    * @param array $args
    *
    * @return mixed
    */
-  function add_admin_page( $page_name, $admin_page_class, $admin_page_filepath, $args = array() ) {
-    if ( ! empty( $admin_page_filepath ) ) {
-      if ( WP_DEBUG && ! file_exists( $admin_page_filepath ) ) {
-        $message = __( 'There is no file %s for the default admin page class used by %s.', 'surrogate' );
-        Surrogate::show_error( $message, $admin_page_filepath, $this->plugin_class );
-      }
-      require( $admin_page_filepath );
-    }
-
-    if ( WP_DEBUG && ! class_exists( $admin_page_class ) ) {
-      $message = __( 'There is no default admin page class %s has been defined for %s.', 'surrogate' );
-      Surrogate::show_error( $message, $admin_page_class, $this->plugin_class );
-    }
-
+  function add_admin_page( $page_name, $args = array() ) {
     /**
      * Give the admin page access back to this plugin.
      */
     $args['plugin'] = $this;
-    $args['plugin_slug'] = "{$this->plugin_slug}-{$page_name}";
     /**
      * @var Surrogate_Admin_Page $admin_page
      */
-    return $this->_admin_pages[$page_name] = new $admin_page_class( $page_name, $args );
+    return $this->_admin_pages[$page_name] = new Surrogate_Admin_Page( $page_name, $args );
   }
 
   /**
@@ -343,6 +376,51 @@ class Surrogate_Plugin_Base {
    * @param array $args
    */
   function add_shortcode( $shortcode_name, $args = array() ) {
+    $args['plugin'] = $this;
+    $this->_shortcodes[ $shortcode_name ] = new Surrogate_Shortcode( $shortcode_name, $args );
+  }
+
+  /**
+   * @return array|bool
+   */
+  function get_shortcodes() {
+    return $this->_shortcodes;
+  }
+  /**
+   * @param bool|string $shortcode_name
+   *
+   * @return Surrogate_Shortcode
+   */
+  function get_shortcode( $shortcode_name = false ) {
+    $shortcode = false;
+
+    if ( ! $shortcode_name )
+      $shortcode_name = $this->plugin_slug; // This is the 'default' shortcode
+
+    if ( ! isset( $this->_shortcodes[$shortcode_name] ) ) {
+      trigger_error( sprintf( __( 'Need to call %s->initialize_shortcodes() before using %s->get_shortcode().' ), $this->plugin_class, $this->plugin_class ) );
+    } else {
+      /**
+       * @var Surrogate_Shortcode $shortcode
+       */
+      $shortcode = $this->_shortcodes[$shortcode_name];
+      if ( ! $shortcode->initialized ) {
+        $this->initialize_shortcode($shortcode);
+        $shortcode->initialized = true;
+      }
+    }
+
+    return $shortcode;
+  }
+
+  /**
+   * @param bool|string $shortcode_name
+   *
+   * @return bool|Surrogate_Shortcode
+   */
+  function get_shortcode_attributes( $shortcode_name = false ) {
+    $shortcode = $this->get_shortcode($shortcode_name);
+    return $shortcode ? $shortcode->get_attributes() : false;
   }
 
 //  /**
@@ -527,11 +605,11 @@ class Surrogate_Plugin_Base {
   }
 
   /**
-   * @param string $setting_name
+   * @param string $shortcode_name
    * @return bool
    */
-  function has_setting( $setting_name ) {
-    return isset( $this->_settings[$setting_name] );
+  function has_shortcode( $shortcode_name ) {
+    return isset( $this->_shortcodes[$shortcode_name] );
   }
   /**
    * @param   string|Surrogate_Admin_Form $admin_form
@@ -552,6 +630,9 @@ class Surrogate_Plugin_Base {
     }
     return $admin_form;
   }
+  /**
+   * @throws Exception
+   */
   function initialize_admin_form() {
     throw new Exception( 'Class ' . get_class($this) . ' [subclass of ' . __CLASS__ . '] must define an initialize() method.' );
   }
@@ -580,20 +661,14 @@ class Surrogate_Plugin_Base {
     $form = isset( $args['form'] ) ? $args['form'] : end( $this->_admin_forms );
     return $form->add_field( $form_name, $args );
   }
-  /**
-   * @param string $settings_name
-   * @param array  $args
-   */
-  function register_settings( $settings_name, $args = array() ) {
-    $this->_settings[$settings_name] = new Surrogate_Settings( $settings_name, $args );
-  }
-  /**
-   * @param string $settings_name
-   * @return Surrogate_Settings
-   */
-  function get_settings( $settings_name ) {
-    return $this->_settings[$settings_name];
-  }
+//  /**
+//   * @param string $settings_name
+//   * @param array  $args
+//   */
+//  function register_settings( $settings_name, $args = array() ) {
+//    $this->_settings[$settings_name] = new Surrogate_Settings( $settings_name, $args );
+//  }
+
   /**
    * @param array $input
    *
@@ -613,12 +688,11 @@ class Surrogate_Plugin_Base {
     $control = $_POST[$_POST['option_page']];
     $page = $this->current_page = $this->get_admin_page( $control['page'] );
     $form = $this->current_form = $this->get_admin_form( $control['form'] );
-    $settings = $this->current_settings = $this->get_settings( $control['settings'] );
 
     /**
      * Check with the API to see if we are authenticated
      */
-    if ( $this->api && $page->is_authenticated() ) {
+    if ( $this->api && ( $page->is_authentication_tab() || ! $page->has_tabs() ) ) {
       if ( ! $this->api->assumed_authenticated( $input ) ) {
         add_settings_error( $page->get_settings_group_name(), 'surrogate-no-credentials', __( 'You must enter both a username and a password', 'surrogate' ) );
       } else if ( $this->api->authenticate( $input ) ) {
@@ -631,19 +705,19 @@ class Surrogate_Plugin_Base {
     }
 
     if ( isset( $control['clear'] ) ) {
-      $input = $settings->get_empty_settings();
+      $input = $form->get_empty_settings();
       $message = __( 'Form values cleared.%s%sNOTE:%s Your browser may still be displaying values from its cache but this plugin has indeed cleared these values.%s', 'surrogate' );
       add_settings_error( $page->get_settings_group_name(), "surrogate-clear", sprintf( $message, "<br/><br/>&nbsp;&nbsp;&nbsp;", '<em>', '</em>', '<br/><br/>' ), 'updated' );
     } else if ( isset( $control['reset'] ) ) {
-      $input = $this->current_settings->get_new_settings();
+      $input = $this->current_form->get_new_settings();
       add_settings_error( $page->get_settings_group_name(), 'surrogate-reset', __( 'Defaults reset.', 'surrogate' ), 'updated' );
     } else if ( method_exists( $this, 'validate_settings' ) ) {
       $input = array_map( 'rtrim', (array)$input );
-      add_filter( $action_key = "pre_update_option_{$this->current_settings->option_name}", array( $this, 'pre_update_option' ), 10, 2 );
+      add_filter( $action_key = "pre_update_option_{$this->current_form->option_name}", array( $this, 'pre_update_option' ), 10, 2 );
       /**
        * @todo How to signal a failed validation?
        */
-      $input = call_user_func( array( $this, 'validate_settings' ), $input, $this->current_settings );
+      $input = call_user_func( array( $this, 'validate_settings' ), $input, $this->current_form );
       /**
        * @var Surrogate_Admin_Field $field
        */
@@ -664,7 +738,7 @@ class Surrogate_Plugin_Base {
           $validated_value = filter_var( $input[$field_name], $validator );
         }
         if ( method_exists( $this, $method = "sanitize_setting_{$field_name}" ) ) {
-          $validated_value = call_user_func( array( $this, $method ), $validated_value, $field, $settings );
+          $validated_value = call_user_func( array( $this, $method ), $validated_value, $field, $form );
         }
         if ( $validation_options || $validated_value != $input[$field_name] ) {
           if ( ! $validation_options ) {
@@ -705,7 +779,7 @@ class Surrogate_Plugin_Base {
       /**
        * @todo auto-encrypt credentials
        */
-      $newvalue = call_user_func( array( $this, 'encrypt_settings' ), $newvalue, $this->current_settings );
+      $newvalue = call_user_func( array( $this, 'encrypt_settings' ), $newvalue, $this->current_form );
     }
     remove_filter( current_filter(), array( $this, 'pre_update_option' ) );
     return $newvalue;

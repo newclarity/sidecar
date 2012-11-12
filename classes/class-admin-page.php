@@ -4,7 +4,7 @@
  */
 class Surrogate_Admin_Page {
   /**
-   * @var Surrogate_Plugin_Base
+   * @var Surrogate_Plugin
    */
   var $plugin;
   /**
@@ -35,10 +35,6 @@ class Surrogate_Admin_Page {
    * @var bool
    */
   protected $_initialized = false;
-  /**
-   * @var Surrogate_Settings
-   */
-  var $settings;
   /**
    * @var string
    */
@@ -108,7 +104,7 @@ class Surrogate_Admin_Page {
     /**
      * Check $this->plugin first so we don't couple these if we don't have to.
      */
-    if ( $this->plugin instanceof Surrogate_Plugin_Base ) {
+    if ( $this->plugin instanceof Surrogate_Plugin ) {
       if ( ! $this->page_title )
         $this->page_title = $this->plugin->plugin_label;
 
@@ -154,9 +150,7 @@ class Surrogate_Admin_Page {
    * @return array
    */
   function get_auth_credentials() {
-    $auth_form = $this->get_auth_form();
-    $settings = $this->plugin->get_settings( $auth_form->settings_name );
-    return $settings->get_settings();
+    return $this->get_auth_form()->get_settings();
   }
   /**
    * @return Surrogate_Admin_Form
@@ -193,6 +187,12 @@ class Surrogate_Admin_Page {
    */
   function get_default_tab() {
     return reset( $this->_tabs );
+  }
+  /**
+   * @return bool
+   */
+  function is_authentication_tab() {
+    return is_object( $this->get_authentication_tab() );
   }
   /**
    * @return Surrogate_Admin_Tab
@@ -306,7 +306,7 @@ HTML;
  	  echo "\n<div class=\"wrap{$tab_class}\">";
  	  $this->the_icon();
     $this->the_title_and_tabs( $tab );
-    $this->the_content();
+    $this->the_page_content();
  	  echo "\n" . '</div>';
  	}
 
@@ -349,7 +349,7 @@ HTML;
   /**
    *
    */
-  function the_content() {
+  function the_page_content() {
     echo '<div id="admin-content">';
     /**
      * @var bool|Surrogate_Admin_Tab
@@ -629,8 +629,7 @@ HTML;
        * @var Surrogate_Admin_Form $admin_form
        */
       foreach( $this->_admin_forms as $admin_form ) {
-        $settings = $this->plugin->get_settings( $admin_form->settings_name );
-        if ( isset( $_POST[$settings->option_name] ) ) {
+        if ( isset( $_POST[$admin_form->option_name] ) ) {
           $is_postback_update = true;
           break;
         }
@@ -699,7 +698,7 @@ HTML;
  				 * ...and we ARE on the account tab then prepare a "Need to authenticate" message for later display.
  				 */
  				add_settings_error(
- 					$this->plugin->plugin_slug, // @todo Switch to $this->settings->settings_name,
+ 					$this->plugin->plugin_slug, // @todo Switch to $this->form_name,
  					'need-info',
  					__( 'You must have an account to use this plugin.  Please enter your credentials.', 'surrogate' )
  				);

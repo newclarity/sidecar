@@ -5,7 +5,7 @@
 class Surrogate_Admin_Field {
 
   /**
-   * @var Surrogate_Plugin_Base
+   * @var Surrogate_Plugin
    */
   var $plugin;
 
@@ -100,9 +100,10 @@ class Surrogate_Admin_Field {
     /**
      * @todo: Get options with all expected elements initialized
      */
-    $settings = $this->plugin->get_settings( $settings_name = $this->admin_form->settings_name );
-    $value = esc_attr( $settings->get_setting( $this->field_name ) );
-    $input_name = "{$settings->option_name}[{$this->field_name}]";
+    $admin_form = $this->admin_form;
+    $settings = $admin_form->get_settings( $this->admin_form->option_name );
+    $value = esc_attr( $settings[$this->field_name] );
+    $input_name = "{$admin_form->option_name}[{$this->field_name}]";
     $input_id = str_replace( '_', '-', $input_name );
     $size_html = $this->field_size ? " size=\"{$this->field_size}\"" : '';
     $css_base = $this->plugin->css_base;
@@ -110,7 +111,7 @@ class Surrogate_Admin_Field {
 
     if ( 'radio' == $this->field_type ) {
       $html = array( "<ul id=\"{$input_id}-radio-field-options\" class=\"radio-field-options\">" );
-      $this_value = $settings->get_setting( $this->field_name );
+      $this_value = $settings[$this->field_name];
       foreach( $this->field_options as $value => $label ) {
         $checked = ( ! empty( $this_value ) && $value == $this_value ) ? 'checked="checked" ' : '';
         $value = esc_attr( $value );
