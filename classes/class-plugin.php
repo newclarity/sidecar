@@ -268,6 +268,25 @@ class Surrogate_Plugin {
     }
   }
   /**
+   * @param Surrogate_Shortcode $shortcode
+   * @param array $attributes
+   * @param string $to 'api_vars' or 'settings'
+   * @return array
+   */
+  function transform_shortcode_attributes( $shortcode, $attributes, $to = 'api_vars' ) {
+    $to = rtrim( $to, 's' );
+    $attribute_objects = $shortcode->get_attributes();
+    foreach( $attributes as $attribute_name => $attribute ) {
+      if ( isset( $attribute_objects[$attribute_name] ) ) {
+        if ( $attribute_name != ( $new_name = $attribute_objects[$attribute_name]->$to ) ) {
+          $attributes[$new_name] = $attribute;
+          unset( $attributes[$attribute_name] );
+        }
+      }
+    }
+    return $attributes;
+  }
+  /**
    *
    */
   function initialize_shortcodes() {
