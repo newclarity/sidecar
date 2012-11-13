@@ -47,6 +47,8 @@ class Surrogate_Shortcode {
    * @return null|string
    */
   function do_shortcode( $attributes, $content = null ) {
+    if ( empty( $attributes ) && ! is_array( $attributes ) )
+      $attributes = array();
     return $this->plugin->do_shortcode( $this, $attributes, $content );
 	}
 
@@ -61,6 +63,7 @@ class Surrogate_Shortcode {
       'example' => false,
       'help' => false,
       'setting' => $attribute_name,
+      'api_var' => $attribute_name,
     ));
     if ( ! $args['example'] )
       $args['example'] = <<<TEXT
@@ -73,6 +76,14 @@ TEXT;
      */
     function get_attributes() {
       return $this->_attributes;
+    }
+    /**
+     * @param string $attribute_name
+     *
+     * @return array
+     */
+    function has_attribute( $attribute_name ) {
+      return isset( $this->_attributes[$attribute_name] );
     }
 //  /**
 //   * @param $content
