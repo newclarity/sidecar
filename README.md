@@ -34,7 +34,7 @@ Surrogate has the classes for the following functionality:
 Surrogate currently only supports the following:
 - While in beta, **the API is guaranteed to change**. If you try it, expect to have to change your code that uses it.
 - Admin pages can only currently have a link appear in the _"Settings"_ menu _(without additional coding.)_
-- Settings are associated with an Admin Form; each Admin Form has a 1-to-1 correspondence to a set of settings.
+- Settings are associated with an Admin Form; each Admin Form has a 1-to-1 correspondence to a group of settings.
 - The Forms and Fields leverage [WordPress' Settings API](http://codex.wordpress.org/Settings_API) although Surrogate may in the future add functionality that exceeds what the Settings API can support in which case use of the Settings API will be optional.
 - Settings groups are currently not implemented.
 - Shortcodes are currently not implemented.
