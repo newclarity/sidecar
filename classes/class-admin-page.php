@@ -275,8 +275,9 @@ class Surrogate_Admin_Page {
     $plugin = $this->plugin;
  	  $localfile = 'css/admin-style.css';
  	  $filepath = "{$plugin->plugin_path}/{$localfile}";
- 	  if ( file_exists( $filepath ) )
- 		  wp_enqueue_style( "{$plugin->plugin_name}_admin_style", plugins_url( $localfile, $plugin->plugin_file ) );
+ 	  if ( file_exists( $filepath ) ) {
+ 		  wp_enqueue_style( "{$plugin->plugin_name}_admin_styles", plugins_url( $localfile, $plugin->plugin_file ) );
+     }
  	}
 
   /**

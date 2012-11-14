@@ -6,7 +6,7 @@ class Surrogate_Plugin {
   /**
    * @var array
    */
-  private static $_me = array();
+  protected static $_me = array();
   /**
    * @var string
    */
@@ -77,6 +77,10 @@ class Surrogate_Plugin {
    */
   protected $_urls = array();
   /**
+   * @var array Array of Image file names defined for handle use by plugin.
+   */
+  protected $_images = array();
+  /**
    * @var bool|array
    */
   protected $_shortcodes = false;
@@ -129,6 +133,7 @@ class Surrogate_Plugin {
 
     add_action( 'init', array( $this, 'init' ) );
     add_action( 'wp_loaded', array( $this, 'wp_loaded' ) );
+    add_action( 'wp_print_styles', array( $this, 'wp_print_styles' ) );
 
     $this->plugin_class_base = preg_replace( '#^(.*?)_Plugin$#', '$1', $this->plugin_class );
 
@@ -153,6 +158,20 @@ class Surrogate_Plugin {
   static function me() {
     return self::$_me;
   }
+
+  /**
+   *
+   */
+  function wp_print_styles() {
+ 	  $localfile = 'css/style.css';
+    $args = apply_filters( 'surrogate_print_styles', array(
+      'name'  => "{$this->plugin_name}_style",
+      'path'  => "{$this->plugin_path}/{$localfile}",
+      'url'   => plugins_url( $localfile, $this->plugin_file ),
+    ));
+ 	  if ( file_exists( $args['path'] ) )
+ 		  wp_enqueue_style( $args['name'], $args['url'] );
+ 	}
 
   /**
    * @return bool
@@ -476,17 +495,15 @@ class Surrogate_Plugin {
  	}
 
   /**
-   * @param       $url_name
-   * @param       $url_template
+   * @param string $url_name
+   * @param string $url_template
    * @param array $args
    */
   function register_url( $url_name, $url_template, $args = array() ) {
     $args['url_name'] = $url_name;
     $args['url_template'] = $url_template;
-    if ( ! isset( $args['url_vars'] ) ) {
-      preg_match_all( '#([^{]+)\{([^}]+)\}#', $url_template, $matches );
-      $args['url_vars'] = $matches[2];
-    }
+    if ( ! isset( $args['url_vars'] ) )
+      $args['url_vars'] = false;
     $this->_urls[$url_name] = $args;
   }
 
@@ -523,6 +540,10 @@ class Surrogate_Plugin {
     $url = $this->_urls[$url_name]['url_template'];
     if ( is_array( $values ) ) {
       $vars = $this->_urls[$url_name]['url_vars'];
+      if ( ! $vars ) {
+        preg_match_all( '#([^{]+)\{([^}]+)\}#', $url, $matches );
+        $vars = $matches[2];
+      }
       if ( is_numeric( key($values) ) ) {
         /**
          * The $values array contains name/value pairs.
@@ -543,11 +564,86 @@ class Surrogate_Plugin {
  	}
 
   /**
+   * @param string $image_name
+   * @param string $image_url
+   * @param array $args
+   */
+  function register_image( $image_name, $image_url, $args = array() ) {
+    $args['image_name'] = $image_name;
+    $args['image_url'] = $image_url;
+    if ( ! isset( $args['url_vars'] ) )
+      $args['image_vars'] = false;
+    $this->_images[$image_name] = $args;
+  }
+
+  /**
+   * @param string $image_name
+   *
    * @return bool
    */
-  function is_authenticated() {
- 		return false;
+  function has_image( $image_name ) {
+    return isset( $this->_images[$image_name] );
+  }
+
+  /**
+   * Get by name a previously registered image with optional variable value replacement
+   *
+   * @param             $image_name
+   * @param mixed|array $values
+ 	 * @example:
+   *
+   *    $this->register_image( 'my_logo', 'my-logo.png' );
+   *    echo $this->my_logo_image_url;
+   *
+   *    $this->register_image( 'my_icon', '{icon_type}.png' );
+   *    echo $this->get_image_url( 'my_icon', 'pdf' );
+   *    echo $this->get_image_url( 'my_icon', array('pdf') );
+   *    echo $this->get_image_url( 'my_icon', array('icon_type' => 'pdf') );
+   *
+   * @return string
+   */
+  function get_image_url( $image_name, $values = array() ) {
+    if ( ! is_array( $values ) ) {
+      /**
+       * $values passed as additional function parameters instead of as single array of parameters.
+       */
+      $values = func_get_args();
+      array_shift( $values );
+    }
+    $image_url = $this->_images[$image_name]['image_url'];
+    if ( is_array( $values ) ) {
+      $vars = $this->_images[$image_name]['image_vars'];
+      if ( ! $vars ) {
+        preg_match_all( '#\{([^}]+)\}#', $image_url, $matches );
+        $vars = $matches[1];
+      }
+      if ( is_numeric( key($values) ) ) {
+        /**
+         * The $values array contains name/value pairs.
+         */
+        foreach( $values as $value ) {
+          $image_url = str_replace( "{{$vars[0]}}", $value, $image_url );
+        }
+      } else {
+        /**
+         * The $values array just contains values in same order as the vars specified in the image.
+         */
+        foreach( $vars as $name ) {
+          $image_url = str_replace( "{{$name}}", $values[$name], $image_url );
+        }
+      }
+    }
+    if ( ! preg_match( '#^https?//#', $image_url ) ) {
+      $image_url = plugins_url( "/images/{$image_url}", $this->plugin_file );
+    }
+    return $image_url;
  	}
+//  /**
+//   * @return bool
+//   */
+//  function is_authenticated() {
+// 		return false;
+// 	}
 
   /**
    * Echo the current or specified form.
@@ -831,7 +927,9 @@ class Surrogate_Plugin {
    */
   function __get( $property_name ) {
     $value = false;
-    if ( preg_match( '#^(.+?)_url$#', $property_name, $match ) && $this->has_url( $match[1] ) ) {
+    if ( preg_match( '#^(.*?_(icon|image|photo))_url$#', $property_name, $match ) && $this->has_image_url( $match[1] ) ) {
+      $value = call_user_func( array( $this, "get_image_url" ), $match[1] );
+    } else if ( preg_match( '#^(.*?)_url$#', $property_name, $match ) && $this->has_url( $match[1] ) ) {
       /**
        * Allows magic property syntax for any registered URL
        * @example: $this->foobar_url calls $this-get_url( 'foobar' )
