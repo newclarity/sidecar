@@ -927,7 +927,7 @@ class Surrogate_Plugin {
    */
   function __get( $property_name ) {
     $value = false;
-    if ( preg_match( '#^(.*?_(icon|image|photo))_url$#', $property_name, $match ) && $this->has_image_url( $match[1] ) ) {
+    if ( preg_match( '#^(.*?_(icon|image|photo))_url$#', $property_name, $match ) && $this->has_image( $match[1] ) ) {
       $value = call_user_func( array( $this, "get_image_url" ), $match[1] );
     } else if ( preg_match( '#^(.*?)_url$#', $property_name, $match ) && $this->has_url( $match[1] ) ) {
       /**
