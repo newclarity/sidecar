@@ -4,7 +4,7 @@
  */
 class Sidecar_Admin_Form {
   /**
-   * @var Sidecar_Plugin
+   * @var Sidecar_Base
    */
   var $plugin;
   /**
@@ -250,7 +250,7 @@ HTML;
   }
 
   /**
-   * @param Sidecar_Plugin $plugin
+   * @param Sidecar_Base $plugin
    */
   function initialize( $plugin ) {
     if ( ! $this->has_fields()  )
@@ -262,7 +262,7 @@ HTML;
   }
 
   /**
-   * @param Sidecar_Plugin $plugin
+   * @param Sidecar_Base $plugin
    */
   function initialize_sections( $plugin ) {
     foreach( $this->get_sections() as $section_name => $section ) {
@@ -289,7 +289,7 @@ HTML;
     }
   }
   /**
-   * @param Sidecar_Plugin $plugin
+   * @param Sidecar_Base $plugin
    */
   function initialize_buttons( $plugin ) {
     foreach( $this->_buttons as $button_name => $button ) {

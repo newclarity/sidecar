@@ -2,7 +2,7 @@
 /**
  *
  */
-class Sidecar_Plugin {
+class Sidecar_Base {
   /**
    * @var array
    */
@@ -153,7 +153,7 @@ class Sidecar_Plugin {
   }
 
   /**
-   * @return Sidecar_Plugin
+   * @return Sidecar_Base
    */
   static function me() {
     return self::$_me;
@@ -222,7 +222,6 @@ class Sidecar_Plugin {
 
     if ( ! $this->css_base )
       $this->css_base = $this->plugin_slug;
-
 
   }
 

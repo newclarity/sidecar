@@ -4,7 +4,7 @@
  */
 class Sidecar_Shortcode {
   /**
-   * @var Sidecar_Plugin
+   * @var Sidecar_Base
    */
   var $plugin;
   /**
@@ -15,10 +15,6 @@ class Sidecar_Shortcode {
    * @var array
    */
 	protected $_attributes = array();
-//  /**
-//   * @var array
-//   */
-//  var $do_args; // For do_shortcode( $shortcode->do_args )
   /**
    * @var bool
    */

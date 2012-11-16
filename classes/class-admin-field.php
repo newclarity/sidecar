@@ -5,7 +5,7 @@
 class Sidecar_Admin_Field {
 
   /**
-   * @var Sidecar_Plugin
+   * @var Sidecar_Base
    */
   var $plugin;
 

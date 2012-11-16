@@ -4,7 +4,7 @@
  */
 class Sidecar_Admin_Page {
   /**
-   * @var Sidecar_Plugin
+   * @var Sidecar_Base
    */
   var $plugin;
   /**
@@ -104,7 +104,7 @@ class Sidecar_Admin_Page {
     /**
      * Check $this->plugin first so we don't couple these if we don't have to.
      */
-    if ( $this->plugin instanceof Sidecar_Plugin ) {
+    if ( $this->plugin instanceof Sidecar_Base ) {
       if ( ! $this->page_title )
         $this->page_title = $this->plugin->plugin_label;
 
