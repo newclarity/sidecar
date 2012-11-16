@@ -2,7 +2,7 @@
 /**
  *
  */
-class Surrogate_Admin_Tab {
+class Sidecar_Admin_Tab {
   /**
    * @var string
    */
@@ -32,7 +32,7 @@ class Surrogate_Admin_Tab {
    */
   var $after_content = false;
   /**
-   * @var string|Surrogate_Admin_Form
+   * @var string|Sidecar_Admin_Form
    */
   var $admin_forms = false;
   /**

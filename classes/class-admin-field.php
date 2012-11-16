@@ -2,15 +2,15 @@
 /**
  *
  */
-class Surrogate_Admin_Field {
+class Sidecar_Admin_Field {
 
   /**
-   * @var Surrogate_Plugin
+   * @var Sidecar_Plugin
    */
   var $plugin;
 
   /**
-   * @var Surrogate_Admin_Form
+   * @var Sidecar_Admin_Form
    */
   var $admin_form;
 

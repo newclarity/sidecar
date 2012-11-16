@@ -2,7 +2,7 @@
 /**
  *
  */
-class Surrogate_Plugin {
+class Sidecar_Plugin {
   /**
    * @var array
    */
@@ -94,12 +94,12 @@ class Surrogate_Plugin {
   protected $_admin_pages = array();
 
   /**
-   * @var Surrogate_Admin_Page
+   * @var Sidecar_Admin_Page
    */
   var $current_page;
 
   /**
-   * @var Surrogate_Admin_Form
+   * @var Sidecar_Admin_Form
    */
   var $current_form;
 
@@ -119,8 +119,8 @@ class Surrogate_Plugin {
   function __construct( $args = array() ) {
     $this->plugin_class = get_class( $this );
     if ( isset( self::$_me[$this->plugin_class] ) ) {
-      $message = __( '%s is a singleton class and cannot be instantiated more than once.', 'surrogate' );
-      Surrogate::show_error( $message , $this->plugin_class );
+      $message = __( '%s is a singleton class and cannot be instantiated more than once.', 'sidecar' );
+      Sidecar::show_error( $message , $this->plugin_class );
     }
     self::$_me[$this->plugin_class] = &$this;
 
@@ -153,7 +153,7 @@ class Surrogate_Plugin {
   }
 
   /**
-   * @return Surrogate_Plugin
+   * @return Sidecar_Plugin
    */
   static function me() {
     return self::$_me;
@@ -164,7 +164,7 @@ class Surrogate_Plugin {
    */
   function wp_print_styles() {
  	  $localfile = 'css/style.css';
-    $args = apply_filters( 'surrogate_print_styles', array(
+    $args = apply_filters( 'sidecar_print_styles', array(
       'name'  => "{$this->plugin_name}_style",
       'path'  => "{$this->plugin_path}/{$localfile}",
       'url'   => plugins_url( $localfile, $this->plugin_file ),
@@ -210,7 +210,7 @@ class Surrogate_Plugin {
       $this->plugin_label = $this->plugin_title;
 
     if ( ! $this->plugin_file )
-      Surrogate::show_error( '%s->plugin_file must be set in an %s->initialize_admin() method', get_class( $this), get_class( $this) );
+      Sidecar::show_error( '%s->plugin_file must be set in an %s->initialize_admin() method', get_class( $this), get_class( $this) );
 
 //    $this->plugin_file_base = preg_replace( '#^(.*)-plugin\.php$#', '$1', $this->plugin_file );
 
@@ -287,7 +287,7 @@ class Surrogate_Plugin {
     }
   }
   /**
-   * @param Surrogate_Shortcode $shortcode
+   * @param Sidecar_Shortcode $shortcode
    * @param array $attributes
    * @param string $to 'api_vars' or 'settings'
    * @return array
@@ -325,14 +325,14 @@ class Surrogate_Plugin {
     throw new Exception( 'Class ' . get_class($this) . ' [subclass of ' . __CLASS__ . '] must define an initialize_admin() method.' );
   }
   /**
-   * @param Surrogate_Admin_Page $admin_page
+   * @param Sidecar_Admin_Page $admin_page
    * @throws Exception
    */
   function initialize_admin_page( $admin_page ) {
     throw new Exception( 'Class ' . get_class($this) . ' [subclass of ' . __CLASS__ . '] must define an initialize_admin_page() method.' );
   }
   /**
-   * @param Surrogate_Shortcode $shortcode
+   * @param Sidecar_Shortcode $shortcode
    * @throws Exception
    */
   function initialize_shortcode( $shortcode ) {
@@ -340,7 +340,7 @@ class Surrogate_Plugin {
   }
 
   /**
-   * @param Surrogate_Shortcode $shortcode
+   * @param Sidecar_Shortcode $shortcode
    * @param array() $attributes
    * @param string $content
    *
@@ -360,10 +360,10 @@ class Surrogate_Plugin {
    */
   function add_default_button( $args = array() ) {
     /**
-     * @var Surrogate_Admin_Form
+     * @var Sidecar_Admin_Form
      */
     $form = isset( $args['form'] ) ? $args['form'] : end( $this->_admin_forms );
-    return $form->add_button( 'save', __( 'Save Settings', 'surrogate' ), $args );
+    return $form->add_button( 'save', __( 'Save Settings', 'sidecar' ), $args );
   }
   /**
    * @param string $button_name
@@ -374,7 +374,7 @@ class Surrogate_Plugin {
    */
   function add_button( $button_name, $button_text, $args = array() ) {
     /**
-     * @var Surrogate_Admin_Form
+     * @var Sidecar_Admin_Form
      */
     $form = isset( $args['form'] ) ? $args['form'] : end( $this->_admin_forms );
     return $form->add_button( $button_name, $button_text, $args );
@@ -392,15 +392,15 @@ class Surrogate_Plugin {
      */
     $args['plugin'] = $this;
     /**
-     * @var Surrogate_Admin_Page $admin_page
+     * @var Sidecar_Admin_Page $admin_page
      */
-    return $this->_admin_pages[$page_name] = new Surrogate_Admin_Page( $page_name, $args );
+    return $this->_admin_pages[$page_name] = new Sidecar_Admin_Page( $page_name, $args );
   }
 
   /**
    * @param string $page_name
    *
-   * @return Surrogate_Admin_Page
+   * @return Sidecar_Admin_Page
    */
   function get_admin_page( $page_name ) {
     return $this->_admin_pages[$page_name];
@@ -415,7 +415,7 @@ class Surrogate_Plugin {
    */
   function add_shortcode( $shortcode_name, $args = array() ) {
     $args['plugin'] = $this;
-    $this->_shortcodes[ $shortcode_name ] = new Surrogate_Shortcode( $shortcode_name, $args );
+    $this->_shortcodes[ $shortcode_name ] = new Sidecar_Shortcode( $shortcode_name, $args );
   }
 
   /**
@@ -427,7 +427,7 @@ class Surrogate_Plugin {
   /**
    * @param bool|string $shortcode_name
    *
-   * @return Surrogate_Shortcode
+   * @return Sidecar_Shortcode
    */
   function get_shortcode( $shortcode_name = false ) {
     $shortcode = false;
@@ -439,7 +439,7 @@ class Surrogate_Plugin {
       trigger_error( sprintf( __( 'Need to call %s->initialize_shortcodes() before using %s->get_shortcode().' ), $this->plugin_class, $this->plugin_class ) );
     } else {
       /**
-       * @var Surrogate_Shortcode $shortcode
+       * @var Sidecar_Shortcode $shortcode
        */
       $shortcode = $this->_shortcodes[$shortcode_name];
       if ( ! $shortcode->initialized ) {
@@ -454,7 +454,7 @@ class Surrogate_Plugin {
   /**
    * @param bool|string $shortcode_name
    *
-   * @return bool|Surrogate_Shortcode
+   * @return bool|Sidecar_Shortcode
    */
   function get_shortcode_attributes( $shortcode_name = false ) {
     $shortcode = $this->get_shortcode($shortcode_name);
@@ -648,9 +648,9 @@ class Surrogate_Plugin {
   /**
    * Echo the current or specified form.
    *
-   * @param bool|Surrogate_Admin_Form $form
+   * @param bool|Sidecar_Admin_Form $form
    *
-   * @return Surrogate_Admin_Form
+   * @return Sidecar_Admin_Form
    */
   function the_form( $form = false ) {
     if ( ! $form )
@@ -660,7 +660,7 @@ class Surrogate_Plugin {
 
   /**
    * @param   array   $admin_form
-   * @return  Surrogate_Admin_Form
+   * @return  Sidecar_Admin_Form
    */
   function promote_admin_form( $admin_form ) {
     /**
@@ -673,9 +673,9 @@ class Surrogate_Plugin {
       $admin_form['admin_page'] = end( $this->_admin_pages );
 
     /**
-     * @var array|Surrogate_Admin_Form $admin_form
+     * @var array|Sidecar_Admin_Form $admin_form
      */
-    $admin_form = $this->_admin_forms[$form_name] = new Surrogate_Admin_Form( $form_name, $admin_form );
+    $admin_form = $this->_admin_forms[$form_name] = new Sidecar_Admin_Form( $form_name, $admin_form );
 
     $this->current_form = $admin_form;
     return $admin_form;
@@ -691,11 +691,11 @@ class Surrogate_Plugin {
   /**
    * @param $args
    *
-   * @return Surrogate_Admin_Field
+   * @return Sidecar_Admin_Field
    */
   function get_form_field( $args ) {
     /**
-     * @var Surrogate_Admin_Form $form
+     * @var Sidecar_Admin_Form $form
      */
     $form = $this->get_admin_form( $args['form']->form_name );
     $field = $form->get_form_field( $args['field']->field_name, array( 'section_name' => $args['section']->section_name ) );
@@ -706,7 +706,7 @@ class Surrogate_Plugin {
    */
   function get_form_field_html( $args ) {
     /**
-     * @var Surrogate_Admin_Field $field
+     * @var Sidecar_Admin_Field $field
      */
     $field = $this->get_form_field( $args );
     return $field->get_field_html();
@@ -727,12 +727,12 @@ class Surrogate_Plugin {
     return isset( $this->_shortcodes[$shortcode_name] );
   }
   /**
-   * @param   string|Surrogate_Admin_Form $admin_form
-   * @return  array|Surrogate_Admin_Form
+   * @param   string|Sidecar_Admin_Form $admin_form
+   * @return  array|Sidecar_Admin_Form
    */
   function get_admin_form( $admin_form ) {
     /*
-     * Could be a string or already Surrogate_Admin_Form.
+     * Could be a string or already Sidecar_Admin_Form.
      */
     $admin_form = is_string( $admin_form ) && isset( $this->_admin_forms[$admin_form] ) ? $this->_admin_forms[$admin_form] : $admin_form;
     if ( is_array( $admin_form ) ) {
@@ -767,11 +767,11 @@ class Surrogate_Plugin {
   /**
    * @param string  $form_name
    * @param array   $args
-   * @return Surrogate_Admin_Field
+   * @return Sidecar_Admin_Field
    */
   function add_field( $form_name, $args = array() ) {
     /**
-     * @var Surrogate_Admin_Form
+     * @var Sidecar_Admin_Form
      */
     $form = isset( $args['form'] ) ? $args['form'] : end( $this->_admin_forms );
     return $form->add_field( $form_name, $args );
@@ -781,7 +781,7 @@ class Surrogate_Plugin {
 //   * @param array  $args
 //   */
 //  function register_settings( $settings_name, $args = array() ) {
-//    $this->_settings[$settings_name] = new Surrogate_Settings( $settings_name, $args );
+//    $this->_settings[$settings_name] = new Sidecar_Settings( $settings_name, $args );
 //  }
 
   /**
@@ -809,23 +809,23 @@ class Surrogate_Plugin {
      */
     if ( $this->api && ( $page->is_authentication_tab() || ! $page->has_tabs() ) ) {
       if ( ! $this->api->assumed_authenticated( $input ) ) {
-        add_settings_error( $page->get_settings_group_name(), 'surrogate-no-credentials', __( 'You must enter both a username and a password', 'surrogate' ) );
+        add_settings_error( $page->get_settings_group_name(), 'sidecar-no-credentials', __( 'You must enter both a username and a password', 'sidecar' ) );
       } else if ( $this->api->authenticate( $input ) ) {
         $input['authenticated'] = true;
-        add_settings_error( $page->get_settings_group_name(), 'surrogate-updated', __( 'Authentication successful. Settings saved.', 'surrogate' ), 'updated' );
+        add_settings_error( $page->get_settings_group_name(), 'sidecar-updated', __( 'Authentication successful. Settings saved.', 'sidecar' ), 'updated' );
       } else {
         $input['authenticated'] = false;
-        add_settings_error( $page->get_settings_group_name(), 'surrogate-login-failed', __( 'Authentication Failed. Please try again.', 'surrogate' ) );
+        add_settings_error( $page->get_settings_group_name(), 'sidecar-login-failed', __( 'Authentication Failed. Please try again.', 'sidecar' ) );
       }
     }
 
     if ( isset( $control['clear'] ) ) {
       $input = $form->get_empty_settings();
-      $message = __( 'Form values cleared.%s%sNOTE:%s Your browser may still be displaying values from its cache but this plugin has indeed cleared these values.%s', 'surrogate' );
-      add_settings_error( $page->get_settings_group_name(), "surrogate-clear", sprintf( $message, "<br/><br/>&nbsp;&nbsp;&nbsp;", '<em>', '</em>', '<br/><br/>' ), 'updated' );
+      $message = __( 'Form values cleared.%s%sNOTE:%s Your browser may still be displaying values from its cache but this plugin has indeed cleared these values.%s', 'sidecar' );
+      add_settings_error( $page->get_settings_group_name(), "sidecar-clear", sprintf( $message, "<br/><br/>&nbsp;&nbsp;&nbsp;", '<em>', '</em>', '<br/><br/>' ), 'updated' );
     } else if ( isset( $control['reset'] ) ) {
       $input = $this->current_form->get_new_settings();
-      add_settings_error( $page->get_settings_group_name(), 'surrogate-reset', __( 'Defaults reset.', 'surrogate' ), 'updated' );
+      add_settings_error( $page->get_settings_group_name(), 'sidecar-reset', __( 'Defaults reset.', 'sidecar' ), 'updated' );
     } else if ( method_exists( $this, 'validate_settings' ) ) {
       $input = array_map( 'rtrim', (array)$input );
       add_filter( $action_key = "pre_update_option_{$this->current_form->option_name}", array( $this, 'pre_update_option' ), 10, 2 );
@@ -834,7 +834,7 @@ class Surrogate_Plugin {
        */
       $input = call_user_func( array( $this, 'validate_settings' ), $input, $this->current_form );
       /**
-       * @var Surrogate_Admin_Field $field
+       * @var Sidecar_Admin_Field $field
        */
       foreach( $form->get_fields() as $field_name => $field ) {
         $validation_options = false;
@@ -857,20 +857,20 @@ class Surrogate_Plugin {
         }
         if ( $validation_options || $validated_value != $input[$field_name] ) {
           if ( ! $validation_options ) {
-            add_settings_error( $page->get_settings_group_name(), 'surrogate-value', sprintf(
-              __( 'Please enter a valid value for "%s."', 'surrogate' ), $field->field_label
+            add_settings_error( $page->get_settings_group_name(), 'sidecar-value', sprintf(
+              __( 'Please enter a valid value for "%s."', 'sidecar' ), $field->field_label
             ));
           } else {
             if ( isset( $validation_options['min'] ) && $validation_options['min'] > intval( $input[$field_name] ) ) {
-              add_settings_error( $page->get_settings_group_name(), 'surrogate-min', sprintf(
-                __( 'Please enter a value greater than or equal to %d for "%s."', 'surrogate' ),
+              add_settings_error( $page->get_settings_group_name(), 'sidecar-min', sprintf(
+                __( 'Please enter a value greater than or equal to %d for "%s."', 'sidecar' ),
                   $validation_options['min'],
                   $field->field_label
               ));
             }
             if ( isset( $validation_options['max'] ) && $validation_options['max'] < intval( $input[$field_name] ) ) {
-              add_settings_error( $page->get_settings_group_name(), 'surrogate-max', sprintf(
-                __( 'Please enter a value less than or equal to %d for "%s."', 'surrogate' ),
+              add_settings_error( $page->get_settings_group_name(), 'sidecar-max', sprintf(
+                __( 'Please enter a value less than or equal to %d for "%s."', 'sidecar' ),
                   $validation_options['max'],
                   $field->field_label
               ));
@@ -907,11 +907,11 @@ class Surrogate_Plugin {
     global $wp_version;
     if ( version_compare( $wp_version, $this->min_wp, '<' ) ) {
       deactivate_plugins( basename( $this->plugin_file ) );
-      $msg = __( 'Your site needs to be running WordPress %s or later in order to use %s.', 'surrogate' );
+      $msg = __( 'Your site needs to be running WordPress %s or later in order to use %s.', 'sidecar' );
       trigger_error( sprintf( $msg, $this->min_wp, $this->plugin_title ), E_USER_ERROR );
     } if ( version_compare( PHP_VERSION, $this->min_php, '<' ) ) {
       deactivate_plugins( basename( $this->plugin_file ) );
-      $msg = __( 'Your site needs to be running PHP %s or later in order to use %s.', 'surrogate' );
+      $msg = __( 'Your site needs to be running PHP %s or later in order to use %s.', 'sidecar' );
       trigger_error( sprintf( $msg, $this->min_php, $this->plugin_title ), E_USER_ERROR );
     } else {
       if ( ! wp_next_scheduled( $this->cron_key ) ) {
@@ -938,7 +938,7 @@ class Surrogate_Plugin {
        */
       $value = call_user_func( array( $this, "get_url" ), $match[1] );
     } else {
-      Surrogate::show_error( 'No property named %s on %s class.', $property_name, get_class( $this ) );
+      Sidecar::show_error( 'No property named %s on %s class.', $property_name, get_class( $this ) );
     }
     return $value;
   }

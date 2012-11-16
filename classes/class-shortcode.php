@@ -2,9 +2,9 @@
 /**
  *
  */
-class Surrogate_Shortcode {
+class Sidecar_Shortcode {
   /**
-   * @var Surrogate_Plugin
+   * @var Sidecar_Plugin
    */
   var $plugin;
   /**

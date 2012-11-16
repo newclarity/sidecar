@@ -1,12 +1,12 @@
 
-Surrogate _(beta)_
+Sidecar _(beta)_
 =========
 
-Surrogate is a PHP library for WordPress providing APIs to address needs that WordPress Core doesn't currently address &mdash; hence the name _"Surrogate"_. The authors of Surrogate would ideally like to see the features in Surrogate become part of WordPress Core.
+Sidecar is the Missing Plugin API for WordPress
 
 Features
 -
-Surrogate provides an API for easily creating a **WordPress Plugin** that has the following features:
+Sidecar provides an API for easily creating a **WordPress Plugin** that has the following features:
 
 - **Admin Pages** &ndash; One (1) of more linked from one or more Admin Menu(s)/Submenu(s).
 - **Admin Page Tabs** &ndash; Zero (0) or more per Admin Page.
@@ -17,11 +17,11 @@ Surrogate provides an API for easily creating a **WordPress Plugin** that has th
 Philosophy
 -
 
-Surrogate is designed to allow the plugin developer to get the most functionality with the least amount of work and to minimize time required for testing and adding common features. Surrogate follows the [D.R.Y. principle](http://en.wikipedia.org/wiki/Don't_repeat_yourself) and the [Decisions, not Options philosophy](http://wordpress.org/about/philosophy/#decisions). Developers subclass the Plugin Base class and add all features required in the class, directly or indirectly. The Plugin Base class leverages the additional
+Sidecar is designed to allow the plugin developer to get the most functionality with the least amount of work and to minimize time required for testing and adding common features. Sidecar follows the [D.R.Y. principle](http://en.wikipedia.org/wiki/Don't_repeat_yourself) and the [Decisions, not Options philosophy](http://wordpress.org/about/philosophy/#decisions). Developers subclass the Plugin Base class and add all features required in the class, directly or indirectly. The Plugin Base class leverages the additional
 
 PHP Classes
 -
-Surrogate has the classes for the following functionality:
+Sidecar has the classes for the following functionality:
 
 - Plugin
 - Admin Page
@@ -31,11 +31,11 @@ Surrogate has the classes for the following functionality:
 - Shortcodes
 
 ### Current Feature Caveats
-Surrogate currently only supports the following:
+Sidecar currently only supports the following:
 - While in beta, **the API is guaranteed to change**. If you try it, expect to have to change your code that uses it.
 - Admin pages can only currently have a link appear in the _"Settings"_ menu _(without additional coding.)_
 - Settings are associated with an Admin Form; each Admin Form has a 1-to-1 correspondence to a group of settings.
-- The Forms and Fields leverage [WordPress' Settings API](http://codex.wordpress.org/Settings_API) although Surrogate may in the future add functionality that exceeds what the Settings API can support in which case use of the Settings API will be optional.
+- The Forms and Fields leverage [WordPress' Settings API](http://codex.wordpress.org/Settings_API) although Sidecar may in the future add functionality that exceeds what the Settings API can support in which case use of the Settings API will be optional.
 - Settings groups are currently not implemented.
 - Shortcodes are currently not implemented.
 

@@ -2,13 +2,13 @@
 /**
  *
  */
-class Surrogate_Admin_Page {
+class Sidecar_Admin_Page {
   /**
-   * @var Surrogate_Plugin
+   * @var Sidecar_Plugin
    */
   var $plugin;
   /**
-   * @var null|array Array contains Surrogate_Admin_Form objects
+   * @var null|array Array contains Sidecar_Admin_Form objects
    */
   protected $_admin_forms = array();
   /**
@@ -24,7 +24,7 @@ class Surrogate_Admin_Page {
    */
   protected $_is_page_url;
   /**
-   * @var Surrogate_Admin_Tab
+   * @var Sidecar_Admin_Tab
    */
   protected $_authentication_tab;
   /**
@@ -104,7 +104,7 @@ class Surrogate_Admin_Page {
     /**
      * Check $this->plugin first so we don't couple these if we don't have to.
      */
-    if ( $this->plugin instanceof Surrogate_Plugin ) {
+    if ( $this->plugin instanceof Sidecar_Plugin ) {
       if ( ! $this->page_title )
         $this->page_title = $this->plugin->plugin_label;
 
@@ -153,14 +153,14 @@ class Surrogate_Admin_Page {
     return $this->get_auth_form()->get_settings();
   }
   /**
-   * @return Surrogate_Admin_Form
+   * @return Sidecar_Admin_Form
    */
   function get_auth_form() {
     return $this->plugin->get_admin_form( $this->_auth_form );
   }
 
   /**
-   * @param string|Surrogate_Admin_Form $form
+   * @param string|Sidecar_Admin_Form $form
    */
   function set_auth_form( $form ) {
     if ( is_string( $form ) ) {
@@ -168,7 +168,7 @@ class Surrogate_Admin_Page {
     } else if ( isset( $form->form_name ) ) {
       $this->_auth_form = $form->form_name;
     } else if ( WP_DEBUG ) {
-      $message = __( '%s->set_auth_form() must be passed a string, an array with a \'form_name\' element or an object with a \'form_name\' property.', 'surrogate' );
+      $message = __( '%s->set_auth_form() must be passed a string, an array with a \'form_name\' element or an object with a \'form_name\' property.', 'sidecar' );
       trigger_error( sprintf( $message, $this->plugin_class ) );
     }
   }
@@ -179,11 +179,11 @@ class Surrogate_Admin_Page {
    * @param array $args
    */
   function add_tab( $tab_slug, $tab_text, $args = array() ) {
-    $this->_tabs[$tab_slug] = $tab = new Surrogate_Admin_Tab( $tab_slug, $tab_text, $args );
+    $this->_tabs[$tab_slug] = $tab = new Sidecar_Admin_Tab( $tab_slug, $tab_text, $args );
  	}
 
   /**
-   * @return Surrogate_Admin_Tab
+   * @return Sidecar_Admin_Tab
    */
   function get_default_tab() {
     return reset( $this->_tabs );
@@ -195,12 +195,12 @@ class Surrogate_Admin_Page {
     return is_object( $this->get_authentication_tab() );
   }
   /**
-   * @return Surrogate_Admin_Tab
+   * @return Sidecar_Admin_Tab
    */
   function get_authentication_tab() {
     if ( ! $this->_authentication_tab ) {
       /**
-       * @var Surrogate_Admin_Tab $tab
+       * @var Sidecar_Admin_Tab $tab
        */
       foreach( $this->_tabs as $tab ) {
         if ( in_array( $this->_auth_form, $tab->admin_forms ) ) {
@@ -353,7 +353,7 @@ HTML;
   function the_page_content() {
     echo '<div id="admin-content">';
     /**
-     * @var bool|Surrogate_Admin_Tab
+     * @var bool|Sidecar_Admin_Tab
      */
     $current_tab = $this->has_tabs() ? $this->get_current_tab() : false;
 
@@ -374,8 +374,8 @@ HTML;
         if ( is_array( $method ) ){
           $method = ( is_string( $handler[0] ) ? "{$handler[0]}::" : get_class( $handler[0] ) .'->' ) . $handler[1];
         }
-        $message = __( '%s provided as %s for admin tab %s of admin page %s is not a valid callable.', 'surrogate' );
-        Surrogate::show_error( $message,
+        $message = __( '%s provided as %s for admin tab %s of admin page %s is not a valid callable.', 'sidecar' );
+        Sidecar::show_error( $message,
           "<strong><code>{$method}()</code></strong>",
           "<strong><code>tab_handler</code></strong>",
           "<strong><em>\"{$current_tab->tab_slug}\"</em></strong>",
@@ -403,8 +403,8 @@ HTML;
            * If it was a tab then report the more specific function as the one we are missing
            */
           $handler = $tab_handler;
-        $message = __( 'No method named %s defined yet for %s.', 'surrogate' );
-        Surrogate::show_error( $message,
+        $message = __( 'No method named %s defined yet for %s.', 'sidecar' );
+        Sidecar::show_error( $message,
           "<strong><code>{$handler[1]}()</code></strong>",
           "<strong><code>{$this->plugin->plugin_class}</code></strong>"
           );
@@ -498,16 +498,16 @@ HTML;
     return $this->get_tab_url();
  	}
   /**
-   * @param bool|string|Surrogate_Admin_Tab $tab
+   * @param bool|string|Sidecar_Admin_Tab $tab
    * @return string|void
    */
   function get_tab_url( $tab = false ) {
     if ( ! $this->_initialized ) {
-      $message = __( '%s->get_page_url() cannot be called prior to %s->initialize_admin_page() being called.', 'surrogate' );
-      Surrogate::show_error( $message, __CLASS__, $this->plugin->plugin_class );
+      $message = __( '%s->get_page_url() cannot be called prior to %s->initialize_admin_page() being called.', 'sidecar' );
+      Sidecar::show_error( $message, __CLASS__, $this->plugin->plugin_class );
     }
 
-    if ( $tab instanceof Surrogate_Admin_Tab )
+    if ( $tab instanceof Sidecar_Admin_Tab )
       $tab = $tab->tab_slug;
     if ( $this->has_tabs() ) {
       if ( isset( $this->_page_url[$tab] ) ) {
@@ -553,7 +553,7 @@ HTML;
   /**
  	 * Check if the passed $tab variable matches the URL's tab parameter.
  	 *
- 	 * @return Surrogate_Admin_Tab
+ 	 * @return Sidecar_Admin_Tab
  	 */
  	function get_current_tab() {
  	  static $current_tab;
@@ -577,7 +577,7 @@ HTML;
   /**
  	 * Check if the passed $tab variable matches the URL's tab parameter.
  	 *
- 	 * @param string|Surrogate_Admin_Tab $tab
+ 	 * @param string|Sidecar_Admin_Tab $tab
  	 * @return bool
  	 */
  	function has_tab( $tab ) {
@@ -627,7 +627,7 @@ HTML;
       $this->initialize();
       $is_postback_update = false;
       /**
-       * @var Surrogate_Admin_Form $admin_form
+       * @var Sidecar_Admin_Form $admin_form
        */
       foreach( $this->_admin_forms as $admin_form ) {
         if ( isset( $_POST[$admin_form->option_name] ) ) {
@@ -701,7 +701,7 @@ HTML;
  				add_settings_error(
  					$this->plugin->plugin_slug, // @todo Switch to $this->form_name,
  					'need-info',
- 					__( 'You must have an account to use this plugin.  Please enter your credentials.', 'surrogate' )
+ 					__( 'You must have an account to use this plugin.  Please enter your credentials.', 'sidecar' )
  				);
  			}
  		}
@@ -722,7 +722,7 @@ HTML;
        */
       $value = call_user_func( array( $this, "get_tab_url" ), $match[1] );
     } else {
-      Surrogate::show_error( 'No property named %s on %s class.', $property_name, get_class( $this ) );
+      Sidecar::show_error( 'No property named %s on %s class.', $property_name, get_class( $this ) );
     }
     return $value;
   }

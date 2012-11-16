@@ -2,13 +2,13 @@
 /**
  *
  */
-class Surrogate_Admin_Form {
+class Sidecar_Admin_Form {
   /**
-   * @var Surrogate_Plugin
+   * @var Sidecar_Plugin
    */
   var $plugin;
   /**
-   * @var Surrogate_Admin_Page
+   * @var Sidecar_Admin_Page
    */
   var $admin_page;
   /**
@@ -171,7 +171,7 @@ class Surrogate_Admin_Form {
     }
     /**
      * Extract the hidden fields so they won't display
-     * @var Surrogate_Admin_Field $hidden_field
+     * @var Sidecar_Admin_Field $hidden_field
      */
     $hidden_fields_html = array();
     foreach( $hidden_fields as $hidden_field ) {
@@ -250,11 +250,11 @@ HTML;
   }
 
   /**
-   * @param Surrogate_Plugin $plugin
+   * @param Sidecar_Plugin $plugin
    */
   function initialize( $plugin ) {
     if ( ! $this->has_fields()  )
-      Surrogate::show_error( 'Form %s for Plugin %s has no fields registered.', $this->form_name, $this->plugin->plugin_name );
+      Sidecar::show_error( 'Form %s for Plugin %s has no fields registered.', $this->form_name, $this->plugin->plugin_name );
     $settings = $this->get_settings( $this->form_name );
     register_setting( $this->admin_page->get_settings_group_name(), $this->option_name, array( $this->plugin, 'filter_postback' ) );
     $this->initialize_sections( $plugin );
@@ -262,7 +262,7 @@ HTML;
   }
 
   /**
-   * @param Surrogate_Plugin $plugin
+   * @param Sidecar_Plugin $plugin
    */
   function initialize_sections( $plugin ) {
     foreach( $this->get_sections() as $section_name => $section ) {
@@ -289,7 +289,7 @@ HTML;
     }
   }
   /**
-   * @param Surrogate_Plugin $plugin
+   * @param Sidecar_Plugin $plugin
    */
   function initialize_buttons( $plugin ) {
     foreach( $this->_buttons as $button_name => $button ) {
@@ -381,7 +381,7 @@ HTML;
      */
     $args['admin_form'] = $this;
     $args['plugin'] = $this->plugin;
-    return $this->_sections[$section_name]->fields[$field_name] = new Surrogate_Admin_Field( $field_name, $args );
+    return $this->_sections[$section_name]->fields[$field_name] = new Sidecar_Admin_Field( $field_name, $args );
   }
   /**
    * Get an array of new settings (empty string; '').
