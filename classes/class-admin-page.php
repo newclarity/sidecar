@@ -8,9 +8,9 @@ class Sidecar_Admin_Page {
    */
   var $plugin;
   /**
-   * @var null|array Array contains Sidecar_Admin_Form objects
+   * @var null|array Array contains Sidecar_Form objects
    */
-  protected $_admin_forms = array();
+  protected $_forms = array();
   /**
    * @var array
    */
@@ -126,17 +126,128 @@ class Sidecar_Admin_Page {
     $this->_call_plugin( 'initialize_admin_page', $this );
     $current_tab = $this->has_tabs() ? $this->get_current_tab() : false;
     if ( $current_tab && $current_tab->has_forms() ) {
+      register_setting( $this->plugin->option_name, $this->plugin->option_name, array( $this, 'filter_postback' ) );
       $plugin = $this->plugin;
-      foreach( $current_tab->admin_forms as $admin_form ) {
-        if ( $plugin->has_admin_form( $admin_form ) ) {
-          $admin_form = $this->plugin->get_admin_form( $admin_form );
-          $admin_form->admin_page = $this;
-          $this->_admin_forms[$admin_form->form_name] = $admin_form;
+      /**
+       * Sidecar_Form $form
+       */
+      foreach( $current_tab->forms as $form ) {
+        if ( $plugin->has_form( $form ) ) {
+          $form = $this->plugin->get_form( $form );
+          $form->admin_page = $this;
+          $form->initialize_sections( $this->plugin );
+          $form->initialize_buttons( $this->plugin );
+          $this->_forms[$form->form_name] = $form;
         }
       }
     }
     $this->_initialized = true;
   }
+  /**
+   * @param array $input
+   *
+   * @return array
+   */
+  function filter_postback( $input ) {
+    if ( ! current_user_can( 'manage_options' ) ) {
+      /**
+       * TODO: Verify someone without proper options can actually get here.
+       */
+      wp_die( __( 'Sorry, you do not have sufficient priviledges.' ) );
+    }
+    if ( method_exists( $this, 'initialize_postback' ) )
+      $this->plugin->initialize_postback();
+
+    /**
+     * Get the array that contains names of 'plugin', 'page', 'tab', 'form' and 'settings'
+     * as well as special 'clear' and 'reset' for clearing and resetting the form respectively.
+     */
+    $settings = $_POST[$_POST['option_page']];
+    $page = $this->plugin->current_page = $this->plugin->get_admin_page( $settings['state']['page'] );
+    $form = $this->plugin->current_form = $this->plugin->get_form( $settings['state']['form'] );
+    $form_values = $input[$form->settings_key];
+    /**
+     * Check with the API to see if we are authenticated
+     */
+    $api = $this->plugin->api;
+    if ( $api && ( $page->is_authentication_tab() || ! $page->has_tabs() ) ) {
+      if ( ! $api->assumed_authenticated( $form_values ) ) {
+        add_settings_error( $page->plugin->option_name, 'sidecar-no-credentials', __( 'You must enter both a username and a password', 'sidecar' ) );
+      } else if ( $api->authenticate( $form_values ) ) {
+        $form_values['authenticated'] = true;
+        add_settings_error( $page->plugin->option_name, 'sidecar-updated', __( 'Authentication successful. Settings saved.', 'sidecar' ), 'updated' );
+      } else {
+        $form_values['authenticated'] = false;
+        add_settings_error( $page->plugin->option_name, 'sidecar-login-failed', __( 'Authentication Failed. Please try again.', 'sidecar' ) );
+      }
+    }
+    $this->plugin->api = $api;
+
+    if ( isset( $settings['action']['clear'] ) ) {
+      $form_values = $form->get_empty_settings();
+      $message = __( 'Form values cleared.%s%sNOTE:%s Your browser may still be displaying values from its cache but this plugin has indeed cleared these values.%s', 'sidecar' );
+      add_settings_error( $page->plugin->option_name, "sidecar-clear", sprintf( $message, "<br/><br/>&nbsp;&nbsp;&nbsp;", '<em>', '</em>', '<br/><br/>' ), 'updated' );
+    } else if ( isset( $settings['action']['reset'] ) ) {
+      $form_values = $this->plugin->current_form->get_new_settings();
+      add_settings_error( $page->plugin->option_name, 'sidecar-reset', __( 'Defaults reset.', 'sidecar' ), 'updated' );
+    } else if ( method_exists( $this->plugin, 'validate_settings' ) ) {
+      $form_values = array_map( 'rtrim', (array)$form_values );
+      add_filter( $action_key = "pre_update_option_{$this->plugin->option_name}", array( $this->plugin, 'pre_update_option' ), 10, 2 );
+      /**
+       * @todo How to signal a failed validation?
+       */
+      $form_values = call_user_func( array( $this->plugin, 'validate_settings' ), $form_values, $this->plugin->current_form );
+      /**
+       * @var Sidecar_Field $field
+       */
+      foreach( $form->get_fields() as $field_name => $field ) {
+        $validation_options = false;
+   			/**
+   			 * Default to FILTER_SANITIZE_STRING if ['validator'] not set.
+   			 */
+   			if ( $field->field_options ) {
+          $validated_value = isset( $field->field_options[$form_values[$field_name]] ) ? $form_values[$field_name] : false;
+        } else if ( isset( $field->field_validator['filter'] ) ) {
+           $validated_value = filter_var( $form_values[$field_name], $field->field_validator['filter'] );
+           if ( isset( $field->field_validator['options'] ) ) {
+            $validation_options = $field->field_validator['options'];
+           }
+        } else {
+          $validator = $field->field_validator ? $field->field_validator : FILTER_SANITIZE_STRING;
+          $validated_value = filter_var( $form_values[$field_name], $validator );
+        }
+        if ( method_exists( $this->plugin, $method = "sanitize_setting_{$field_name}" ) ) {
+          $validated_value = call_user_func( array( $this->plugin, $method ), $validated_value, $field, $form );
+        }
+        if ( $validation_options || $validated_value != $form_values[$field_name] ) {
+          if ( ! $validation_options ) {
+            add_settings_error( $page->plugin->option_name, 'sidecar-value', sprintf(
+              __( 'Please enter a valid value for "%s."', 'sidecar' ), $field->field_label
+            ));
+          } else {
+            if ( isset( $validation_options['min'] ) && $validation_options['min'] > intval( $form_values[$field_name] ) ) {
+              add_settings_error( $page->plugin->option_name, 'sidecar-min', sprintf(
+                __( 'Please enter a value greater than or equal to %d for "%s."', 'sidecar' ),
+                  $validation_options['min'],
+                  $field->field_label
+              ));
+            }
+            if ( isset( $validation_options['max'] ) && $validation_options['max'] < intval( $form_values[$field_name] ) ) {
+              add_settings_error( $page->plugin->option_name, 'sidecar-max', sprintf(
+                __( 'Please enter a value less than or equal to %d for "%s."', 'sidecar' ),
+                  $validation_options['max'],
+                  $field->field_label
+              ));
+              $continue = true;
+            }
+          }
+        }
+      }
+    }
+    $input[$form->settings_key] = $form_values;
+    return $input;
+  }
+
 
   /**
    * Test the credentials for the pluginsauth form
@@ -153,14 +264,14 @@ class Sidecar_Admin_Page {
     return $this->get_auth_form()->get_settings();
   }
   /**
-   * @return Sidecar_Admin_Form
+   * @return Sidecar_Form
    */
   function get_auth_form() {
-    return $this->plugin->get_admin_form( $this->_auth_form );
+    return $this->plugin->get_form( $this->_auth_form );
   }
 
   /**
-   * @param string|Sidecar_Admin_Form $form
+   * @param string|Sidecar_Form $form
    */
   function set_auth_form( $form ) {
     if ( is_string( $form ) ) {
@@ -203,20 +314,12 @@ class Sidecar_Admin_Page {
        * @var Sidecar_Admin_Tab $tab
        */
       foreach( $this->_tabs as $tab ) {
-        if ( in_array( $this->_auth_form, $tab->admin_forms ) ) {
+        if ( in_array( $this->_auth_form, $tab->forms ) ) {
           $this->_authentication_tab = $tab;
         }
       }
     }
     return $this->_authentication_tab;
-  }
-  /**
-   * @return string
-   */
-  function get_settings_group_name() {
-    if ( ! isset( $this->_settings_group_name ) )
-      $this->_settings_group_name = "{$this->plugin->plugin_name}_{$this->page_name}";
-    return $this->_settings_group_name;
   }
   /**
    * Calls a method in the plugin
@@ -391,11 +494,11 @@ HTML;
          */
         $handler = is_callable( $tab_handler ) ? $tab_handler : $handler;
       }
-      if ( ! is_callable( $handler ) && $this->plugin->has_admin_form( $current_tab->tab_slug ) ) {
+      if ( ! is_callable( $handler ) && $this->plugin->has_form( $current_tab->tab_slug ) ) {
         /*
          * If we have no handler but do have a form with same name as the tab slug, show it.
          */
-        $handler = array( $this->plugin->get_admin_form( $current_tab->tab_slug ), 'the_form' );
+        $handler = array( $this->plugin->get_form( $current_tab->tab_slug ), 'the_form' );
       }
       if ( ! is_callable( $handler ) ) {
         if ( isset( $tab_handler ) )
@@ -561,13 +664,13 @@ HTML;
       $tab_slug = false;
       if ( isset( $_GET['tab'] ) ) {
          $tab_slug = $_GET['tab'];
-      } else if ( isset( $_POST['option_page'] ) && isset( $_POST[$_POST['option_page']]['tab'] )) {
+      } else if ( isset( $_POST['option_page'] ) && isset( $_POST[$_POST['option_page']]['state']['tab'] )) {
         /*
          * This is used during HTTP postback from an admin form.
          * The <input type="hidden" name="option_page"> added by settings_fields() and
-         * referencing <input type="hidden" name="{option_page}[tab]"> generated by $admin_form->get_form_html()
+         * referencing <input type="hidden" name="{option_page}[tab]"> generated by $form->get_form_html()
          */
-        $tab_slug = $_POST[$_POST['option_page']]['tab'];
+        $tab_slug = $_POST[$_POST['option_page']]['state']['tab'];
       }
       $current_tab = $tab_slug && isset( $this->_tabs[$tab_slug] ) ? $this->_tabs[$tab_slug] : false;
     }
@@ -625,16 +728,7 @@ HTML;
     $is_postback_update = false;
     if ( isset( $_POST['action'] ) && 'update' == $_POST['action'] && '/wp-admin/options.php' == $_SERVER['REQUEST_URI'] ) {
       $this->initialize();
-      $is_postback_update = false;
-      /**
-       * @var Sidecar_Admin_Form $admin_form
-       */
-      foreach( $this->_admin_forms as $admin_form ) {
-        if ( isset( $_POST[$admin_form->option_name] ) ) {
-          $is_postback_update = true;
-          break;
-        }
-      }
+      $is_postback_update = isset( $_POST[$this->plugin->option_name] );
     }
     return $is_postback_update;
   }

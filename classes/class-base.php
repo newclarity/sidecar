@@ -87,7 +87,7 @@ class Sidecar_Base {
   /**
    * @var bool|array
    */
-  protected $_admin_forms = false;
+  protected $_forms = false;
   /**
    * @var bool|array
    */
@@ -99,7 +99,7 @@ class Sidecar_Base {
   var $current_page;
 
   /**
-   * @var Sidecar_Admin_Form
+   * @var Sidecar_Form
    */
   var $current_form;
 
@@ -111,6 +111,14 @@ class Sidecar_Base {
    * @var bool
    */
   protected $_initialized = false;
+  /**
+   * @var array
+   */
+  protected $_settings = array();
+  /**
+   * @var string
+   */
+  var $option_name;
 
 
   /**
@@ -140,6 +148,9 @@ class Sidecar_Base {
     if ( ! $this->plugin_name )
       $this->plugin_name = strtolower( $this->plugin_class_base );
 
+    if ( ! $this->option_name )
+      $this->option_name = "{$this->plugin_name}_settings";
+
     if ( ! $this->cron_key )
       $this->cron_key = "{$this->plugin_name}_cron";
 
@@ -152,6 +163,95 @@ class Sidecar_Base {
     $this->initialize_plugin();
   }
 
+  /**
+   * @param string|Sidecar_Form $form
+   * @return array
+   */
+  function get_settings( $form ) {
+    if ( is_string( $form ) && $this->has_form( $form ) )
+      $form = $this->get_form( $form );
+    if ( ! isset( $this->_settings[$form->settings_key] ) ) {
+      $this->initialize_settings( $form );
+    }
+    if ( ! isset( $this->_settings['state']['decrypted'][$form->form_name] ) ) {
+      if ( method_exists( $this, 'decrypt_settings' ) ) {
+        $this->_settings[$form->settings_key] = call_user_func(
+          array( $this, 'decrypt_settings' ),
+          $this->_settings[$form->settings_key],
+          $form, $this->_settings
+        );
+      }
+      $this->_settings['state']['decrypted'][$form->form_name] = true;
+    }
+    return $this->_settings[$form->settings_key];
+  }
+
+  /**
+   * @param string|Sidecar_Form $form
+   * @return array
+   */
+  function initialize_settings( $form ) {
+    if ( is_string( $form ) && $this->has_form( $form ) )
+      $form = $this->get_form( $form );
+
+    if ( 0 == count( $this->_settings ) ) {
+      $this->_settings = get_option( $this->option_name );
+      $this->_settings['state'] = array( 'decrypted' => array() );
+    }
+
+    if ( ! isset( $this->_settings[$form->settings_key] ) )
+      $this->_settings[$form->settings_key] = array();
+
+    if ( $form instanceof Sidecar_Form ) {
+      $this->_settings[$form->settings_key] = array_merge(
+        $form->get_new_settings(),
+        $this->_settings[$form->settings_key]
+      );
+    }
+  }
+
+  /**
+   * @param string|Sidecar_Form $form
+   * @param string $setting_name
+   * @return bool
+   */
+  function has_setting( $form, $setting_name ) {
+    if ( ! $form instanceof Sidecar_Form )
+      if ( is_string( $form ) && $this->has_form( $form ) ) {
+        $form = $this->get_form( $form );
+      }
+    if ( ! isset( $this->_settings[$form->settings_key] ) ) {
+      /*
+       * Call to initialize settings
+       */
+      $this->initialize_settings( $form );
+    }
+    return isset( $this->_settings[$form->settings_key][$setting_name] );
+  }
+  /**
+   * @param string|Sidecar_Form $form
+   * @param string $setting_name
+   * @return string
+   */
+  function get_setting( $form, $setting_name ) {
+    $value = false;
+    if ( $this->has_setting( $form, $setting_name ) )
+      $value = $this->_settings[$form->settings_key][$setting_name];
+    return $value;
+  }
+  /**
+   * @param string|Sidecar_Form $form
+   * @param string $setting_name
+   * @param mixed $value
+   */
+  function set_setting( $form, $setting_name, $value ) {
+    if ( ! $form instanceof Sidecar_Form )
+      if ( is_string( $form ) && $this->has_form( $form ) ) {
+        $form = $this->get_form( $form );
+      }
+    if ( $form instanceof Sidecar_Form && isset( $this->_settings[$form->settings_key] ) )
+ 	    $this->_settings[$form->settings_key][$setting_name] = $value;
+  }
   /**
    * @return Sidecar_Base
    */
@@ -184,8 +284,8 @@ class Sidecar_Base {
    *
    * @return bool
    */
-  function has_admin_form( $form_name ) {
-    return isset( $this->_admin_forms[$form_name] );
+  function has_form( $form_name ) {
+    return isset( $this->_forms[$form_name] );
   }
 
   function initialize() {
@@ -230,10 +330,15 @@ class Sidecar_Base {
    */
   function wp_loaded() {
     if ( ! is_admin() ) {
-      if ( method_exists( $this->plugin_class, 'initialize_shortcodes' ) ) {
+      $shortcodes = method_exists( $this->plugin_class, 'initialize_shortcodes' );
+      $template = method_exists( $this, 'initialize_template' );
+      if ( $shortcodes || $template ) {
         // @todo Should we always initialize or only when we need it?
         $this->initialize();
-        $this->initialize_shortcodes();
+        if ( $shortcodes )
+          $this->initialize_shortcodes();
+        if ( $template )
+          $this->initialize_template();
         add_filter( 'the_content', array( $this, 'the_content' ), -1000 );
       }
     }
@@ -305,9 +410,28 @@ class Sidecar_Base {
     return $attributes;
   }
   /**
+   * @param Sidecar_Form $form
+   */
+  function initialize_form( $form ) {
+    // Only here to keep PhpStorm from complaining that it's not defined.
+  }
+  /**
    *
    */
   function initialize_shortcodes() {
+    // Only here to keep PhpStorm from complaining that it's not defined.
+  }
+  /**
+   *
+   */
+  function initialize_postback() {
+    // Only here to keep PhpStorm from complaining that it's not defined.
+  }
+
+  /**
+   *
+   */
+  function initialize_template() {
     // Only here to keep PhpStorm from complaining that it's not defined.
   }
 
@@ -359,9 +483,9 @@ class Sidecar_Base {
    */
   function add_default_button( $args = array() ) {
     /**
-     * @var Sidecar_Admin_Form
+     * @var Sidecar_Form
      */
-    $form = isset( $args['form'] ) ? $args['form'] : end( $this->_admin_forms );
+    $form = isset( $args['form'] ) ? $args['form'] : end( $this->_forms );
     return $form->add_button( 'save', __( 'Save Settings', 'sidecar' ), $args );
   }
   /**
@@ -373,9 +497,9 @@ class Sidecar_Base {
    */
   function add_button( $button_name, $button_text, $args = array() ) {
     /**
-     * @var Sidecar_Admin_Form
+     * @var Sidecar_Form
      */
-    $form = isset( $args['form'] ) ? $args['form'] : end( $this->_admin_forms );
+    $form = isset( $args['form'] ) ? $args['form'] : end( $this->_forms );
     return $form->add_button( $button_name, $button_text, $args );
   }
 
@@ -548,14 +672,16 @@ class Sidecar_Base {
          * The $values array contains name/value pairs.
          */
         foreach( $values as $name => $value ) {
-          $url = str_replace( "{{$vars[0]}}", $value, $url );
+          if ( isset( $vars[0] ) )
+            $url = str_replace( "{{$vars[0]}}", $value, $url );
         }
       } else {
         /**
          * The $values array just contains values in same order as the vars specified in the URL.
          */
         foreach( $vars as $name ) {
-          $url = str_replace( "{{$name}}", $values[$name], $url );
+          if ( isset( $values[$name] ) )
+            $url = str_replace( "{{$name}}", $values[$name], $url );
         }
       }
     }
@@ -647,9 +773,9 @@ class Sidecar_Base {
   /**
    * Echo the current or specified form.
    *
-   * @param bool|Sidecar_Admin_Form $form
+   * @param bool|Sidecar_Form $form
    *
-   * @return Sidecar_Admin_Form
+   * @return Sidecar_Form
    */
   function the_form( $form = false ) {
     if ( ! $form )
@@ -658,26 +784,28 @@ class Sidecar_Base {
  	}
 
   /**
-   * @param   array   $admin_form
-   * @return  Sidecar_Admin_Form
+   * @param   array   $form
+   * @return  Sidecar_Form
    */
-  function promote_admin_form( $admin_form ) {
+  function promote_form( $form ) {
     /**
      * @var array $form
      */
-    $form_name = $admin_form['form_name'];
-    $admin_form['plugin'] = $this;
+    $form_name = $form['form_name'];
+    $form['plugin'] = $this;
 
-    if ( ! isset( $admin_form['admin_page'] ) )
-      $admin_form['admin_page'] = end( $this->_admin_pages );
+    if ( ! isset( $form['admin_page'] ) )
+      $form['admin_page'] = end( $this->_admin_pages );
 
     /**
-     * @var array|Sidecar_Admin_Form $admin_form
+     * @var array|Sidecar_Form $form
      */
-    $admin_form = $this->_admin_forms[$form_name] = new Sidecar_Admin_Form( $form_name, $admin_form );
+    $form = $this->_forms[$form_name] = new Sidecar_Form( $form_name, $form );
 
-    $this->current_form = $admin_form;
-    return $admin_form;
+    $this->current_form = $form;
+    $this->initialize_form( $form );
+    $form->initialize();
+    return $form;
   }
   /**
    * @param array $args
@@ -690,13 +818,13 @@ class Sidecar_Base {
   /**
    * @param $args
    *
-   * @return Sidecar_Admin_Field
+   * @return Sidecar_Field
    */
   function get_form_field( $args ) {
     /**
-     * @var Sidecar_Admin_Form $form
+     * @var Sidecar_Form $form
      */
-    $form = $this->get_admin_form( $args['form']->form_name );
+    $form = $this->get_form( $args['form']->form_name );
     $field = $form->get_form_field( $args['field']->field_name, array( 'section_name' => $args['section']->section_name ) );
     return $field;
   }
@@ -705,7 +833,7 @@ class Sidecar_Base {
    */
   function get_form_field_html( $args ) {
     /**
-     * @var Sidecar_Admin_Field $field
+     * @var Sidecar_Field $field
      */
     $field = $this->get_form_field( $args );
     return $field->get_field_html();
@@ -726,37 +854,25 @@ class Sidecar_Base {
     return isset( $this->_shortcodes[$shortcode_name] );
   }
   /**
-   * @param   string|Sidecar_Admin_Form $admin_form
-   * @return  array|Sidecar_Admin_Form
+   * @param   string|Sidecar_Form $form
+   * @return  array|Sidecar_Form
    */
-  function get_admin_form( $admin_form ) {
+  function get_form( $form ) {
     /*
-     * Could be a string or already Sidecar_Admin_Form.
+     * Could be a string or already Sidecar_Form.
      */
-    $admin_form = is_string( $admin_form ) && isset( $this->_admin_forms[$admin_form] ) ? $this->_admin_forms[$admin_form] : $admin_form;
-    if ( is_array( $admin_form ) ) {
-      /**
-       * Convert the form from array to object.
-       */
-      $admin_form = $this->promote_admin_form( $admin_form );
-      $this->initialize_admin_form( $admin_form );
-      $admin_form->initialize( $this );
-    }
-    return $admin_form;
-  }
-  /**
-   * @throws Exception
-   */
-  function initialize_admin_form() {
-    throw new Exception( 'Class ' . get_class($this) . ' [subclass of ' . __CLASS__ . '] must define an initialize() method.' );
+    $form = is_string( $form ) && isset( $this->_forms[$form] ) ? $this->_forms[$form] : $form;
+    if ( is_array( $form ) )
+      $form = $this->promote_form( $form );
+    return $form;
   }
   /**
    * @param string  $form_name
    * @param array   $args
    */
-  function add_admin_form( $form_name, $args = array() ) {
+  function add_form( $form_name, $args = array() ) {
     $args['form_name'] = $form_name;
-    $this->_admin_forms[$form_name] = $args;
+    $this->_forms[$form_name] = $args;
   }
   /**
    * @param       $form_name
@@ -766,13 +882,13 @@ class Sidecar_Base {
   /**
    * @param string  $form_name
    * @param array   $args
-   * @return Sidecar_Admin_Field
+   * @return Sidecar_Field
    */
   function add_field( $form_name, $args = array() ) {
     /**
-     * @var Sidecar_Admin_Form
+     * @var Sidecar_Form
      */
-    $form = isset( $args['form'] ) ? $args['form'] : end( $this->_admin_forms );
+    $form = isset( $args['form'] ) ? $args['form'] : end( $this->_forms );
     return $form->add_field( $form_name, $args );
   }
 //  /**
@@ -783,105 +899,6 @@ class Sidecar_Base {
 //    $this->_settings[$settings_name] = new Sidecar_Settings( $settings_name, $args );
 //  }
 
-  /**
-   * @param array $input
-   *
-   * @return array
-   */
-  function filter_postback( $input ) {
-    if ( ! current_user_can( 'manage_options' ) ) {
-      /**
-       * TODO: Verify someone without proper options can actually get here.
-       */
-      wp_die( __( 'Sorry, you do not have sufficient priviledges.' ) );
-    }
-    /**
-     * Get the array that contains names of 'plugin', 'page', 'tab', 'form' and 'settings'
-     * as well as special 'clear' and 'reset' for clearing and resetting the form respectively.
-     */
-    $control = $_POST[$_POST['option_page']];
-    $page = $this->current_page = $this->get_admin_page( $control['page'] );
-    $form = $this->current_form = $this->get_admin_form( $control['form'] );
-
-    /**
-     * Check with the API to see if we are authenticated
-     */
-    if ( $this->api && ( $page->is_authentication_tab() || ! $page->has_tabs() ) ) {
-      if ( ! $this->api->assumed_authenticated( $input ) ) {
-        add_settings_error( $page->get_settings_group_name(), 'sidecar-no-credentials', __( 'You must enter both a username and a password', 'sidecar' ) );
-      } else if ( $this->api->authenticate( $input ) ) {
-        $input['authenticated'] = true;
-        add_settings_error( $page->get_settings_group_name(), 'sidecar-updated', __( 'Authentication successful. Settings saved.', 'sidecar' ), 'updated' );
-      } else {
-        $input['authenticated'] = false;
-        add_settings_error( $page->get_settings_group_name(), 'sidecar-login-failed', __( 'Authentication Failed. Please try again.', 'sidecar' ) );
-      }
-    }
-
-    if ( isset( $control['clear'] ) ) {
-      $input = $form->get_empty_settings();
-      $message = __( 'Form values cleared.%s%sNOTE:%s Your browser may still be displaying values from its cache but this plugin has indeed cleared these values.%s', 'sidecar' );
-      add_settings_error( $page->get_settings_group_name(), "sidecar-clear", sprintf( $message, "<br/><br/>&nbsp;&nbsp;&nbsp;", '<em>', '</em>', '<br/><br/>' ), 'updated' );
-    } else if ( isset( $control['reset'] ) ) {
-      $input = $this->current_form->get_new_settings();
-      add_settings_error( $page->get_settings_group_name(), 'sidecar-reset', __( 'Defaults reset.', 'sidecar' ), 'updated' );
-    } else if ( method_exists( $this, 'validate_settings' ) ) {
-      $input = array_map( 'rtrim', (array)$input );
-      add_filter( $action_key = "pre_update_option_{$this->current_form->option_name}", array( $this, 'pre_update_option' ), 10, 2 );
-      /**
-       * @todo How to signal a failed validation?
-       */
-      $input = call_user_func( array( $this, 'validate_settings' ), $input, $this->current_form );
-      /**
-       * @var Sidecar_Admin_Field $field
-       */
-      foreach( $form->get_fields() as $field_name => $field ) {
-        $validation_options = false;
-   			/**
-   			 * Default to FILTER_SANITIZE_STRING if ['validator'] not set.
-   			 */
-   			if ( $field->field_options ) {
-          $validated_value = isset( $field->field_options[$input[$field_name]] ) ? $input[$field_name] : false;
-        } else if ( isset( $field->field_validator['filter'] ) ) {
-           $validated_value = filter_var( $input[$field_name], $field->field_validator['filter'] );
-           if ( isset( $field->field_validator['options'] ) ) {
-            $validation_options = $field->field_validator['options'];
-           }
-        } else {
-          $validator = $field->field_validator ? $field->field_validator : FILTER_SANITIZE_STRING;
-          $validated_value = filter_var( $input[$field_name], $validator );
-        }
-        if ( method_exists( $this, $method = "sanitize_setting_{$field_name}" ) ) {
-          $validated_value = call_user_func( array( $this, $method ), $validated_value, $field, $form );
-        }
-        if ( $validation_options || $validated_value != $input[$field_name] ) {
-          if ( ! $validation_options ) {
-            add_settings_error( $page->get_settings_group_name(), 'sidecar-value', sprintf(
-              __( 'Please enter a valid value for "%s."', 'sidecar' ), $field->field_label
-            ));
-          } else {
-            if ( isset( $validation_options['min'] ) && $validation_options['min'] > intval( $input[$field_name] ) ) {
-              add_settings_error( $page->get_settings_group_name(), 'sidecar-min', sprintf(
-                __( 'Please enter a value greater than or equal to %d for "%s."', 'sidecar' ),
-                  $validation_options['min'],
-                  $field->field_label
-              ));
-            }
-            if ( isset( $validation_options['max'] ) && $validation_options['max'] < intval( $input[$field_name] ) ) {
-              add_settings_error( $page->get_settings_group_name(), 'sidecar-max', sprintf(
-                __( 'Please enter a value less than or equal to %d for "%s."', 'sidecar' ),
-                  $validation_options['max'],
-                  $field->field_label
-              ));
-              $continue = true;
-            }
-          }
-        }
-      }
-    }
-    return $input;
-  }
-
 
   /**
    * @param array $newvalue
@@ -889,12 +906,27 @@ class Sidecar_Base {
    * @return array
    */
   function pre_update_option( $newvalue, $oldvalue ) {
+    /**
+     * This only going to be saving one form's worth of data yet the settings can have many forms, like:
+     *
+     *    $settings = array(
+     *      '_form1' => array( ... ),
+     *      '_form2' => array( ... ),
+     *      '_form3' => array( ... ),
+     *    );
+     *
+     * So the next 3 lines grab all the old values of the other forms and uses the new values for this form.
+     */
+    $settings_key = "_{$newvalue['state']['form']}";
+    $oldvalue[$settings_key] = $newvalue[$settings_key];
+    $newvalue = $oldvalue;
     if ( method_exists( $this, 'encrypt_settings' ) ) {
       /**
        * @todo auto-encrypt credentials
        */
-      $newvalue = call_user_func( array( $this, 'encrypt_settings' ), $newvalue, $this->current_form );
+      $newvalue[$settings_key] = call_user_func( array( $this, 'encrypt_settings' ), $newvalue[$settings_key], $this->current_form, $newvalue );
     }
+    unset( $newvalue['state'] ); // We don't need to save this.
     remove_filter( current_filter(), array( $this, 'pre_update_option' ) );
     return $newvalue;
   }

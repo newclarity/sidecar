@@ -2,7 +2,7 @@
 /**
  *
  */
-class Sidecar_Admin_Field {
+class Sidecar_Field {
 
   /**
    * @var Sidecar_Base
@@ -10,9 +10,9 @@ class Sidecar_Admin_Field {
   var $plugin;
 
   /**
-   * @var Sidecar_Admin_Form
+   * @var Sidecar_Form
    */
-  var $admin_form;
+  var $form;
 
   /**
    * @var array
@@ -100,11 +100,17 @@ class Sidecar_Admin_Field {
     /**
      * @todo: Get options with all expected elements initialized
      */
-    $admin_form = $this->admin_form;
-    $settings = $admin_form->get_settings( $this->admin_form->option_name );
+    $form = $this->form;
+    $settings = $form->get_settings( $this->form->settings_key );
     $value = esc_attr( $settings[$this->field_name] );
-    $input_name = "{$admin_form->option_name}[{$this->field_name}]";
-    $input_id = str_replace( '_', '-', $input_name );
+    $input_name = "{$this->plugin->option_name}[{$form->settings_key}][{$this->field_name}]";
+    /**
+     * Sets HTML id like the following:
+     * @example
+     *  HTML name = my_plugin_settings[_form-name}[field-name]
+     *  HTML id =>  my-plugin-settings--form-name-field-name
+     */
+    $input_id = str_replace( array( '[_', '_', '][', '[', ']' ), array( '--', '-', '-', '-', '' ), $input_name );
     $size_html = $this->field_size ? " size=\"{$this->field_size}\"" : '';
     $css_base = $this->plugin->css_base;
     $help_html = $this->field_help ? "\n<br />\n<span class=\"{$css_base}-field-help\">{$this->field_help}</span>" : false;

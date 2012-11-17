@@ -2,7 +2,7 @@
 /**
  *
  */
-class Sidecar_Admin_Form {
+class Sidecar_Form {
   /**
    * @var Sidecar_Base
    */
@@ -15,10 +15,6 @@ class Sidecar_Admin_Form {
    * @var string
    */
   var $form_name;
-  /**
-   * @var string
-   */
-  var $option_name;
   /**
    * @var array
    */
@@ -35,6 +31,10 @@ class Sidecar_Admin_Form {
    * @var array
    */
   var $_buttons = array();
+  /**
+   * @var string
+   */
+  var $settings_key;
 
   /**
    * @param string $form_name
@@ -52,7 +52,7 @@ class Sidecar_Admin_Form {
         $this->$property = $value;
       }
     }
-    $this->option_name = "{$this->plugin->plugin_name}_{$this->form_name}";
+    $this->settings_key = "_{$form_name}";
 
   }
 
@@ -152,7 +152,7 @@ class Sidecar_Admin_Form {
     /**
      * Get the HTML for the hidden fields from the Settings API
      */
-    settings_fields( $settings_group = $this->admin_page->get_settings_group_name() );
+    settings_fields( $settings_group = $this->plugin->option_name );
 
     /**
      * Hide hidden fields from Settings API by removing them from global $wp_settings_fields
@@ -161,17 +161,17 @@ class Sidecar_Admin_Form {
     global $wp_settings_fields;
     $hidden_fields = array();
     $settings = $this->get_settings( $this->form_name );
-    foreach( $wp_settings_fields[$this->option_name] as $section_name => $section ) {
+    foreach( $wp_settings_fields[$this->plugin->option_name] as $section_name => $section ) {
       foreach( $section as $field_name => $field ) {
         if ( 'hidden' == $field['args']['field']->field_type ) {
           $hidden_fields[] = $field['args']['field'];
-          unset( $wp_settings_fields[$this->option_name][$section_name][$field_name] );
+          unset( $wp_settings_fields[$this->plugin->option_name][$section_name][$field_name] );
         }
       }
     }
     /**
      * Extract the hidden fields so they won't display
-     * @var Sidecar_Admin_Field $hidden_field
+     * @var Sidecar_Field $hidden_field
      */
     $hidden_fields_html = array();
     foreach( $hidden_fields as $hidden_field ) {
@@ -182,7 +182,7 @@ class Sidecar_Admin_Form {
     /**
      * Output each of the sections.
      */
-    do_settings_sections( $this->option_name );
+    do_settings_sections( $this->plugin->option_name );
 
     $form_fields_html = ob_get_clean();
 
@@ -194,10 +194,10 @@ class Sidecar_Admin_Form {
       $tab_slug = $this->admin_page->get_current_tab()->tab_slug;
 
       $hidden_section_input_html = <<<HTML
-<input type="hidden" name="{$settings_group}[plugin]" value="{$this->plugin->plugin_name}" />
-<input type="hidden" name="{$settings_group}[page]" value="{$this->admin_page->page_name}" />
-<input type="hidden" name="{$settings_group}[tab]" value="{$tab_slug}" />
-<input type="hidden" name="{$settings_group}[form]" value="{$this->form_name}" />
+<input type="hidden" name="{$this->plugin->option_name}[state][plugin]" value="{$this->plugin->plugin_name}" />
+<input type="hidden" name="{$this->plugin->option_name}[state][page]" value="{$this->admin_page->page_name}" />
+<input type="hidden" name="{$this->plugin->option_name}[state][tab]" value="{$tab_slug}" />
+<input type="hidden" name="{$this->plugin->option_name}[state][form]" value="{$this->form_name}" />
 HTML;
     }
     $buttons_html = array();
@@ -250,15 +250,15 @@ HTML;
   }
 
   /**
-   * @param Sidecar_Base $plugin
    */
-  function initialize( $plugin ) {
-    if ( ! $this->has_fields()  )
-      Sidecar::show_error( 'Form %s for Plugin %s has no fields registered.', $this->form_name, $this->plugin->plugin_name );
-    $settings = $this->get_settings( $this->form_name );
-    register_setting( $this->admin_page->get_settings_group_name(), $this->option_name, array( $this->plugin, 'filter_postback' ) );
-    $this->initialize_sections( $plugin );
-    $this->initialize_buttons( $plugin );
+  function initialize() {
+    if ( ! $this->has_fields()  ) {
+      $this->plugin->initialize_form( $this );
+    }
+    /**
+     * Load the settings for this form
+     */
+    $this->initialize_settings( $this->form_name );
   }
 
   /**
@@ -269,7 +269,7 @@ HTML;
       if ( ! $section->section_handler )
         $section->section_handler = array( $plugin, 'the_form_section' );
       $settings =  $this->get_settings( $this->form_name );
-      add_settings_section( $section_name, $section->section_title, $section->section_handler, $this->option_name, array(
+      add_settings_section( $section_name, $section->section_title, $section->section_handler, $this->plugin->option_name, array(
         'section' => $section,
         'form' => $this,
         'plugin' => $plugin,
@@ -278,7 +278,7 @@ HTML;
       foreach( $section->fields as $field_name => $field ) {
         if ( ! $field->field_handler )
           $field->field_handler = array( $plugin, 'the_form_field' );
-        add_settings_field( $field_name, $field->field_label, $field->field_handler, $this->option_name, $section_name, array(
+        add_settings_field( $field_name, $field->field_label, $field->field_handler, $this->plugin->option_name, $section_name, array(
           'field' => $field,
           'section' => $section,
           'form' => $this,
@@ -301,7 +301,7 @@ HTML;
         if ( 'primary' == $button->button_type ) {
           $button->input_name = 'submit';
         } else {
-          $button->input_name = $this->admin_page->get_settings_group_name() . "[{$button_name}]";
+          $button->input_name = "{$this->plugin->option_name}[action][{$button_name}]";
         }
 
       if ( ! isset( $button->button_wrap ) )
@@ -338,7 +338,7 @@ HTML;
     $args = (object)$args;
 
     $args->section_name = $section_name;
-    $args->admin_form = $this;
+    $args->form = $this;
 
     if ( ! isset( $args->fields ) )
       $args->fields = array();
@@ -377,11 +377,11 @@ HTML;
     }
     /**
      * Luke, I am your father!
-     * (or for those who don't get the reference, assign reference to $args['admin_form'] so it will know it's form.)
+     * (or for those who don't get the reference, assign reference to $args['form'] so it will know it's form.)
      */
-    $args['admin_form'] = $this;
+    $args['form'] = $this;
     $args['plugin'] = $this->plugin;
-    return $this->_sections[$section_name]->fields[$field_name] = new Sidecar_Admin_Field( $field_name, $args );
+    return $this->_sections[$section_name]->fields[$field_name] = new Sidecar_Field( $field_name, $args );
   }
   /**
    * Get an array of new settings (empty string; '').
@@ -411,17 +411,14 @@ HTML;
    * @return array
    */
   function get_settings() {
-    if ( ! isset( $this->_settings ) ) {
-      $option = get_option( $this->option_name );
-      if ( method_exists( $this->plugin, 'decrypt_settings' ) ) {
-        /**
-         * @todo auto-decrypt credentials
-         */
-        $option = call_user_func( array( $this->plugin, 'decrypt_settings' ), $option, $this );
-      }
-      $this->_settings = array_merge( $this->get_new_settings(), $option );
-    }
-    return $this->_settings;
+    return $this->plugin->get_settings( $this );
+  }
+
+  /**
+   *
+   */
+  function initialize_settings() {
+    $this->plugin->initialize_settings( $this );
   }
 
   /**
@@ -430,12 +427,7 @@ HTML;
    * @return bool
    */
   function has_setting( $setting_name ) {
-    if ( ! isset( $this->_settings ) )
-      /*
-       * This will initialize settings
-       */
-      $this->get_settings();
-    return isset( $this->_settings[$setting_name] );
+    return $this->plugin->has_setting( $this, $setting_name );
   }
 
   /**
@@ -444,16 +436,14 @@ HTML;
    * @return mixed
    */
   function get_setting( $setting_name ) {
-    $value = false;
-    if ( $this->has_setting( $setting_name ) )
-      $value = $this->_settings[$setting_name];
-    return $value;
+    return $this->plugin->get_setting( $this, $setting_name );
  	}
 
   /**
-   * @param array $new_settings
+   * @param string $setting_name
+   * @param mixed $value
    */
-  function set_settings( $new_settings ) {
- 	  $this->_settings = $new_settings;
+  function set_setting( $setting_name, $value ) {
+    $this->plugin->set_setting( $this, $setting_name, $value );
   }
 }

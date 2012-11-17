@@ -32,14 +32,14 @@ class Sidecar_Admin_Tab {
    */
   var $after_content = false;
   /**
-   * @var string|Sidecar_Admin_Form
+   * @var string|Sidecar_Form
    */
-  var $admin_forms = false;
+  var $forms = false;
   /**
    * @return bool
    */
   function has_forms() {
-    return is_array( $this->admin_forms );
+    return is_array( $this->forms );
   }
 
   /**
@@ -62,12 +62,12 @@ class Sidecar_Admin_Tab {
       }
     }
 
-    if ( ! $this->admin_forms ) {
+    if ( ! $this->forms ) {
       /**
-       * Is 'admin_form' passed in (singluar) grab it, otherwise grab the tab slug.
+       * Is 'form' passed in (singluar) grab it, otherwise grab the tab slug.
        * Later convert the current tab's form to an object.
        */
-      $this->admin_forms = array( isset( $args['admin_form'] ) ? $args['admin_form'] : $tab_slug );
+      $this->forms = array( isset( $args['form'] ) ? $args['form'] : $tab_slug );
     }
 
   }
