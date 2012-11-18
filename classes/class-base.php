@@ -174,17 +174,18 @@ class Sidecar_Base {
       /**
        * This plugin is being symlinked.
        * @see: http://wordpress.stackexchange.com/questions/15202/plugins-in-symlinked-directories
+       * @see: http://wordpress.stackexchange.com/a/15204/89
        */
-      $found = false;
-      $multisite_plugins = is_multisite() ? wp_get_active_network_plugins() : array();
-      $plugins = array_merge( wp_get_mu_plugins(), $multisite_plugins, wp_get_active_and_valid_plugins() );
-      foreach( $plugins as $plugin ) {
-        if ( realpath( $plugin ) == $this->plugin_file ) {
-          $this->plugin_file = $plugin;
-          break;
-        }
+      global $mu_plugin, $network_plugin, $plugin;
+      if ( isset( $mu_plugin ) ) {
+        $this->plugin_file = $mu_plugin;
+      } else if ( is_multisite()  && isset( $network_plugin ) ) {
+        $this->plugin_file = $network_plugin;
+      } else if ( isset( $plugin ) ) {
+        $this->plugin_file = $plugin;
       }
     }
+
 
   }
 
