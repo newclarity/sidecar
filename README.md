@@ -10,7 +10,7 @@ Sidecar provides an API for easily creating a **WordPress Plugin** that has the 
 
 - **Admin Pages** &ndash; One (1) of more linked from one or more Admin Menu(s)/Submenu(s).
 - **Admin Tabs** &ndash; Zero (0) or more per Admin Page.
-- **Forms** &ndash; Zero (0) or more per Admin Page Tab and/or tab-less Admin Page.
+- **Forms** &ndash; Zero (0) or more per Admin Tab and/or tab-less Admin Page.
 - **Form Fields** &ndash; One (1) or more per Form.
 - **Shortcodes** &ndash; Zero (0) or more.
 
