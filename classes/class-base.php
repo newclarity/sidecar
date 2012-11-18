@@ -193,7 +193,8 @@ class Sidecar_Base {
    * @return array
    */
   function get_credentials() {
-    return $this->has_form( 'credentials' ) ? $this->get_settings( 'credentials' ) : false;
+    $settings = get_option( $this->option_name );
+    return isset( $settings['_credentials'] ) ? $settings['_credentials'] : false;
   }
 
   /**
