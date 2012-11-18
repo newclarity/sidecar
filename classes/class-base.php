@@ -104,9 +104,17 @@ class Sidecar_Base {
   var $current_form;
 
   /**
-   * @var RESTian_Client
+   * @var bool|RESTian_Client
    */
   var $api = false;
+  /**
+   * @var bool|string
+   */
+  var $api_loader = false;
+  /**
+   * @var bool|string
+   */
+  var $api_class = false;
   /**
    * @var bool
    */
@@ -161,6 +169,30 @@ class Sidecar_Base {
      * Ask subclass to initialize plugin which includes admin pages
      */
     $this->initialize_plugin();
+
+    if ( false === strpos( $this->plugin_file, WP_CONTENT_DIR ) ) {
+      /**
+       * This plugin is being symlinked.
+       * @see: http://wordpress.stackexchange.com/questions/15202/plugins-in-symlinked-directories
+       */
+      $found = false;
+      $multisite_plugins = is_multisite() ? wp_get_active_network_plugins() : array();
+      $plugins = array_merge( wp_get_mu_plugins(), $multisite_plugins, wp_get_active_and_valid_plugins() );
+      foreach( $plugins as $plugin ) {
+        if ( realpath( $plugin ) == $this->plugin_file ) {
+          $this->plugin_file = $plugin;
+          break;
+        }
+      }
+    }
+
+  }
+
+  /**
+   * @return array
+   */
+  function get_credentials() {
+    return $this->has_form( 'credentials' ) ? $this->get_settings( 'credentials' ) : false;
   }
 
   /**
@@ -316,6 +348,10 @@ class Sidecar_Base {
 
     if ( ! $this->plugin_path )
       $this->plugin_path = dirname( $this->plugin_file );
+
+    if ( $this->api_loader ) {
+      $this->api_loader = "{$this->plugin_path}/{$this->api_loader}";
+    }
 
     if ( ! $this->plugin_slug )
       $this->plugin_slug = str_replace( '_', '-', $this->plugin_name );
@@ -891,14 +927,6 @@ class Sidecar_Base {
     $form = isset( $args['form'] ) ? $args['form'] : end( $this->_forms );
     return $form->add_field( $form_name, $args );
   }
-//  /**
-//   * @param string $settings_name
-//   * @param array  $args
-//   */
-//  function register_settings( $settings_name, $args = array() ) {
-//    $this->_settings[$settings_name] = new Sidecar_Settings( $settings_name, $args );
-//  }
-
 
   /**
    * @param array $newvalue
@@ -948,7 +976,26 @@ class Sidecar_Base {
       if ( ! wp_next_scheduled( $this->cron_key ) ) {
         wp_schedule_event( time(), $this->cron_recurrance, $this->cron_key );
       }
-//      $this->initialize_all_settings();
+      $settings = get_option( $this->option_name );
+      if ( ! is_array( $settings ) )
+        $settings = array();
+      /*
+       * If we have existing settings and we are either upgrading or reactivating we
+       * previously had a _credentials element then reauthenticate and record that change.
+       */
+      if ( isset( $settings['_credentials'] ) && $this->api_class && file_exists( $this->api_loader ) ) {
+        require_once( $this->api_loader );
+        if ( class_exists( $this->api_class ) ) {
+          /**
+           * @var RESTian_Client
+           */
+          $api = new ${$this->api_class}();
+          $settings['_credentials']['authenticated'] = $this->api->authenticate( $settings['_credentials'] );
+          $this->api = $api;
+        }
+      }
+      $settings['installed_version'] = $this->plugin_version;
+      update_option( $this->option_name, $settings );
     }
   }
 
