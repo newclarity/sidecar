@@ -26,6 +26,12 @@ class Sidecar_Base {
    */
   var $plugin_slug;
   /**
+   * ID of plugin used by WordPress in get_option('active_plugins')
+   *
+   * @var string
+   */
+  var $plugin_id;
+  /**
    * @var string
    */
   var $plugin_version;
@@ -127,12 +133,29 @@ class Sidecar_Base {
    * @var string
    */
   var $option_name;
-
+  /**
+   * @var string
+   */
+  var $uses_ajax = false;
 
   /**
    * @param array $args
    */
   function __construct( $args = array() ) {
+    /*
+     * If running an AJAX callback and either $this->uses_ajax or $args['uses_ajax'] is false then bypass the plugin.
+     *
+     * To enable AJAX support in a plugin either:
+     *
+     *  1. Create a __construct in plugin class, set $this->uses_ajax=true then call parent::_construct(), or
+     *
+     *  2. Pass array( 'uses_ajax' => true ) to plugin's required constructor at end of plugin file,
+     *     i.e. new MyPlugin( array( 'uses_ajax' => true ) );
+     *
+     */
+    if ( defined( 'DOING_AJAX' ) && DOING_AJAX && ( ! $this->uses_ajax || ( isset( $args['uses_ajax'] ) && ! $args['uses_ajax'] ) ) )
+      return;
+
     $this->plugin_class = get_class( $this );
     if ( isset( self::$_me[$this->plugin_class] ) ) {
       $message = __( '%s is a singleton class and cannot be instantiated more than once.', 'sidecar' );
@@ -162,49 +185,85 @@ class Sidecar_Base {
     if ( ! $this->cron_key )
       $this->cron_key = "{$this->plugin_name}_cron";
 
-    register_activation_hook( $this->plugin_file, array( $this, 'activate' ) );
-    register_deactivation_hook( $this->plugin_file, array( $this, 'deactivate' ) );
-
-    /**
-     * Ask subclass to initialize plugin which includes admin pages
-     */
-    $this->initialize_plugin();
-
-    if ( false === strpos( $this->plugin_file, WP_CONTENT_DIR ) ) {
+    global $pagenow;
+    if ( isset( $_GET['action'] ) && 'activate' == $_GET['action'] && isset( $_GET['plugin'] ) && 'plugins.php' == $pagenow ) {
+      /*
+       * This plugin is being activated
+       */
+      $this->plugin_id = filter_input( INPUT_GET, 'plugin', FILTER_SANITIZE_STRING );
+      $this->plugin_file = WP_PLUGIN_DIR . '/' . $this->plugin_id;
+      register_activation_hook( $this->plugin_id, array( $this, 'activate' ) );
+    } else {
       /**
-       * This plugin is being symlinked.
+       * Grab the plugin file name from one the global values set when the plugin is included.
        * @see: http://wordpress.stackexchange.com/questions/15202/plugins-in-symlinked-directories
        * @see: http://wordpress.stackexchange.com/a/15204/89
        */
       global $mu_plugin, $network_plugin, $plugin;
       if ( isset( $mu_plugin ) ) {
         $this->plugin_file = $mu_plugin;
-      } else if ( is_multisite()  && isset( $network_plugin ) ) {
+      } else if ( isset( $network_plugin ) ) {
         $this->plugin_file = $network_plugin;
       } else if ( isset( $plugin ) ) {
         $this->plugin_file = $plugin;
+      } else {
+        trigger_error( sprintf( __( 'Plugin %s only works when loaded by WordPress.' ), $this->plugin_name ) );
+        exit;
       }
+      $this->plugin_id = basename( dirname( $this->plugin_file ) ) . '/' . basename( $this->plugin_file );
+      require_once( ABSPATH . 'wp-admin/includes/plugin.php' );
+      if ( ! is_plugin_active( $this->plugin_id ) ) {
+        trigger_error( sprintf( __( 'Plugin %s is not an active plugin or is not installed in a subdirectory of %s.' ),
+          $this->plugin_name,
+          WP_CONTENT_DIR . '/plugins'
+        ));
+        exit;
+      }
+      register_deactivation_hook( $this->plugin_id, array( $this, 'deactivate' ) );
     }
 
+
+    /**
+     * Ask subclass to initialize plugin which includes admin pages
+     */
+    $this->initialize_plugin();
 
   }
 
   /**
    * @return array
    */
-  function get_credentials() {
+  function get_settings() {
+    if ( ! $this->_initialized )
+      $this->initialize();
     $settings = get_option( $this->option_name );
-    return isset( $settings['_credentials'] ) ? $settings['_credentials'] : false;
+    if (  $this->has_forms() )
+      /**
+       * @var Sidecar_Form
+       */
+      foreach( $this->get_forms() as $key => $form ) {
+        if ( is_array( $form ) ) {
+          $form = $this->promote_form( $form );
+        }
+        $settings[$form->settings_key] = $this->get_form_settings( $form );
+      }
+    return $settings;
   }
 
+  /**
+   * @return array|bool
+   */
+  function get_forms() {
+    return $this->_forms;
+  }
   /**
    * @param string|Sidecar_Form $form
    * @return array
    */
-  function get_settings( $form ) {
+  function get_form_settings( $form ) {
     if ( is_string( $form ) && $this->has_form( $form ) )
       $form = $this->get_form( $form );
-    if ( ! isset( $this->_settings[$form->settings_key] ) ) {
+    if ( ! isset( $form->settings_key ) || ! isset( $this->_settings[$form->settings_key] ) ) {
       $this->initialize_settings( $form );
     }
     if ( ! isset( $this->_settings['state']['decrypted'][$form->form_name] ) ) {
@@ -218,6 +277,36 @@ class Sidecar_Base {
       $this->_settings['state']['decrypted'][$form->form_name] = true;
     }
     return $this->_settings[$form->settings_key];
+  }
+
+  /**
+   * @return bool
+   */
+  function has_forms() {
+    return is_array( $this->_forms ) && count( $this->_forms );
+  }
+
+  /**
+   * @param array $settings
+   */
+  function update_settings( $settings ) {
+    if ( $this->has_forms() ) {
+      /**
+       * @var Sidecar_Form
+       */
+      foreach( $this->get_forms() as $key => $form ) {
+        if ( method_exists( $this, 'encrypt_settings' ) ) {
+          $settings[$form->settings_key] = call_user_func(
+            array( $this, 'encrypt_settings' ),
+            $settings[$form->settings_key],
+            $form, $this->_settings
+          );
+        }
+      }
+    }
+    unset( $settings['state'] );
+    update_option( $this->option_name, $settings );
+    $this->_settings = $settings;
   }
 
   /**
@@ -262,18 +351,29 @@ class Sidecar_Base {
     }
     return isset( $this->_settings[$form->settings_key][$setting_name] );
   }
+//  /**
+//   * @param string|Sidecar_Form $form
+//   * @param string $setting_name
+//   * @return string
+//   */
+//  function get_form_setting( $form, $setting_name ) {
+//    $value = false;
+//    if ( $this->has_setting( $form, $setting_name ) )
+//      $value = $this->_settings[$form->settings_key][$setting_name];
+//    return $value;
+//  }
   /**
-   * @param string|Sidecar_Form $form
    * @param string $setting_name
-   * @return string
+   * @param string $form_name
+   * @param array $args
+   * @return array
    */
-  function get_setting( $form, $setting_name ) {
-    $value = false;
-    if ( $this->has_setting( $form, $setting_name ) )
-      $value = $this->_settings[$form->settings_key][$setting_name];
-    return $value;
+  function get_form_setting( $setting_name, $form_name, $args = array() ) {
+    $settings = $this->get_form_settings( $form_name, $args );
+    return isset( $settings[$setting_name] ) ? $settings[$setting_name] : false;
   }
-  /**
+
+    /**
    * @param string|Sidecar_Form $form
    * @param string $setting_name
    * @param mixed $value
@@ -429,12 +529,33 @@ class Sidecar_Base {
     }
   }
   /**
-   * @param Sidecar_Shortcode $shortcode
-   * @param array $attributes
-   * @param string $to 'api_vars' or 'settings'
+   * @param string $to 'api_vars' or 'fields'
+   * @param Sidecar_Form $form
+   * @param array $fields
    * @return array
    */
-  function transform_shortcode_attributes( $shortcode, $attributes, $to = 'api_vars' ) {
+  function transform_form_fields_to( $to, $form, $fields ) {
+    $to = rtrim( $to, 's' );
+    $field_objects = $form->get_fields();
+    foreach( $fields as $field_name => $value ) {
+      if ( isset( $field_objects[$field_name] ) ) {
+        if ( $field_name != ( $new_name = $field_objects[$field_name]->$to ) ) {
+          if ( $new_name )  // If false then it's not an API var
+            $fields[$new_name] = $value;
+          unset( $fields[$field_name] );
+        }
+      }
+    }
+    return $fields;
+  }
+
+  /**
+   * @param string $to 'api_vars' or 'settings'
+   * @param Sidecar_Shortcode $shortcode
+   * @param array $attributes
+   * @return array
+   */
+  function transform_shortcode_attributes_to( $to, $shortcode, $attributes ) {
     $to = rtrim( $to, 's' );
     $attribute_objects = $shortcode->get_attributes();
     foreach( $attributes as $attribute_name => $attribute ) {
@@ -902,7 +1023,7 @@ class Sidecar_Base {
     $form = is_string( $form ) && isset( $this->_forms[$form] ) ? $this->_forms[$form] : $form;
     if ( is_array( $form ) )
       $form = $this->promote_form( $form );
-    return $form;
+    return is_object( $form ) ? $form : false;
   }
   /**
    * @param string  $form_name
@@ -965,6 +1086,9 @@ class Sidecar_Base {
    * @todo Decide if trigger_error() is the best for error messages
    */
   function activate() {
+    if ( ! $this->_initialized )
+      $this->initialize();
+
     global $wp_version;
     if ( version_compare( $wp_version, $this->min_wp, '<' ) ) {
       deactivate_plugins( basename( $this->plugin_file ) );
@@ -978,29 +1102,51 @@ class Sidecar_Base {
       if ( ! wp_next_scheduled( $this->cron_key ) ) {
         wp_schedule_event( time(), $this->cron_recurrance, $this->cron_key );
       }
-      $settings = get_option( $this->option_name );
-      if ( ! is_array( $settings ) )
-        $settings = array();
       /*
        * If we have existing settings and we are either upgrading or reactivating we
        * previously had a _credentials element then reauthenticate and record that change.
        */
-      if ( isset( $settings['_credentials'] ) && $this->api_class && file_exists( $this->api_loader ) ) {
-        require_once( $this->api_loader );
-        if ( class_exists( $this->api_class ) ) {
-          /**
-           * @var RESTian_Client
-           */
-          $api = new ${$this->api_class}();
-          $settings['_credentials']['authenticated'] = $this->api->authenticate( $settings['_credentials'] );
-          $this->api = $api;
+      $settings = $this->get_settings();
+      $auth_form = $this->get_auth_form();
+      if ( $auth_form ) {
+        $auth_key = $auth_form->settings_key;
+        if ( isset( $settings[$auth_key] ) && $this->api_class && file_exists( $this->api_loader ) ) {
+          require_once( $this->api_loader );
+          if ( class_exists( $this->api_class ) ) {
+            $class_name = $this->api_class;
+            /**
+             * @var RESTian_Client
+             */
+            $api = new $class_name();
+            $settings[$auth_key]['authenticated'] = $api->authenticate( $settings[$auth_key] );
+            $this->api = $api;
+          }
         }
       }
       $settings['installed_version'] = $this->plugin_version;
-      update_option( $this->option_name, $settings );
+      $this->update_settings( $settings );
     }
   }
 
+  /**
+   * @return Sidecar_Form
+   */
+  function get_auth_form() {
+//    $this->initialize();
+    $this->initialize_admin();
+    $auth_form = false;
+    /**
+     * @var Sidecar_Admin_Page $page
+     */
+    foreach( $this->_admin_pages as $page ) {
+      $this->initialize_admin_page( $page );
+      if ( $test = $page->get_auth_form() ) {
+        $auth_form = $test;
+        break;
+      }
+    }
+    return $auth_form;
+  }
   /**
    * @param $property_name
    * @return bool|string
