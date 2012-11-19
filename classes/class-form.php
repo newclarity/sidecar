@@ -265,10 +265,10 @@ HTML;
    * @param Sidecar_Base $plugin
    */
   function initialize_sections( $plugin ) {
+    $settings = $this->get_settings( $this->form_name );
     foreach( $this->get_sections() as $section_name => $section ) {
       if ( ! $section->section_handler )
         $section->section_handler = array( $plugin, 'the_form_section' );
-      $settings =  $this->get_settings( $this->form_name );
       add_settings_section( $section_name, $section->section_title, $section->section_handler, $this->plugin->option_name, array(
         'section' => $section,
         'form' => $this,
@@ -284,7 +284,7 @@ HTML;
           'form' => $this,
           'plugin' => $plugin,
           'settings' => $settings,
-        ));
+          ));
       }
     }
   }
@@ -411,7 +411,7 @@ HTML;
    * @return array
    */
   function get_settings() {
-    return $this->plugin->get_settings( $this );
+    return $this->plugin->get_form_settings( $this );
   }
 
   /**
@@ -427,7 +427,7 @@ HTML;
    * @return bool
    */
   function has_setting( $setting_name ) {
-    return $this->plugin->has_setting( $this, $setting_name );
+    return $this->plugin->has_form_setting( $this, $setting_name );
   }
 
   /**
@@ -436,7 +436,7 @@ HTML;
    * @return mixed
    */
   function get_setting( $setting_name ) {
-    return $this->plugin->get_setting( $this, $setting_name );
+    return $this->plugin->get_form_setting( $this, $setting_name );
  	}
 
   /**
@@ -444,6 +444,6 @@ HTML;
    * @param mixed $value
    */
   function set_setting( $setting_name, $value ) {
-    $this->plugin->set_setting( $this, $setting_name, $value );
+    $this->plugin->set_form_setting( $this, $setting_name, $value );
   }
 }
