@@ -65,6 +65,15 @@ class Sidecar_Field {
   var $field_handler = false;
 
   /**
+   * Indicates this field value if used for an API.
+   * Defaults to $this->field_name, can be see to another name
+   * (i.e. field_name = 'content_type', api_var = 'type'
+   * but if set to false it will cause the API to ignore this field.
+   * @var null|bool|string
+   */
+  var $api_var;
+
+  /**
    * @param string $field_name
    * @param array $args
    */
@@ -91,6 +100,8 @@ class Sidecar_Field {
     if ( ! $this->field_size )
       $this->field_size = preg_match( '#(text|password)#', $this->field_type ) ? 40 : false;
 
+    if ( is_null( $this->api_var ) )
+      $this->api_var = $this->field_name;
   }
 
   /**
@@ -102,7 +113,7 @@ class Sidecar_Field {
      */
     $form = $this->form;
     $settings = $form->get_settings( $this->form->settings_key );
-    $value = esc_attr( $settings[$this->field_name] );
+    $value = isset( $settings[$this->field_name] ) ? esc_attr( $settings[$this->field_name] ) : false;
     $input_name = "{$this->plugin->option_name}[{$form->settings_key}][{$this->field_name}]";
     /**
      * Sets HTML id like the following:
