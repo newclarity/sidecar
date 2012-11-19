@@ -70,14 +70,14 @@ class Sidecar_Base {
    * @var string Minimum WordPress version, defaults to first version requiring PHP 5.2.4.
    */
   var $min_wp = '3.2';
-  /**
-   * @var string Cron recurrance
-   */
-  var $cron_recurrance = 'hourly';
-  /**
-   * @var string Key used for cron for this plugin
-   */
-  var $cron_key;
+//  /**
+//   * @var string Cron recurrance
+//   */
+//  var $cron_recurrance = 'hourly';
+//  /**
+//   * @var string Key used for cron for this plugin
+//   */
+//  var $cron_key;
   /**
    * @var array Array of URLs defined for handle use by plugin.
    */
@@ -182,8 +182,8 @@ class Sidecar_Base {
     if ( ! $this->option_name )
       $this->option_name = "{$this->plugin_name}_settings";
 
-    if ( ! $this->cron_key )
-      $this->cron_key = "{$this->plugin_name}_cron";
+//    if ( ! $this->cron_key )
+//      $this->cron_key = "{$this->plugin_name}_cron";
 
     global $pagenow;
     if ( isset( $_GET['action'] ) && 'activate' == $_GET['action'] && isset( $_GET['plugin'] ) && 'plugins.php' == $pagenow ) {
@@ -499,8 +499,8 @@ class Sidecar_Base {
   }
 
   function init() {
-    add_action( 'cron_schedules', array( $this, 'cron_schedules' ) );
-    add_action( 'cron', array( $this, 'cron' ) );
+//    add_action( 'cron_schedules', array( $this, 'cron_schedules' ) );
+//    add_action( 'cron', array( $this, 'cron' ) );
     /**
      * @todo Figure out how to load this only if needed
      */
@@ -729,7 +729,6 @@ class Sidecar_Base {
         $shortcode->initialized = true;
       }
     }
-
     return $shortcode;
   }
 
@@ -756,24 +755,24 @@ class Sidecar_Base {
    *
    * @return mixed
    */
-  function cron_schedules( $schedules ) {
- 		$schedules['fifteenseconds'] = array( 'interval' => 15, 'display' => __( 'Once Every Fifteen Seconds' ) );
- 		return $schedules;
- 	}
+//  function cron_schedules( $schedules ) {
+// 		$schedules['fifteenseconds'] = array( 'interval' => 15, 'display' => __( 'Once Every Fifteen Seconds' ) );
+// 		return $schedules;
+// 	}
 
   /**
    * @return bool
    */
-  function cron() {
-    return true;
-  }
+//  function cron() {
+//    return true;
+//  }
 
   function deactivate() {
  		/**
  		 * Unschedule cron
  		 */
- 		$next_run = wp_next_scheduled( $this->cron_key );
- 		wp_unschedule_event( $next_run, $this->cron_key );
+// 		$next_run = wp_next_scheduled( $this->cron_key );
+// 		wp_unschedule_event( $next_run, $this->cron_key );
  	}
 
   /**
@@ -1099,9 +1098,10 @@ class Sidecar_Base {
       $msg = __( 'Your site needs to be running PHP %s or later in order to use %s.', 'sidecar' );
       trigger_error( sprintf( $msg, $this->min_php, $this->plugin_title ), E_USER_ERROR );
     } else {
-      if ( ! wp_next_scheduled( $this->cron_key ) ) {
-        wp_schedule_event( time(), $this->cron_recurrance, $this->cron_key );
-      }
+// @todo Add simplified support for cron when we see a use-case for it.
+//      if ( ! wp_next_scheduled( $this->cron_key ) ) {
+//        wp_schedule_event( time(), $this->cron_recurrance, $this->cron_key );
+//      }
       /*
        * If we have existing settings and we are either upgrading or reactivating we
        * previously had a _credentials element then reauthenticate and record that change.
@@ -1132,7 +1132,6 @@ class Sidecar_Base {
    * @return Sidecar_Form
    */
   function get_auth_form() {
-//    $this->initialize();
     $this->initialize_admin();
     $auth_form = false;
     /**
