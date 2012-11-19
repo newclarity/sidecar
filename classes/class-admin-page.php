@@ -149,6 +149,14 @@ class Sidecar_Admin_Page {
    * @return array
    */
   function filter_postback( $input ) {
+    static $called_already;
+    if ( isset( $called_already ) ) {
+      /**
+       * When using the Settings API this filter will be called twice when the option needs to be added.
+       */
+      return $input;
+    }
+    $called_already = true;
     if ( ! current_user_can( 'manage_options' ) ) {
       /**
        * TODO: Verify someone without proper options can actually get here.
