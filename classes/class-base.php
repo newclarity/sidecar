@@ -338,7 +338,7 @@ class Sidecar_Base {
    * @param string $setting_name
    * @return bool
    */
-  function has_setting( $form, $setting_name ) {
+  function has_form_setting( $form, $setting_name ) {
     if ( ! $form instanceof Sidecar_Form )
       if ( is_string( $form ) && $this->has_form( $form ) ) {
         $form = $this->get_form( $form );
@@ -358,7 +358,7 @@ class Sidecar_Base {
 //   */
 //  function get_form_setting( $form, $setting_name ) {
 //    $value = false;
-//    if ( $this->has_setting( $form, $setting_name ) )
+//    if ( $this->has_form_setting( $form, $setting_name ) )
 //      $value = $this->_settings[$form->settings_key][$setting_name];
 //    return $value;
 //  }
@@ -378,7 +378,7 @@ class Sidecar_Base {
    * @param string $setting_name
    * @param mixed $value
    */
-  function set_setting( $form, $setting_name, $value ) {
+  function set_form_setting( $form, $setting_name, $value ) {
     if ( ! $form instanceof Sidecar_Form )
       if ( is_string( $form ) && $this->has_form( $form ) ) {
         $form = $this->get_form( $form );
