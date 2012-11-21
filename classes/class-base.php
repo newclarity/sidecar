@@ -186,12 +186,23 @@ class Sidecar_Base {
 //      $this->cron_key = "{$this->plugin_name}_cron";
 
     global $pagenow;
-    if ( isset( $_GET['action'] ) && 'activate' == $_GET['action'] && isset( $_GET['plugin'] ) && 'plugins.php' == $pagenow ) {
-      /*
-       * This plugin is being activated
-       */
-      $this->plugin_id = filter_input( INPUT_GET, 'plugin', FILTER_SANITIZE_STRING );
-      $this->plugin_file = WP_PLUGIN_DIR . '/' . $this->plugin_id;
+    if ( $this->is_plugin_page_action() ) {
+      global $plugin;
+      if ( ! isset( $plugin ) ) {
+        /*
+         * This plugin is being activated
+         */
+        $this->plugin_id = filter_input( INPUT_GET, 'plugin', FILTER_SANITIZE_STRING );
+        $this->plugin_file = WP_PLUGIN_DIR . '/' . $this->plugin_id;
+      } else {
+        /*
+         * Another plugin is being activated
+         */
+        $this->plugin_file = WP_PLUGIN_DIR . '/' . $plugin;
+        $this->plugin_id = $plugin;
+      }
+      add_action( 'plugins_loaded', array( $this, 'plugins_loaded' ) );
+      add_action( "activate_{$this->plugin_id}", array( $this, 'activate_plugin' ), 0 );
       register_activation_hook( $this->plugin_id, array( $this, 'activate' ) );
     } else {
       /**
@@ -220,6 +231,7 @@ class Sidecar_Base {
         exit;
       }
       register_deactivation_hook( $this->plugin_id, array( $this, 'deactivate' ) );
+      //@todo register_uninstall_hook
     }
 
 
@@ -230,6 +242,33 @@ class Sidecar_Base {
 
   }
 
+  /**
+   * Used to check if we are in an activation callback on the Plugins page.
+   *
+   * @return bool
+   */
+  function is_plugin_page_action() {
+    global $pagenow;
+    return 'plugins.php' == $pagenow
+      && isset( $_GET['action'] )
+      && isset( $_GET['plugin'] );
+  }
+
+  /**
+   * This is used for the "activate_{$this->plugin_id}" hook
+   * when $this->is_plugin_page_action().
+   */
+  function activate_plugin() {
+    $this->initialize();
+  }
+
+  /**
+   * This is used for the "activate_{$this->plugin_id}" hook
+   * when $this->is_plugin_page_action().
+   */
+  function plugins_loaded() {
+    $this->initialize();
+  }
   /**
    * @return array
    */
