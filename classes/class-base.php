@@ -98,6 +98,10 @@ class Sidecar_Base {
    * @var bool|array
    */
   protected $_admin_pages = array();
+  /**
+   * @var array Array of Meta Links for the WordPress plugin page.
+   */
+  protected $_meta_links = array();
 
   /**
    * @var Sidecar_Admin_Page
@@ -247,9 +251,18 @@ class Sidecar_Base {
    *
    * @return bool
    */
-  function is_plugin_page_action() {
+  function is_plugin_page() {
     global $pagenow;
-    return 'plugins.php' == $pagenow
+    return 'plugins.php' == $pagenow;
+  }
+
+  /**
+   * Used to check if we are in an activation callback on the Plugins page.
+   *
+   * @return bool
+   */
+  function is_plugin_page_action() {
+    return $this->is_plugin_page()
       && isset( $_GET['action'] )
       && isset( $_GET['plugin'] );
   }
@@ -506,7 +519,13 @@ class Sidecar_Base {
    *
    */
   function wp_loaded() {
-    if ( ! is_admin() ) {
+    if ( is_admin() ) {
+      add_action( 'admin_notices',       array( $this, 'admin_notices' ) );
+      if ( $this->is_plugin_page() ) {
+        add_filter( 'plugin_action_links', array( $this, 'plugin_action_links' ), 10, 2 );
+        add_filter( 'plugin_row_meta',     array( $this, 'plugin_meta_links' ), 10, 2 );
+      }
+    } else {
       $shortcodes = method_exists( $this->plugin_class, 'initialize_shortcodes' );
       $template = method_exists( $this, 'initialize_template' );
       if ( $shortcodes || $template ) {
@@ -520,6 +539,51 @@ class Sidecar_Base {
       }
     }
   }
+  /**
+   */
+  function admin_notices() {
+//    $html = <<<HTML
+//<div id="message" class="updated">
+//    <p>Message text goes here</p>
+//</div>
+//HTML;
+//    echo $html;
+  }
+
+  /**
+   * @param $links
+   * @param $file
+   *
+   * @return array
+   */
+  function plugin_action_links( $links, $file ){
+    if ( $file == $this->plugin_id ) {
+      if ( $settings_page = $this->get_admin_page( 'settings' ) ) {
+        $settings_page->initialize();
+        $url = $this->get_admin_page( 'settings' )->get_page_url(null);
+        $link_text = __( 'Settings', 'sidecar' );
+        $links[] = "<a href=\"{$url}\">{$link_text}</a>";
+      }
+    }
+    return $links;
+  }
+
+  /**
+   * @param array $links
+   * @param string $file
+   *
+   * @return array
+   */
+  function plugin_meta_links( $links, $file ){
+    if ( $file == $this->plugin_id ) {
+      foreach( $this->_meta_links as $link_text => $link ) {
+        $title = isset( $link['title'] ) ? " title=\"{$link['title']}\"" : '';
+        $links[] = "<a target=\"_blank\" href=\"{$link['url']}\"{$title}>{$link_text}</a>";
+      }
+    }
+    return $links;
+  }
+
   /**
    * @param $content
    */
@@ -715,7 +779,17 @@ class Sidecar_Base {
     /**
      * @var Sidecar_Admin_Page $admin_page
      */
-    return $this->_admin_pages[$page_name] = new Sidecar_Admin_Page( $page_name, $args );
+    $this->_admin_pages[$page_name] = new Sidecar_Admin_Page( $page_name, $args );
+  }
+  /**
+   * @param string $link_text
+   * @param string $url
+   * @param array $args
+   */
+  function add_meta_link( $link_text, $url, $args = array() ) {
+    $args['link_text'] = $link_text;
+    $args['url'] = $url;
+    $this->_meta_links[$link_text] = $args;
   }
 
   /**
@@ -726,6 +800,10 @@ class Sidecar_Base {
   function get_admin_page( $page_name ) {
     return $this->_admin_pages[$page_name];
   }
+
+  /**
+   *
+   */
   function add_default_shortcode() {
     $this->add_shortcode( $this->plugin_slug );
   }
