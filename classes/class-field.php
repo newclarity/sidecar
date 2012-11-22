@@ -60,6 +60,11 @@ class Sidecar_Field {
   var $field_options;
 
   /**
+   * @var bool
+   */
+  var $field_required = false;
+
+  /**
    * @var bool|callable
    */
   var $field_handler = false;

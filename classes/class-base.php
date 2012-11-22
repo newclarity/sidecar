@@ -140,24 +140,28 @@ class Sidecar_Base {
   /**
    * @var string
    */
-  var $uses_ajax = false;
+  var $needs_ajax = false;
+  /**
+   * @var bool
+   */
+  var $needs_settings = true;
 
   /**
    * @param array $args
    */
   function __construct( $args = array() ) {
     /*
-     * If running an AJAX callback and either $this->uses_ajax or $args['uses_ajax'] is false then bypass the plugin.
+     * If running an AJAX callback and either $this->needs_ajax or $args['needs_ajax'] is false then bypass the plugin.
      *
      * To enable AJAX support in a plugin either:
      *
-     *  1. Create a __construct in plugin class, set $this->uses_ajax=true then call parent::_construct(), or
+     *  1. Create a __construct in plugin class, set $this->needs_ajax=true then call parent::_construct(), or
      *
-     *  2. Pass array( 'uses_ajax' => true ) to plugin's required constructor at end of plugin file,
-     *     i.e. new MyPlugin( array( 'uses_ajax' => true ) );
+     *  2. Pass array( 'needs_ajax' => true ) to plugin's required constructor at end of plugin file,
+     *     i.e. new MyPlugin( array( 'needs_ajax' => true ) );
      *
      */
-    if ( defined( 'DOING_AJAX' ) && DOING_AJAX && ( ! $this->uses_ajax || ( isset( $args['uses_ajax'] ) && ! $args['uses_ajax'] ) ) )
+    if ( defined( 'DOING_AJAX' ) && DOING_AJAX && ( ! $this->needs_ajax || ( isset( $args['needs_ajax'] ) && ! $args['needs_ajax'] ) ) )
       return;
 
     $this->plugin_class = get_class( $this );
@@ -235,7 +239,7 @@ class Sidecar_Base {
         exit;
       }
       register_deactivation_hook( $this->plugin_id, array( $this, 'deactivate' ) );
-      //@todo register_uninstall_hook
+      register_deactivation_hook( $this->plugin_id, array( $this, 'uninstall' ) );
     }
 
 
@@ -243,6 +247,33 @@ class Sidecar_Base {
      * Ask subclass to initialize plugin which includes admin pages
      */
     $this->initialize_plugin();
+
+  }
+
+  /**
+   *
+   */
+  function uninstall() {
+    if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) )
+      return;
+
+    $plugin = new RevoStock_Gallery_Plugin();
+
+    /**
+     * Delete settings
+     */
+    delete_option( $plugin->option_name );
+
+    /*
+     * Call subclass' uninstall if applicable.
+     */
+    $this->uninstall_plugin();
+
+//    /**
+//     * Delete cron tasks
+//     */
+//    $next_run = wp_next_scheduled( $plugin->cron_key );
+//    wp_unschedule_event( $next_run, $plugin->cron_key );
 
   }
 
@@ -282,6 +313,29 @@ class Sidecar_Base {
   function plugins_loaded() {
     $this->initialize();
   }
+
+  /**
+   * @return bool
+   */
+  function has_required_settings() {
+    $has_required_settings = true;
+    if ( ! $this->_initialized )
+      $this->initialize();
+    if (  $this->has_forms() ) {
+      $settings = $this->get_settings();
+      /** @var Sidecar_Form $form */
+      foreach( $this->get_forms() as $form_name => $form ) {
+        /** @var Sidecar_Field $field */
+        foreach( $form->get_fields() as $field_name => $field ) {
+          if ( $field->field_required && empty( $settings[$form->settings_key][$field_name] ) ) {
+            $has_required_settings = false;
+            break;
+          }
+        }
+      }
+    }
+    return $has_required_settings;
+  }
   /**
    * @return array
    */
@@ -290,13 +344,8 @@ class Sidecar_Base {
       $this->initialize();
     $settings = get_option( $this->option_name );
     if (  $this->has_forms() )
-      /**
-       * @var Sidecar_Form
-       */
-      foreach( $this->get_forms() as $key => $form ) {
-        if ( is_array( $form ) ) {
-          $form = $this->promote_form( $form );
-        }
+      /** @var Sidecar_Form $form */
+      foreach( $this->get_forms() as $form ) {
         $settings[$form->settings_key] = $this->get_form_settings( $form );
       }
     return $settings;
@@ -306,6 +355,9 @@ class Sidecar_Base {
    * @return array|bool
    */
   function get_forms() {
+    foreach( $this->_forms as $form_name => $form )
+      if ( is_array( $form ) )
+        $this->_forms[$form_name] = $this->promote_form( $form );
     return $this->_forms;
   }
   /**
@@ -313,6 +365,8 @@ class Sidecar_Base {
    * @return array
    */
   function get_form_settings( $form ) {
+    if ( is_array( $form ) )
+      $form = $this->promote_form( $form );
     if ( is_string( $form ) && $this->has_form( $form ) )
       $form = $this->get_form( $form );
     if ( ! isset( $form->settings_key ) || ! isset( $this->_settings[$form->settings_key] ) ) {
@@ -542,12 +596,19 @@ class Sidecar_Base {
   /**
    */
   function admin_notices() {
-//    $html = <<<HTML
-//<div id="message" class="updated">
-//    <p>Message text goes here</p>
-//</div>
-//HTML;
-//    echo $html;
+    if ( $this->needs_settings && ! $this->has_required_settings() && $this->is_plugin_page() ) {
+    $icon_html = $this->has_url( 'logo_icon' ) ? "<span class=\"sidecar-logo-icon\"></span><img src=\"{$this->logo_icon_url}\" /></span>" : '';
+    $message = sprintf( __( 'The <em>%s</em> plugin it now activated. Please configure it\'s <a href="%s"><strong>settings</strong></a>.', 'sidecar' ),
+      $this->plugin_title,
+      $this->get_settings_url()
+    );
+    $html = <<<HTML
+<div id="message" class="updated">
+    <p>{$icon_html}{$message}</p>
+</div>
+HTML;
+    echo $html;
+    }
   }
 
   /**
@@ -557,17 +618,25 @@ class Sidecar_Base {
    * @return array
    */
   function plugin_action_links( $links, $file ){
-    if ( $file == $this->plugin_id ) {
-      if ( $settings_page = $this->get_admin_page( 'settings' ) ) {
-        $settings_page->initialize();
-        $url = $this->get_admin_page( 'settings' )->get_page_url(null);
-        $link_text = __( 'Settings', 'sidecar' );
-        $links[] = "<a href=\"{$url}\">{$link_text}</a>";
-      }
+    if ( $file == $this->plugin_id  ) {
+      $url = $this->get_settings_url();
+      $link_text = __( 'Settings', 'sidecar' );
+      $links[] = "<a href=\"{$url}\">{$link_text}</a>";
     }
     return $links;
   }
 
+  /**
+   * @return bool|string|void
+   */
+  function get_settings_url() {
+    $settings_url = false;
+    if ( $settings_page = $this->get_admin_page( 'settings' ) ) {
+      $settings_page->initialize();
+      $settings_url = $this->get_admin_page( 'settings' )->get_page_url( null );
+    }
+    return $settings_url;
+  }
   /**
    * @param array $links
    * @param string $file
@@ -696,6 +765,12 @@ class Sidecar_Base {
   function initialize_template() {
     // Only here to keep PhpStorm from complaining that it's not defined.
   }
+  /**
+   *
+   */
+  function uninstall_plugin() {
+    // Only here to keep PhpStorm from complaining that it's not defined.
+  }
 
   /**
    * @throws Exception
@@ -788,7 +863,7 @@ class Sidecar_Base {
    */
   function add_meta_link( $link_text, $url, $args = array() ) {
     $args['link_text'] = $link_text;
-    $args['url'] = $url;
+    $args['url'] = isset( $this->_urls[$url] ) ? $this->_urls[$url]['url_template'] : $url;
     $this->_meta_links[$link_text] = $args;
   }
 
