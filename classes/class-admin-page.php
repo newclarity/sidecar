@@ -606,10 +606,10 @@ HTML;
    * @return string|void
    */
   function get_page_url() {
-    return $this->get_tab_url();
+    return $this->get_tab_url(null);
  	}
   /**
-   * @param bool|string|Sidecar_Admin_Tab $tab
+   * @param null|bool|string|Sidecar_Admin_Tab $tab If null is passed then don't add a default tab.
    * @return string|void
    */
   function get_tab_url( $tab = false ) {
@@ -626,7 +626,7 @@ HTML;
       } else {
         if ( false === $tab )
           $tab = $this->get_default_tab()->tab_slug;
-        $url = $this->_page_url[$tab] = $this->get_base_page_url() . "&tab={$tab}";
+        $url = $this->_page_url[$tab] = $this->get_base_page_url() . ( is_null($tab) ? '' : "&tab={$tab}" );
       }
       ;
     } else {
