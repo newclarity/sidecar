@@ -1,7 +1,6 @@
 {
   "name": "newclarity/sidecar",
   "description": "Sidecar: The Missing Plugin API for WordPress",
-  "version": "0.0.0",
   "require": {
       "php": ">=5.2.4"
   }
