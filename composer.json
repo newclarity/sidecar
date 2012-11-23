@@ -2,7 +2,7 @@
   "name": "newclarity/sidecar",
   "description": "Sidecar: The Missing Plugin API for WordPress",
   "repositories": [
-    { "type": "git", "url": "https://github.com/newclarity/restian.git" },
+    { "type": "git", "url": "https://github.com/newclarity/restian.git" }
   ],
   "suggest": {
     "newclarity/restian": "Use to create Plugins that Authenticate with RESTful web services"
