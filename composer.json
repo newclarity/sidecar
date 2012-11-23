@@ -1,5 +1,5 @@
 {
-  "name": "Sidecar",
+  "name": "newclarity/sidecar",
   "description": "Sidecar: The Missing Plugin API for WordPress",
   "repositories": [
     { "type": "git", "url": "https://github.com/newclarity/restian.git" }
