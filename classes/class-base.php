@@ -238,11 +238,12 @@ class Sidecar_Base {
     foreach( $wp_filter[current_filter()] as $filter )
       $filters  = array_merge( $filter, $filters );
 
-    foreach( $filters as $callable )
-      if ( isset( $callable[0] ) && self::$_me[$callable[0]] ) {
-        $class_name = $callable[0];
+    foreach( $filters as $hook ) {
+      if ( isset( $hook['function'] ) && isset( $hook['function'][0] ) && self::$_me[$hook['function'][0]] ) {
+        $class_name = $hook['function'][0];
         break;
       }
+    }
 
     return $class_name;
   }
