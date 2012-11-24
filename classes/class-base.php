@@ -672,7 +672,7 @@ class Sidecar_Base {
       $this->get_settings_url()
     );
     $html = <<<HTML
-<div id="message" class="updated">
+<div id="message" class="error settings-error">
     <p>{$icon_html}{$message}</p>
 </div>
 HTML;
