@@ -212,7 +212,7 @@ class Sidecar_Base {
       register_deactivation_hook( $this->plugin_id, array( $this, 'deactivate' ) );
     }
 
-    register_uninstall_hook( $this->plugin_id, array( __CLASS__, 'uninstall' ) );
+    register_uninstall_hook( $this->plugin_id, array( $this->plugin_class, 'uninstall' ) );
 
   }
 
@@ -229,28 +229,48 @@ class Sidecar_Base {
   }
 
   /**
+   * @return bool|string
+   */
+  protected static function _get_current_filter_class_name() {
+    $class_name = false;
+    global $wp_filter;
+    $filters = array();
+    foreach( $wp_filter[current_filter()] as $filter )
+      $filters  = array_merge( $filter, $filters );
+
+    foreach( $filters as $callable )
+      if ( isset( $callable[0] ) && self::$_me[$callable[0]] ) {
+        $class_name = $callable[0];
+        break;
+      }
+
+    return $class_name;
+  }
+  /**
    *
    */
   static function uninstall() {
 
-    $plugin = self::me();
+    if ( $plugin_class = self::_get_current_filter_class_name() ) {
 
-    /**
-     * Delete settings
-     */
-    delete_option( $plugin->option_name );
+      $plugin = call_user_func( array( $plugin_class, 'me' ) );
 
-    /*
-     * Call subclass' uninstall if applicable.
-     */
-    $plugin->uninstall_plugin();
+      /**
+       * Delete settings
+       */
+      delete_option( $plugin->option_name );
 
-//    /**
-//     * Delete cron tasks
-//     */
-//    $next_run = wp_next_scheduled( $plugin->cron_key );
-//    wp_unschedule_event( $next_run, $plugin->cron_key );
+      /*
+       * Call subclass' uninstall if applicable.
+       */
+      $plugin->uninstall_plugin();
 
+  //    /**
+  //     * Delete cron tasks
+  //     */
+  //    $next_run = wp_next_scheduled( $plugin->cron_key );
+  //    wp_unschedule_event( $next_run, $plugin->cron_key );
+    }
   }
 
   /**
