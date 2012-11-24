@@ -234,14 +234,12 @@ class Sidecar_Base {
   protected static function _get_current_filter_class_name() {
     $class_name = false;
     global $wp_filter;
-    $filters = array();
-    foreach( $wp_filter[current_filter()] as $filter )
-      $filters  = array_merge( $filter, $filters );
-
-    foreach( $filters as $hook ) {
-      if ( isset( $hook['function'] ) && isset( $hook['function'][0] ) && self::$_me[$hook['function'][0]] ) {
-        $class_name = $hook['function'][0];
-        break;
+    foreach( $wp_filter[current_filter()] as $filters ) {
+      foreach( $filters as $hook ) {
+        if ( isset( $hook['function'] ) && isset( $hook['function'][0] ) && self::$_me[$hook['function'][0]] ) {
+          $class_name = $hook['function'][0];
+          break;
+        }
       }
     }
 
