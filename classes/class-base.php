@@ -213,9 +213,17 @@ class Sidecar_Base {
       add_action( "activate_{$this->plugin_id}", array( $this, 'activate_plugin' ), 0 );
       register_activation_hook( $this->plugin_id, array( $this, 'activate' ) );
     } else if ( $this->is_plugin_deletion() ) {
-      echo '';
-      exit;
-
+      /*
+       * @todo My god this is a hack! I really need help from WordPress core here.
+       */
+      $backtrace = debug_backtrace();
+      foreach( $backtrace as $index => $call ) {
+        if ( preg_match( '#/wp-admin/includes/plugin.php$#', $call['file'] ) ) {
+          $this->plugin_file = $backtrace[$index-1]['file'];
+          break;
+        }
+      }
+      $this->plugin_id = basename( dirname( $this->plugin_file ) ) . '/' . basename( $this->plugin_file );
     } else {
       /**
        * Grab the plugin file name from one the global values set when the plugin is included.
@@ -245,7 +253,7 @@ class Sidecar_Base {
       register_deactivation_hook( $this->plugin_id, array( $this, 'deactivate' ) );
     }
 
-    register_uninstall_hook( $this->plugin_id, array( $this->plugin_class, 'deactivate' ) );
+    register_uninstall_hook( $this->plugin_id, array( $this->plugin_class, 'uninstall' ) );
 
     /**
      * Ask subclass to initialize plugin which includes admin pages
