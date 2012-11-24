@@ -193,6 +193,11 @@ class Sidecar_Base {
 //    if ( ! $this->cron_key )
 //      $this->cron_key = "{$this->plugin_name}_cron";
 
+    /**
+     * Ask subclass to initialize plugin which includes admin pages
+     */
+    $this->initialize_plugin();
+
     if ( ! $this->plugin_file ) {
       trigger_error( sprintf( __( '%s->plugin_file must be assigned in %s->initialize_plugin().', 'sidecar' ), $this->plugin_class, $this->plugin_class ) );
       exit;
@@ -208,11 +213,6 @@ class Sidecar_Base {
     }
 
     register_uninstall_hook( $this->plugin_id, array( __CLASS__, 'uninstall' ) );
-
-    /**
-     * Ask subclass to initialize plugin which includes admin pages
-     */
-    $this->initialize_plugin();
 
   }
 
