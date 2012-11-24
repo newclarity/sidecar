@@ -213,6 +213,8 @@ class Sidecar_Base {
       add_action( "activate_{$this->plugin_id}", array( $this, 'activate_plugin' ), 0 );
       register_activation_hook( $this->plugin_id, array( $this, 'activate' ) );
     } else if ( $this->is_plugin_deletion() ) {
+      echo '';
+      exit;
 
     } else {
       /**
@@ -242,6 +244,8 @@ class Sidecar_Base {
       }
       register_deactivation_hook( $this->plugin_id, array( $this, 'deactivate' ) );
     }
+
+    register_uninstall_hook( $this->plugin_id, array( $this->plugin_class, 'deactivate' ) );
 
     /**
      * Ask subclass to initialize plugin which includes admin pages
