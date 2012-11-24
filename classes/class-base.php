@@ -232,8 +232,6 @@ class Sidecar_Base {
    *
    */
   static function uninstall() {
-    if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) )
-      return;
 
     $plugin = new RevoStock_Gallery_Plugin();
 
