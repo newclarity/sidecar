@@ -233,7 +233,7 @@ class Sidecar_Base {
    */
   static function uninstall() {
 
-    $plugin = new RevoStock_Gallery_Plugin();
+    $plugin = self::me();
 
     /**
      * Delete settings
@@ -243,7 +243,7 @@ class Sidecar_Base {
     /*
      * Call subclass' uninstall if applicable.
      */
-    self::me()->uninstall_plugin();
+    $plugin->uninstall_plugin();
 
 //    /**
 //     * Delete cron tasks
@@ -469,10 +469,11 @@ class Sidecar_Base {
  	    $this->_settings[$form->settings_key][$setting_name] = $value;
   }
   /**
+   * @param string $plugin_class
    * @return Sidecar_Base
    */
-  static function me() {
-    return self::$_me;
+  static function me( $plugin_class ) {
+    return self::$_me[$plugin_class];
   }
 
   /**
