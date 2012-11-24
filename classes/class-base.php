@@ -239,7 +239,7 @@ class Sidecar_Base {
         exit;
       }
       register_deactivation_hook( $this->plugin_id, array( $this, 'deactivate' ) );
-      register_deactivation_hook( $this->plugin_id, array( $this, 'uninstall' ) );
+      register_uninstall_hook( $this->plugin_id, array( __CLASS__, 'uninstall' ) );
     }
 
 
@@ -253,7 +253,7 @@ class Sidecar_Base {
   /**
    *
    */
-  function uninstall() {
+  static function uninstall() {
     if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) )
       return;
 
@@ -267,7 +267,7 @@ class Sidecar_Base {
     /*
      * Call subclass' uninstall if applicable.
      */
-    $this->uninstall_plugin();
+    self::me()->uninstall_plugin();
 
 //    /**
 //     * Delete cron tasks
