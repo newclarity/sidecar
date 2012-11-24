@@ -252,7 +252,15 @@ class Sidecar_Base {
 
     if ( $plugin_class = self::_get_current_filter_class_name() ) {
 
+      /**
+       * @var Sidecar_Base $plugin
+       */
       $plugin = call_user_func( array( $plugin_class, 'me' ) );
+
+      /**
+       * Initialize it so we can ensure all properties are set in case $plugin->uninstall_plugin() needs them.
+       */
+      $plugin->initialize();
 
       /**
        * Delete settings
