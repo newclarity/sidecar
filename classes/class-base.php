@@ -193,61 +193,39 @@ class Sidecar_Base {
 //    if ( ! $this->cron_key )
 //      $this->cron_key = "{$this->plugin_name}_cron";
 
-    global $pagenow;
+    if ( ! $this->plugin_file ) {
+      trigger_error( sprintf( __( '%s->plugin_file must be assigned in %s->initialize_plugin().', 'sidecar' ), $this->plugin_class, $this->plugin_class ) );
+      exit;
+    }
+    $this->plugin_id = basename( dirname( $this->plugin_file ) ) . '/' . basename( $this->plugin_file );
+
     if ( $this->is_plugin_page_action() ) {
-      global $plugin;
-      if ( ! isset( $plugin ) ) {
-        /*
-         * This plugin is being activated
-         */
-        $this->plugin_id = filter_input( INPUT_GET, 'plugin', FILTER_SANITIZE_STRING );
-        $this->plugin_file = WP_PLUGIN_DIR . '/' . $this->plugin_id;
-      } else {
-        /*
-         * Another plugin is being activated
-         */
-        $this->plugin_file = WP_PLUGIN_DIR . '/' . $plugin;
-        $this->plugin_id = $plugin;
-      }
       add_action( 'plugins_loaded', array( $this, 'plugins_loaded' ) );
       add_action( "activate_{$this->plugin_id}", array( $this, 'activate_plugin' ), 0 );
       register_activation_hook( $this->plugin_id, array( $this, 'activate' ) );
     } else {
-      /**
-       * Grab the plugin file name from one the global values set when the plugin is included.
-       * @see: http://wordpress.stackexchange.com/questions/15202/plugins-in-symlinked-directories
-       * @see: http://wordpress.stackexchange.com/a/15204/89
-       */
-      global $mu_plugin, $network_plugin, $plugin;
-      if ( isset( $mu_plugin ) ) {
-        $this->plugin_file = $mu_plugin;
-      } else if ( isset( $network_plugin ) ) {
-        $this->plugin_file = $network_plugin;
-      } else if ( isset( $plugin ) ) {
-        $this->plugin_file = $plugin;
-      } else {
-        trigger_error( sprintf( __( 'Plugin %s only works when loaded by WordPress.' ), $this->plugin_name ) );
-        exit;
-      }
-      $this->plugin_id = basename( dirname( $this->plugin_file ) ) . '/' . basename( $this->plugin_file );
-      require_once( ABSPATH . 'wp-admin/includes/plugin.php' );
-      if ( ! is_plugin_active( $this->plugin_id ) ) {
-        trigger_error( sprintf( __( 'Plugin %s is not an active plugin or is not installed in a subdirectory of %s.' ),
-          $this->plugin_name,
-          WP_CONTENT_DIR . '/plugins'
-        ));
-        exit;
-      }
       register_deactivation_hook( $this->plugin_id, array( $this, 'deactivate' ) );
-      register_uninstall_hook( $this->plugin_id, array( __CLASS__, 'uninstall' ) );
     }
 
+    register_uninstall_hook( $this->plugin_id, array( __CLASS__, 'uninstall' ) );
 
     /**
      * Ask subclass to initialize plugin which includes admin pages
      */
     $this->initialize_plugin();
 
+  }
+
+  /**
+   * Used to check if the plugin is currently being deleted.
+   *
+   * @return bool
+   */
+  function is_plugin_deletion() {
+    return $this->is_plugin_page()
+      && isset( $_GET['action'] ) &&  'delete-selected' == $_GET['action']
+      && isset( $_POST['verify-delete'] ) &&  '1' == $_POST['verify-delete']
+      && isset( $_POST['checked'] ) && count( $_POST['checked'] );
   }
 
   /**
@@ -1360,8 +1338,3 @@ HTML;
     return $value;
   }
 }
-
-
-
-
-
