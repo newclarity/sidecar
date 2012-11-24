@@ -26,6 +26,10 @@ class Sidecar_Form {
   /**
    * @var array
    */
+  var $_fields = array();
+  /**
+   * @var array
+   */
   var $_sections = array();
   /**
    * @var array
@@ -61,10 +65,8 @@ class Sidecar_Form {
    */
   function get_field_defaults() {
     $field_defaults = array();
-    foreach( $this->get_sections() as $form_section ) {
-      foreach( $form_section->fields as $field ) {
-        $field_defaults[$field->field_name] = isset( $field->field_default ) ? $field->field_default : '';
-      }
+    foreach( $this->get_fields() as $field ) {
+      $field_defaults[$field->field_name] = isset( $field->field_default ) ? $field->field_default : '';
     }
     return $field_defaults;
   }
@@ -75,11 +77,37 @@ class Sidecar_Form {
     return $this->_sections;
   }
   /**
+   * @return array
+   */
+  function get_fields() {
+    return $this->_fields;
+  }
+  /**
+   * @return Sidecar_Field
+   */
+  function get_field( $field_name ) {
+    return isset( $this->_fields[$field_name] ) ? $this->_fields[$field_name] : false;
+  }
+  /**
+   * @param string $field_name
+   * @return bool
+   */
+  function has_field( $field_name ) {
+    return isset( $this->_fields[$field_name] );
+  }
+  /**
+   * @return bool
+   */
+  function has_fields() {
+    return 0 < count( $this->_fields ) ;
+  }
+
+  /**
    * @param string $section_name
    * @return bool
    */
   function get_section( $section_name ) {
-    return $this->_sections[$section_name];
+    return isset( $this->_sections[$section_name] ) ? $this->_sections[$section_name] : false;
   }
   /**
    * @param string $section_name
@@ -107,16 +135,10 @@ class Sidecar_Form {
    *
    * @return bool
    */
-  function has_fields( $section_name = false ) {
+  function has_section_fields( $section_name = false ) {
+    $has_fields = false;
     if ( $section_name && $this->has_section( $section_name ) ) {
       $has_fields = 0 < count( $this->_sections[$section_name]->fields );
-    } else {
-      $has_fields = false;
-      foreach( $this->_sections as $section )
-        if ( count( $section->fields ) ) {
-          $has_fields = true;
-          break;
-        }
     }
     return $has_fields;
   }
@@ -125,15 +147,10 @@ class Sidecar_Form {
    *
    * @return array
    */
-  function get_fields( $section_name = false ) {
+  function get_section_fields( $section_name = false ) {
+    $fields = array();
     if ( $section_name && $this->has_section( $section_name ) ) {
       $fields = $this->_sections[$section_name]->fields;
-    } else {
-      $fields = array();
-      foreach( $this->_sections as $section )
-        if ( is_array( $section->fields ) ) {
-          $fields = array_merge( $section->fields, $fields );
-        }
     }
     return $fields;
   }
@@ -277,7 +294,7 @@ HTML;
         ));
       foreach( $section->fields as $field_name => $field ) {
         if ( ! $field->field_handler )
-          $field->field_handler = array( $plugin, 'the_form_field' );
+          $field->field_handler = array( $this, '_the_form_field_callback' );
         add_settings_field( $field_name, $field->field_label, $field->field_handler, $this->plugin->option_name, $section_name, array(
           'field' => $field,
           'section' => $section,
@@ -287,6 +304,12 @@ HTML;
           ));
       }
     }
+  }
+  /**
+   * @param array $args
+   */
+  function _the_form_field_callback( $args ) {
+    $this->plugin->the_form_field( $args['field']->field_name, $args['form']->form_name );
   }
   /**
    * @param Sidecar_Base $plugin
@@ -311,22 +334,6 @@ HTML;
         $button->other_attributes = false;
 
     }
-  }
-
-  /**
-   * @param string  $field_name
-   * @param array   $args
-   *
-   * @return mixed
-   */
-  function get_form_field( $field_name, $args = array() ) {
-
-    if ( ! isset( $args['section_name'] ) ) {
-      $section = end( $this->_sections );
-      $args['section_name'] = $section->section_name;
-    }
-
-    return $this->_sections[$args['section_name']]->fields[$field_name];
   }
 
   /**
@@ -381,7 +388,10 @@ HTML;
      */
     $args['form'] = $this;
     $args['plugin'] = $this->plugin;
-    return $this->_sections[$section_name]->fields[$field_name] = new Sidecar_Field( $field_name, $args );
+    $args['section'] = $this->get_section( $section_name );
+    $field = new Sidecar_Field( $field_name, $args );
+    $this->_fields[$field_name] = &$field;
+    $this->_sections[$section_name]->fields[$field_name] = &$field;
   }
   /**
    * Get an array of new settings (empty string; '').

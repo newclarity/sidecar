@@ -1239,30 +1239,29 @@ HTML;
    *
    * @return Sidecar_Field
    */
-  function get_form_field( $args ) {
+  function get_form_field( $field_name, $form_name ) {
     /**
      * @var Sidecar_Form $form
      */
-    $form = $this->get_form( $args['form']->form_name );
-    $field = $form->get_form_field( $args['field']->field_name, array( 'section_name' => $args['section']->section_name ) );
-    return $field;
+    $form = $this->get_form( $form_name );
+    return $form ? $form->get_field( $field_name ) : false;
   }
   /**
    * @param array $args
    */
-  function get_form_field_html( $args ) {
+  function get_form_field_html( $field_name, $form_name ) {
     /**
      * @var Sidecar_Field $field
      */
-    $field = $this->get_form_field( $args );
+    $field = $this->get_form_field( $field_name, $form_name );
     return $field->get_field_html();
   }
 
   /**
    * @param array $args
    */
-  function the_form_field( $args ) {
-    echo $this->get_form_field_html( $args );
+  function the_form_field( $field_name, $form_name ) {
+    echo $this->get_form_field_html( $field_name, $form_name );
   }
 
   /**
