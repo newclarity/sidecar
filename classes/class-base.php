@@ -246,7 +246,7 @@ class Sidecar_Base {
       if ( ! is_plugin_active( $this->plugin_id ) ) {
         trigger_error( sprintf( __( 'Plugin %s is not an active plugin or is not installed in a subdirectory of %s.' ),
           $this->plugin_name,
-          WP_CONTENT_DIR . '/plugins'
+          WP_PLUGIN_DIR
         ));
         exit;
       }
