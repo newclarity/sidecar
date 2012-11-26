@@ -213,14 +213,18 @@ class Sidecar_Base {
       add_action( "activate_{$this->plugin_id}", array( $this, 'activate_plugin' ), 0 );
       register_activation_hook( $this->plugin_id, array( $this, 'activate' ) );
     } else if ( $this->is_plugin_deletion() ) {
-      /*
-       * @todo My god this is a hack! I really need help from WordPress core here.
-       */
-      $backtrace = debug_backtrace();
-      foreach( $backtrace as $index => $call ) {
-        if ( preg_match( '#/wp-admin/includes/plugin.php$#', $call['file'] ) ) {
-          $this->plugin_file = $backtrace[$index-1]['file'];
-          break;
+      if ( preg_match( '#^uninstall_(.*?)$#', current_filter(), $match ) ) {
+        $this->plugin_file = $match[1];
+      } else {
+        /*
+         * @todo My god this is a hack! I really need help from WordPress core here.
+         */
+        $backtrace = debug_backtrace();
+        foreach( $backtrace as $index => $call ) {
+          if ( preg_match( '#/wp-admin/includes/plugin.php$#', $call['file'] ) ) {
+            $this->plugin_file = $backtrace[$index-1]['file'];
+            break;
+          }
         }
       }
       $this->plugin_id = basename( dirname( $this->plugin_file ) ) . '/' . basename( $this->plugin_file );
