@@ -946,7 +946,7 @@ HTML;
    * @return Sidecar_Admin_Page
    */
   function get_admin_page( $page_name ) {
-    return $this->_admin_pages[$page_name];
+    return isset( $this->_admin_pages[$page_name] ) ? $this->_admin_pages[$page_name] : false ;
   }
 
   /**
