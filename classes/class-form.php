@@ -178,11 +178,13 @@ class Sidecar_Form {
     global $wp_settings_fields;
     $hidden_fields = array();
     $settings = $this->get_settings( $this->form_name );
-    foreach( $wp_settings_fields[$this->plugin->option_name] as $section_name => $section ) {
-      foreach( $section as $field_name => $field ) {
-        if ( 'hidden' == $field['args']['field']->field_type ) {
-          $hidden_fields[] = $field['args']['field'];
-          unset( $wp_settings_fields[$this->plugin->option_name][$section_name][$field_name] );
+    if ( isset( $wp_settings_fields[$this->plugin->option_name] ) ) {
+      foreach( $wp_settings_fields[$this->plugin->option_name] as $section_name => $section ) {
+        foreach( $section as $field_name => $field ) {
+          if ( 'hidden' == $field['args']['field']->field_type ) {
+            $hidden_fields[] = $field['args']['field'];
+            unset( $wp_settings_fields[$this->plugin->option_name][$section_name][$field_name] );
+          }
         }
       }
     }
