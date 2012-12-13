@@ -730,12 +730,14 @@ HTML;
    * @param $content
    */
   function the_content( $content ) {
-    foreach( $this->get_shortcodes() as $shortcode_name => $shortcode ) {
-      if ( method_exists( $this, 'initialize_shortcode' ) ) {
-        $this->initialize_shortcode( $shortcode );
+    $shortcodes = $this->get_shortcodes();
+    if ( is_array( $shortcodes ) )
+      foreach( $shortcodes as $shortcode_name => $shortcode ) {
+        if ( method_exists( $this, 'initialize_shortcode' ) ) {
+          $this->initialize_shortcode( $shortcode );
+        }
+        add_shortcode( $shortcode_name, array( $shortcode, 'do_shortcode' ) );
       }
-      add_shortcode( $shortcode_name, array( $shortcode, 'do_shortcode' ) );
-    }
     /*
      * We only need to do the first time.
      */
