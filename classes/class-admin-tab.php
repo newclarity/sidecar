@@ -62,12 +62,21 @@ class Sidecar_Admin_Tab {
       }
     }
 
-    if ( ! $this->forms ) {
+    if ( ! $this->page_title )
+      $this->page_title = $tab_text;
+
+    if ( ! $this->forms && isset( $args['form'] ) ) {
       /**
        * Is 'form' passed in (singluar) grab it, otherwise grab the tab slug.
        * Later convert the current tab's form to an object.
+       * Note: If form is passed as only 'true' then get the tab slug,
        */
-      $this->forms = array( isset( $args['form'] ) ? $args['form'] : $tab_slug );
+
+      if ( true === $args['form'] )
+        $args['form'] = $tab_slug;
+
+      $this->forms = array( $args['form'] );
+     // $this->forms = array( isset( $args['form'] ) ? $args['form'] : $tab_slug );
     }
 
   }
