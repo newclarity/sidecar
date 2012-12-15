@@ -680,7 +680,7 @@ HTML;
          */
         $tab_slug = $_POST[$_POST['option_page']]['state']['tab'];
       }
-      $current_tab = $tab_slug && isset( $this->_tabs[$tab_slug] ) ? $this->_tabs[$tab_slug] : false;
+      $current_tab = $tab_slug && isset( $this->_tabs[$tab_slug] ) ? $this->_tabs[$tab_slug] : reset( $this->_tabs );
     }
    return $current_tab;
   }
@@ -764,25 +764,23 @@ HTML;
  			 *
  			 * We redirect to avoid having multiple URLs mean the same thing. That's not optimal for bookmarking, caching, etc.
  			 */
- 			if ( $this->is_authenticated() ) {
+ 			if ( $this->plugin->api && $this->is_authenticated() ) {
  				/**
  				 * If authenticated we redirect with a "301 - This URL has changed" status code so the browser can know
  				 * to go to 'usage' whenever is sees this URL and avoid the round trip next time.
  				 */
  				wp_safe_redirect( $this->get_tab_url( $this->get_default_tab()->tab_slug ), 301 );
- 			} else if ( $auth_tab = $this->get_authentication_tab() ) {
+        exit;
+ 			} else if ( $this->plugin->api && $auth_tab = $this->get_authentication_tab() ) {
  				/**
  				 * If not authenticated we redirect with a "302 - This URL has moved temporarily" status code
  				 * because normally we'd want to go to usage, so don't cause browser to thing this URL w/o a
  				 * valid tab should always go to 'account.'
  				 */
  				wp_safe_redirect( $this->get_tab_url( $auth_tab->tab_slug ), 302 );
+        exit;
  			}
- 			/**
- 			 * Stop processing PHP so we can send the HTTP Location header back the browser to trigger a redirect.
- 			 */
- 			exit;
- 		} else if ( ! $this->is_authenticated() ) {
+ 		} else if ( $this->plugin->api && ! $this->is_authenticated() ) {
  			/**
  			 * If we are not authenticated...
  			 */
