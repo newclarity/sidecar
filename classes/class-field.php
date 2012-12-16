@@ -2,10 +2,10 @@
 /**
  *
  */
-class Sidecar_Field {
+class Sidecar_Field extends Sidecar_Base {
 
   /**
-   * @var Sidecar_Base
+   * @var Sidecar_Plugin_Base
    */
   var $plugin;
 

@@ -2,9 +2,9 @@
 /**
  *
  */
-class Sidecar_Shortcode {
+class Sidecar_Shortcode extends Sidecar_Base {
   /**
-   * @var Sidecar_Base
+   * @var Sidecar_Plugin_Base
    */
   var $plugin;
   /**

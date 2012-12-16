@@ -2,9 +2,9 @@
 /**
  *
  */
-class Sidecar_Form {
+class Sidecar_Form extends Sidecar_Base {
   /**
-   * @var Sidecar_Base
+   * @var Sidecar_Plugin_Base
    */
   var $plugin;
   /**
@@ -281,7 +281,7 @@ HTML;
   }
 
   /**
-   * @param Sidecar_Base $plugin
+   * @param Sidecar_Plugin_Base $plugin
    */
   function initialize_sections( $plugin ) {
     $settings = $this->get_settings( $this->form_name );
@@ -314,7 +314,7 @@ HTML;
     $this->plugin->the_form_field( $args['field']->field_name, $args['form']->form_name );
   }
   /**
-   * @param Sidecar_Base $plugin
+   * @param Sidecar_Plugin_Base $plugin
    */
   function initialize_buttons( $plugin ) {
     foreach( $this->_buttons as $button_name => $button ) {

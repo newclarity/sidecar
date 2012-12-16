@@ -2,7 +2,7 @@
 /**
  *
  */
-class Sidecar_Admin_Tab {
+class Sidecar_Admin_Tab extends Sidecar_Base {
   /**
    * @var string
    */
@@ -34,7 +34,7 @@ class Sidecar_Admin_Tab {
   /**
    * @var string|Sidecar_Form
    */
-  var $forms = false;
+  var $forms = array();
   /**
    * @return bool
    */

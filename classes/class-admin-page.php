@@ -2,9 +2,9 @@
 /**
  *
  */
-class Sidecar_Admin_Page {
+class Sidecar_Admin_Page extends Sidecar_Base {
   /**
-   * @var Sidecar_Base
+   * @var Sidecar_Plugin_Base
    */
   var $plugin;
   /**
@@ -104,7 +104,7 @@ class Sidecar_Admin_Page {
     /**
      * Check $this->plugin first so we don't couple these if we don't have to.
      */
-    if ( $this->plugin instanceof Sidecar_Base ) {
+    if ( $this->plugin instanceof Sidecar_Plugin_Base ) {
       if ( ! $this->page_title )
         $this->page_title = $this->plugin->plugin_label;
 
@@ -494,9 +494,11 @@ HTML;
           );
       }
     } else {
-      $handler = array( $this->plugin, "the_{$this->page_name}_admin_page" );
+      $page_name = str_replace( '-', '_', $this->page_name );
+      $handler = array( $this->plugin, "the_{$page_name}_admin_page" );
       if ( $current_tab ) {
-        $tab_handler = array( $this->plugin, "the_{$this->page_name}_{$current_tab->tab_slug}_tab" );
+        $tab_slug = str_replace( '-', '_', $current_tab->tab_slug );
+        $tab_handler = array( $this->plugin, "the_{$this->page_name}_{$tab_slug}_tab" );
         /**
          * Fallback to page handler if tab handler is not callable
          */

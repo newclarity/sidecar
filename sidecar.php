@@ -37,6 +37,8 @@ define( 'SIDECAR_MIN_WP', '3.2' );
  */
 
 require( SIDECAR_DIR . '/classes/class-base.php' );
+require( SIDECAR_DIR . '/classes/class-singleton-base.php' );
+require( SIDECAR_DIR . '/classes/class-plugin-base.php' );
 require( SIDECAR_DIR . '/classes/class-admin-page.php' );
 require( SIDECAR_DIR . '/classes/class-admin-tab.php' );
 require( SIDECAR_DIR . '/classes/class-form.php' );
