@@ -2,7 +2,7 @@
 /**
  *
  */
-class Sidecar_Admin_Page extends Sidecar_Base {
+class Sidecar_Admin_Page {
   /**
    * @var Sidecar_Plugin_Base
    */
@@ -179,7 +179,7 @@ class Sidecar_Admin_Page extends Sidecar_Base {
      */
     $api = $this->plugin->api;
     if ( $api && ( $page->is_authentication_tab() || ! $page->has_tabs() ) ) {
-      if ( ! $api->assumed_authenticated( $form_values ) ) {
+      if ( ! $api->has_grant( $form_values ) ) {
         add_settings_error( $page->plugin->option_name, 'sidecar-no-credentials', __( 'You must enter both a username and a password', 'sidecar' ) );
       } else if ( $api->authenticate( $form_values ) ) {
         $form_values['authenticated'] = true;

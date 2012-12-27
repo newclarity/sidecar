@@ -2,7 +2,7 @@
 /**
  *
  */
-class Sidecar_Admin_Tab extends Sidecar_Base {
+class Sidecar_Admin_Tab {
   /**
    * @var string
    */

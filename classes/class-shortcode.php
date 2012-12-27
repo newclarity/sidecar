@@ -2,7 +2,7 @@
 /**
  *
  */
-class Sidecar_Shortcode extends Sidecar_Base {
+class Sidecar_Shortcode {
   /**
    * @var Sidecar_Plugin_Base
    */

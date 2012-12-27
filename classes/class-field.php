@@ -2,7 +2,7 @@
 /**
  *
  */
-class Sidecar_Field extends Sidecar_Base {
+class Sidecar_Field {
 
   /**
    * @var Sidecar_Plugin_Base

@@ -36,7 +36,6 @@ define( 'SIDECAR_MIN_WP', '3.2' );
  * TODO: Change this to use a class auto-loader (maybe)
  */
 
-require( SIDECAR_DIR . '/classes/class-base.php' );
 require( SIDECAR_DIR . '/classes/class-singleton-base.php' );
 require( SIDECAR_DIR . '/classes/class-plugin-base.php' );
 require( SIDECAR_DIR . '/classes/class-admin-page.php' );
