@@ -296,7 +296,7 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
     global $wp_filter;
     foreach( $wp_filter[current_filter()] as $filters ) {
       foreach( $filters as $hook ) {
-        if ( isset( $hook['function'] ) && isset( $hook['function'][0] ) && is_string( $hook['function'][0] ) && self::$_me[$hook['function'][0]] ) {
+        if ( isset( $hook['function'] ) && isset( $hook['function'][0] ) && is_string( $hook['function'][0] ) && self::$_this[$hook['function'][0]] ) {
           $class_name = $hook['function'][0];
           break;
         }
