@@ -41,7 +41,7 @@ abstract class Sidecar_Singleton_Base {
    * @return mixed
    */
   static function get( $instance_var_name ) {
-    $instance = self::$_instances[get_called_class()];
+    $instance = self::_get_instance();
     return isset( $instance->$instance_var_name ) ? $instance->$instance_var_name : null;
   }
 
@@ -56,10 +56,21 @@ abstract class Sidecar_Singleton_Base {
     if ( method_exists( get_called_class(), $method_name ) ) {
       $args = func_get_args();
       array_shift( $args );
-      $instance = self::$_instances[get_called_class()];
-      $result = call_user_func_array( array( $instance, $method_name ), $args );
+      $result = call_user_func_array( array( self::_get_instance(), $method_name ), $args );
     }
     return isset( $result ) ? $result : null;
+  }
+
+  /**
+   *
+   */
+  private static function _get_instance() {
+    if ( isset( self::$_instances[$class = get_called_class()] ) ) {
+      $instance = self::$_instances[$class];
+    } else {
+      $instance = new $class();
+    }
+    return $instance;
   }
 
   /**
