@@ -1311,11 +1311,22 @@ HTML;
     return ! empty( $this->api_loader );
   }
   /**
+   * Determines if the currently stored settings contain a grant to access the API.
+   *
    * @return bool
    */
   function has_grant() {
-    $auth_settings = $this->get_auth_form()->get_settings();
-    return $this->api->is_grant( $auth_settings );
+    $has_grant = false;
+    if ( $this->needs_grant() ) {
+      $auth_settings = $this->get_auth_form()->get_settings();
+      /**
+       * The line above MUST be called before the line below.
+       * Do NOT refactor and combine them or api won't have a value
+       * get_settings() creates the api if not there.
+       */
+      $has_grant = $this->api->is_grant( $auth_settings );
+    }
+    return $has_grant;
   }
 
   /**
