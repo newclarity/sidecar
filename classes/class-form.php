@@ -39,6 +39,10 @@ class Sidecar_Form {
    * @var string
    */
   var $settings_key;
+  /**
+   * @var bool
+   */
+  var $requires_api;
 
   /**
    * @param string $form_name

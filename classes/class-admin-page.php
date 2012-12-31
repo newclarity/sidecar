@@ -179,7 +179,7 @@ class Sidecar_Admin_Page {
      */
     $api = $this->plugin->api;
     if ( $api && ( $page->is_authentication_tab() || ! $page->has_tabs() ) ) {
-      if ( ! $api->has_grant( $form_values ) ) {
+      if ( ! $api->is_credentials( $form_values ) ) {
         add_settings_error( $page->plugin->option_name, 'sidecar-no-credentials', __( 'You must enter both a username and a password', 'sidecar' ) );
       } else if ( $api->authenticate( $form_values ) ) {
         $form_values['authenticated'] = true;
@@ -258,14 +258,6 @@ class Sidecar_Admin_Page {
 
 
   /**
-   * Test the credentials for the pluginsauth form
-   * @return bool
-   */
-  function is_authenticated() {
-    $credentials = $this->get_auth_credentials();
-    return isset( $credentials['authenticated'] ) && $credentials['authenticated'];
-  }
-  /**
    * @return array
    */
   function get_auth_credentials() {
@@ -329,6 +321,7 @@ class Sidecar_Admin_Page {
     }
     return $this->_authentication_tab;
   }
+
   /**
    * Calls a method in the plugin
    *
@@ -753,27 +746,29 @@ HTML;
  	 * @return bool Returns true if we are on a verified tab, false or URL redirect otherwise.
  	 */
  	function verify_current_tab() {
-
      /*
       * If we have no tabs trying to verify is a moot point. Punt.
       */
     if ( ! $this->has_tabs() )
       return true;
 
+    $needs_grant = $this->plugin->needs_grant();
+    $has_grant = $this->plugin->has_grant();
+
  		if ( ! $this->is_current_tab_valid() ) {
  			/**
- 			 * If we don't have a valid tab, redirect to first tab if authenticated, or authentication tab if not.
- 			 *
- 			 * We redirect to avoid having multiple URLs mean the same thing. That's not optimal for bookmarking, caching, etc.
+ 			 * If we don't have a valid tab and we are using an API, redirect to first tab if we have an grant or authentication tab if not.
+       *
+       * We redirect to avoid having multiple URLs mean the same thing which would not be optimal for bookmarking, caching, etc.
  			 */
- 			if ( $this->plugin->api && $this->is_authenticated() ) {
+ 			if ( $needs_grant && $has_grant ) {
  				/**
  				 * If authenticated we redirect with a "301 - This URL has changed" status code so the browser can know
  				 * to go to 'usage' whenever is sees this URL and avoid the round trip next time.
  				 */
  				wp_safe_redirect( $this->get_tab_url( $this->get_default_tab()->tab_slug ), 301 );
         exit;
- 			} else if ( $this->plugin->api && $auth_tab = $this->get_authentication_tab() ) {
+ 			} else if ( $needs_grant && $auth_tab = $this->get_authentication_tab() ) {
  				/**
  				 * If not authenticated we redirect with a "302 - This URL has moved temporarily" status code
  				 * because normally we'd want to go to usage, so don't cause browser to thing this URL w/o a
@@ -782,14 +777,17 @@ HTML;
  				wp_safe_redirect( $this->get_tab_url( $auth_tab->tab_slug ), 302 );
         exit;
  			}
- 		} else if ( $this->plugin->api && ! $this->is_authenticated() ) {
+ 		} else if ( $needs_grant && ! $has_grant ) {
  			/**
- 			 * If we are not authenticated...
+ 			 * If we are using an API but we don't have a grant
  			 */
       $auth_tab = $this->get_authentication_tab();
- 			if ( $auth_tab && $auth_tab->tab_slug != $_GET['tab'] ) {
+       /**
+        * If there is a tab and we are not already on the authentication tab
+        */
+       if ( $auth_tab && $auth_tab->tab_slug != $_GET['tab'] ) {
  				/**
- 				 * ...and we are NOT on the account tab then redirect to the 'account' tab.
+ 				 * ...and we are NOT on the authentication tab then redirect to the 'account' tab.
  				 *
  				 * We redirect with a "302 - This URL has moved temporarily" because it's still a good URL and
  				 * we want the browser to be happy to return here later.
@@ -798,7 +796,7 @@ HTML;
  				exit;
  			} else {
  				/**
- 				 * ...and we ARE on the account tab then prepare a "Need to authenticate" message for later display.
+ 				 * ...and we ARE on the authentication tab then prepare a "Need to authenticate" message for later display.
  				 */
  				add_settings_error(
  					$this->plugin->plugin_slug, // @todo Switch to $this->form_name,

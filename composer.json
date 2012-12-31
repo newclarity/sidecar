@@ -5,7 +5,7 @@
     { "type": "git", "url": "https://github.com/newclarity/restian.git" }
   ],
   "suggest": {
-    "newclarity/restian": "Use to create Plugins that Authenticate with RESTful web services"
+    "newclarity/restian": "0.1.*"
   },
   "require":{
     "php":">=5.2.4"

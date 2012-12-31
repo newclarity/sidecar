@@ -399,6 +399,7 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
     }
     return $has_required_settings;
   }
+
   /**
    * @return array
    */
@@ -1211,6 +1212,9 @@ HTML;
      */
     $form = $this->_forms[$form_name] = new Sidecar_Form( $form_name, $form );
 
+    if ( $form->requires_api ) {
+      $this->initialize_api();
+    }
     $this->current_form = $form;
     $this->initialize_form( $form );
     $form->initialize();
@@ -1301,6 +1305,20 @@ HTML;
   }
 
   /**
+   * @return bool
+   */
+  function needs_grant() {
+    return ! empty( $this->api_loader );
+  }
+  /**
+   * @return bool
+   */
+  function has_grant() {
+    $auth_settings = $this->get_auth_form()->get_settings();
+    return $this->api->is_grant( $auth_settings );
+  }
+
+  /**
    * @param array $newvalue
    * @param array $oldvalue
    * @return array
@@ -1360,16 +1378,10 @@ HTML;
       $auth_form = $this->get_auth_form();
       if ( $auth_form ) {
         $auth_key = $auth_form->settings_key;
-        if ( isset( $settings[$auth_key] ) && $this->api_class && file_exists( $this->api_loader ) ) {
-          require_once( $this->api_loader );
-          if ( class_exists( $this->api_class ) ) {
-            $class_name = $this->api_class;
-            /**
-             * @var RESTian_Client
-             */
-            $api = new $class_name();
-            $settings[$auth_key]['authenticated'] = $api->authenticate( $settings[$auth_key] );
-            $this->api = $api;
+        if ( isset( $settings[$auth_key] ) ) {
+          $this->initialize_api();
+          if ( $this->api ) {
+            $settings[$auth_key]['authenticated'] = $this->api->authenticate( $settings[$auth_key] );
           }
         }
       }
@@ -1377,7 +1389,18 @@ HTML;
       $this->update_settings( $settings );
     }
   }
-
+  function initialize_api() {
+    if ( $this->api_class && file_exists( $this->api_loader ) ) {
+      require_once( $this->api_loader );
+      if ( class_exists( $this->api_class ) ) {
+        $class_name = $this->api_class;
+        /**
+         * @var RESTian_Client
+         */
+        $this->api = new $class_name();
+      }
+    }
+  }
   /**
    * @return Sidecar_Form
    */
