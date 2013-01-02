@@ -44,7 +44,7 @@ class Sidecar_Shortcode {
       if ( property_exists(  $this, $property ) )
         $this->$property = $value;
 
-    $this->HAS_SHORTCODE_KEY  = "_sidecar_has_{$this->shortcode_name}_shortcode";
+    $this->HAS_SHORTCODE_KEY  = "_has_{$this->shortcode_name}_shortcode";
 
 	}
 

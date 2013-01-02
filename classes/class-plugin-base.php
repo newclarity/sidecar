@@ -265,12 +265,17 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
   function _save_post( $post_id ) {
     $this->initialize_shortcodes();
     $shortcodes = $this->get_shortcodes();
-    if ( is_array( $shortcodes ) )
+    if ( is_array( $shortcodes ) ) {
       /**
        * @var Sidecar_Shortcode $shortcode
        */
       foreach( $shortcodes as $shortcode )
         $shortcode->delete_has_shortcode( $post_id );
+      /**
+       * Now load the post asynchronously via HTTP to pre-set the meta value for $this->HAS_SHORTCODE_KEY.
+       */
+      wp_remote_request( get_permalink( $post_id ), array( 'blocking' => false ) );
+    }
   }
 
   /**
