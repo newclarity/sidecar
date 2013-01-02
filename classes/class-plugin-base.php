@@ -169,9 +169,10 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
       if ( property_exists(  $this, $property ) )
         $this->$property = $value;
 
-    add_action( 'init', array( $this, 'init' ) );
-    add_action( 'wp_loaded', array( $this, 'wp_loaded' ) );
-    add_action( 'wp_print_styles', array( $this, 'wp_print_styles' ) );
+    add_action( 'init', array( $this, '_init' ) );
+    add_action( 'wp_loaded', array( $this, '_wp_loaded' ) );
+    add_action( 'wp_print_styles', array( $this, '_wp_print_styles' ) );
+    add_action( 'save_post', array( $this, '_save_post' ) );
 
     $this->plugin_class_base = preg_replace( '#^(.*?)_Plugin$#', '$1', $this->plugin_class );
 
@@ -200,9 +201,9 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
         $this->plugin_file = WP_PLUGIN_DIR . '/' . $plugin;
         $this->plugin_id = $plugin;
       }
-      add_action( 'plugins_loaded', array( $this, 'plugins_loaded' ) );
-      add_action( "activate_{$this->plugin_id}", array( $this, 'activate_plugin' ), 0 );
-      register_activation_hook( $this->plugin_id, array( $this, 'activate' ) );
+      add_action( 'plugins_loaded', array( $this, '_plugins_loaded' ) );
+      add_action( "activate_{$this->plugin_id}", array( $this, '_activate_plugin' ), 0 );
+      register_activation_hook( $this->plugin_id, array( $this, '_activate' ) );
     } else if ( $this->is_plugin_deletion() ) {
       if ( preg_match( '#^uninstall_(.*?)$#', current_filter(), $match ) ) {
         $this->plugin_file = $match[1];
@@ -255,25 +256,21 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
      */
     $this->initialize_plugin();
 
-//
-// @todo Delete after the above is tested.
-//
-//    if ( ! $this->plugin_file ) {
-//      trigger_error( sprintf( __( '%s->plugin_file must be assigned in %s->initialize_plugin().', 'sidecar' ), $this->plugin_class, $this->plugin_class ) );
-//      exit;
-//    }
-//    $this->plugin_id = basename( dirname( $this->plugin_file ) ) . '/' . basename( $this->plugin_file );
-//
-//    if ( $this->is_plugin_page_action() ) {
-//      add_action( 'plugins_loaded', array( $this, 'plugins_loaded' ) );
-//      add_action( "activate_{$this->plugin_id}", array( $this, 'activate_plugin' ), 0 );
-//      register_activation_hook( $this->plugin_id, array( $this, 'activate' ) );
-//    } else {
-//      register_deactivation_hook( $this->plugin_id, array( $this, 'deactivate' ) );
-//    }
-//
-//    register_uninstall_hook( $this->plugin_id, array( $this->plugin_class, 'uninstall' ) );
+  }
 
+  /**
+   * Delete the flag indicating that a post needs external files (CSS styles and JS scripts) for each
+   * shortcode we have in case the newly saved post now has changed the use of the shortcodes.
+   */
+  function _save_post( $post_id ) {
+    $this->initialize_shortcodes();
+    $shortcodes = $this->get_shortcodes();
+    if ( is_array( $shortcodes ) )
+      /**
+       * @var Sidecar_Shortcode $shortcode
+       */
+      foreach( $shortcodes as $shortcode )
+        $shortcode->delete_has_shortcode( $post_id );
   }
 
   /**
@@ -365,7 +362,7 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
    * This is used for the "activate_{$this->plugin_id}" hook
    * when $this->is_plugin_page_action().
    */
-  function activate_plugin() {
+  function _activate_plugin() {
     $this->initialize();
   }
 
@@ -373,7 +370,7 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
    * This is used for the "activate_{$this->plugin_id}" hook
    * when $this->is_plugin_page_action().
    */
-  function plugins_loaded() {
+  function _plugins_loaded() {
     $this->initialize();
   }
 
@@ -560,9 +557,9 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
   /**
    *
    */
-  function wp_print_styles() {
+  function _wp_print_styles() {
  	  $localfile = 'css/style.css';
-    $args = apply_filters( 'sidecar_print_styles', array(
+    $args = apply_filters( "sidecar_print_{$this->plugin_name}_styles", array(
       'name'  => "{$this->plugin_name}_style",
       'path'  => "{$this->plugin_path}/{$localfile}",
       'url'   => plugins_url( $localfile, $this->plugin_file ),
@@ -630,12 +627,12 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
   /**
    *
    */
-  function wp_loaded() {
+  function _wp_loaded() {
     if ( is_admin() ) {
-      add_action( 'admin_notices',       array( $this, 'admin_notices' ) );
+      add_action( 'admin_notices',       array( $this, '_admin_notices' ) );
       if ( $this->is_plugin_page() ) {
-        add_filter( 'plugin_action_links', array( $this, 'plugin_action_links' ), 10, 2 );
-        add_filter( 'plugin_row_meta',     array( $this, 'plugin_meta_links' ), 10, 2 );
+        add_filter( 'plugin_action_links', array( $this, '_plugin_action_links' ), 10, 2 );
+        add_filter( 'plugin_row_meta',     array( $this, '_plugin_meta_links' ), 10, 2 );
       }
     } else {
       $shortcodes = method_exists( $this->plugin_class, 'initialize_shortcodes' );
@@ -647,13 +644,13 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
           $this->initialize_shortcodes();
         if ( $template )
           $this->initialize_template();
-        add_filter( 'the_content', array( $this, 'the_content' ), -1000 );
+        add_filter( 'the_content', array( $this, '_the_content' ), -1000 );
       }
     }
   }
   /**
    */
-  function admin_notices() {
+  function _admin_notices() {
     if ( $this->needs_settings && ! $this->has_required_settings() && $this->is_plugin_page() ) {
     $icon_html = $this->has_url( 'logo_icon' ) ? "<span class=\"sidecar-logo-icon\"></span><img src=\"{$this->logo_icon_url}\" /></span>" : '';
     $message = sprintf( __( 'The <em>%s</em> plugin it now activated. Please configure it\'s <a href="%s"><strong>settings</strong></a>.', 'sidecar' ),
@@ -675,7 +672,7 @@ HTML;
    *
    * @return array
    */
-  function plugin_action_links( $links, $file ){
+  function _plugin_action_links( $links, $file ){
     if ( $file == $this->plugin_id  ) {
       $url = $this->get_settings_url();
       $link_text = __( 'Settings', 'sidecar' );
@@ -701,7 +698,7 @@ HTML;
    *
    * @return array
    */
-  function plugin_meta_links( $links, $file ){
+  function _plugin_meta_links( $links, $file ){
     if ( $file == $this->plugin_id ) {
       foreach( $this->_meta_links as $link_text => $link ) {
         $title = isset( $link['title'] ) ? " title=\"{$link['title']}\"" : '';
@@ -714,25 +711,32 @@ HTML;
   /**
    * @param $content
    */
-  function the_content( $content ) {
+  function _the_content( $content ) {
     $shortcodes = $this->get_shortcodes();
     if ( is_array( $shortcodes ) )
+      /**
+       * @var Sidecar_Shortcode $shortcode
+       */
       foreach( $shortcodes as $shortcode_name => $shortcode ) {
         if ( method_exists( $this, 'initialize_shortcode' ) ) {
           $this->initialize_shortcode( $shortcode );
         }
         add_shortcode( $shortcode_name, array( $shortcode, 'do_shortcode' ) );
+        /**
+         * Now get each shortcode to monitor for it's own use.
+         */
+        $shortcode->add_the_content_filter();
       }
     /*
      * We only need to do the first time.
      */
-    remove_action( 'the_content', array( $this, 'the_content' ), -1000 );
+    remove_action( 'the_content', array( $this, '_the_content' ), -1000 );
     return $content;
   }
 
-  function init() {
-//    add_action( 'cron_schedules', array( $this, 'cron_schedules' ) );
-//    add_action( 'cron', array( $this, 'cron' ) );
+  function _init() {
+//    add_action( 'cron_schedules', array( $this, '_cron_schedules' ) );
+//    add_action( 'cron', array( $this, '_cron' ) );
     /**
      * @todo Figure out how to load this only if needed
      */
@@ -1001,31 +1005,31 @@ HTML;
 //    $subclass = new ReflectionObject( $this );
 //    return $subclass->getFileName();
 //  }
-
-  /**
-   * @param $schedules
-   *
-   * @return mixed
-   */
-//  function cron_schedules( $schedules ) {
+//
+//  /**
+//   * @param $schedules
+//   *
+//   * @return mixed
+//   */
+//  function _cron_schedules( $schedules ) {
 // 		$schedules['fifteenseconds'] = array( 'interval' => 15, 'display' => __( 'Once Every Fifteen Seconds' ) );
 // 		return $schedules;
 // 	}
 
-  /**
-   * @return bool
-   */
-//  function cron() {
+//  /**
+//   * @return bool
+//   */
+//  function _cron() {
 //    return true;
 //  }
 
-  function deactivate() {
- 		/**
- 		 * Unschedule cron
- 		 */
+//  function _deactivate() {
+// 		/**
+// 		 * Unschedule cron
+// 		 */
 // 		$next_run = wp_next_scheduled( $this->cron_key );
 // 		wp_unschedule_event( $next_run, $this->cron_key );
- 	}
+// 	}
 
   /**
    * @param string $url_name
@@ -1363,7 +1367,7 @@ HTML;
 
    * @todo Decide if trigger_error() is the best for error messages
    */
-  function activate() {
+  function _activate() {
     if ( ! $this->_initialized )
       $this->initialize();
 

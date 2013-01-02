@@ -3,7 +3,7 @@
  * Plugin Name: Sidecar for WordPress
  * Plugin URI: http://github.com/newclarity/sidecar
  * Description:
- * Version: 0.1.2
+ * Version: 0.2.0
  * Author: NewClarity, MikeSchinkel
  * Author URI: http://newclarity.net
  * Text Domain: sidecar
