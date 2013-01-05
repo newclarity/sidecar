@@ -129,20 +129,28 @@ TEXT;
    * @return bool
    */
   function get_maybe_has_shortcode( $post_id ) {
-    $has_shortcode = get_post_meta( $post_id, $this->HAS_SHORTCODE_KEY, true );
-    /**
-     * The following test is a more compact way to test this:
-     *
-     *    ( true !== $has_shortcodes && false !== $has_shortcodes )
-     *
-     */
-    if ( '' == $has_shortcode ) {
+    global $wp_query;
+    if ( ! $wp_query->is_single ) {
       /**
-       * Set to true because it's unknown if we need the script (or style) so better safe then sorry
+       * @todo optimize for other use-cases beside single post.
        */
-      $has_shortcode = 'yes';
+      $maybe_has_shortcode = 'yes';
+    } else {
+      $maybe_has_shortcode = get_post_meta( $post_id, $this->HAS_SHORTCODE_KEY, true );
+      /**
+       * The following test is a more compact way to test this:
+       *
+       *    ( true !== $maybe_has_shortcodes && false !== $maybe_has_shortcodes )
+       *
+       */
+      if ( '' == $maybe_has_shortcode ) {
+        /**
+         * Set to true because it's unknown if we need the script (or style) so better safe then sorry
+         */
+        $maybe_has_shortcode = 'yes';
+      }
     }
-    return 'yes' == $has_shortcode;
+    return 'yes' == $maybe_has_shortcode;
   }
 
   /**

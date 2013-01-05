@@ -164,10 +164,6 @@ class Sidecar_Admin_Page {
       wp_die( __( 'Sorry, you do not have sufficient priviledges.' ) );
     }
 
-    if ( $this->get_current_tab()->requires_api() ) {
-      $this->plugin->initialize_api();
-    }
-
     if ( method_exists( $this, 'initialize_postback' ) )
       $this->plugin->initialize_postback();
 
@@ -183,20 +179,29 @@ class Sidecar_Admin_Page {
      * Check with the API to see if we are authenticated
      * @var RESTian_Client $api
      */
-    $api = $this->plugin->api;
+    $api = $this->plugin->get_api();
     if ( $api && ( $page->is_authentication_tab() || ! $page->has_tabs() ) ) {
       if ( ! $api->is_credentials( $form_values ) ) {
         add_settings_error( $page->plugin->option_name, 'sidecar-no-credentials', $api->get_message() );
-      } else if ( $response = $api->authenticate( $form_values ) ) {
-        $form_values = array_merge( $form_values, $response->grant );
-        $form_values['authenticated'] = true;
-        add_settings_error( $page->plugin->option_name, 'sidecar-updated', __( 'Authentication successful. Settings saved.', 'sidecar' ), 'updated' );
       } else {
-        $form_values['authenticated'] = false;
-        add_settings_error( $page->plugin->option_name, 'sidecar-login-failed', __( 'Authentication Failed. Please try again.', 'sidecar' ) );
+        /**
+         * @var RESTian_Response
+         */
+        $response = $api->authenticate( $form_values );
+        if ( $response->has_error() ) {
+          $form_values['authenticated'] = false;
+          if ( ! ( $message = $response->get_error()->message ) ) {
+            $message = 'Please try again.';
+          };
+          add_settings_error( $page->plugin->option_name, 'sidecar-login-failed', __( "Authentication Failed. {$message}", 'sidecar' ) );
+        } else {
+          $form_values = array_merge( $form_values, $response->grant );
+          $form_values['authenticated'] = true;
+          add_settings_error( $page->plugin->option_name, 'sidecar-updated', __( 'Authentication successful. Settings saved.', 'sidecar' ), 'updated' );
+        }
       }
     }
-    $this->plugin->api = $api;
+    $this->plugin->set_api( $api );
 
     if ( isset( $settings['action']['clear'] ) ) {
       $form_values = $form->get_empty_settings();

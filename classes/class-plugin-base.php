@@ -100,6 +100,11 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
   protected $_meta_links = array();
 
   /**
+   * @var bool|array|RESTian_Client
+   */
+  protected $_api = false;
+
+  /**
    * @var Sidecar_Admin_Page
    */
   var $current_page;
@@ -109,18 +114,6 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
    */
   var $current_form;
 
-  /**
-   * @var bool|RESTian_Client
-   */
-  var $api = false;
-  /**
-   * @var bool|string
-   */
-  var $api_loader = false;
-  /**
-   * @var bool|string
-   */
-  var $api_class = false;
   /**
    * @var bool
    */
@@ -141,6 +134,58 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
    * @var bool
    */
   var $needs_settings = true;
+
+  /**
+   * @param $class_name
+   * @param $filepath
+   */
+  function set_api_loader( $class_name, $filepath ) {
+    $this->_api = array(
+      'class_name' => $class_name,
+      'filepath' => $filepath,
+    );
+  }
+
+  /**
+   * @return bool
+   */
+  function has_api() {
+    return false !== $this->get_api();
+  }
+
+  /**
+   * Returns a RESTian_Client object if set_api_loader() has previously been called with correct info, false otherwise.
+   * @return bool|RESTian_Client
+   */
+  function get_api() {
+    if ( ! $this->_api instanceof RESTian_Client ) {
+      /**
+       * @todo fix this to work on Windows
+       */
+      $filepath= '/' == $this->_api['filepath'] ? $this->_api['filepath'] : "{$this->plugin_path}/{$this->_api['filepath']}";
+
+      if ( file_exists( $filepath) ) {
+        require_once( $filepath );
+        if ( class_exists( $this->_api['class_name'] ) ) {
+          $class_name = $this->_api['class_name'];
+          // @var RESTian_Client $this->_api
+          $this->_api = new $class_name( $this );
+        }
+        /**
+         * @todo Verify we still need this
+         */
+        $this->_api->initialize_client();
+      }
+    }
+    return $this->_api;
+  }
+
+  /**
+   * @param RESTian_Client $api
+   */
+  function set_api( $api ) {
+    $this->_api = $api;
+  }
 
   /**
    * @param array $args
@@ -632,10 +677,6 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
 
     if ( ! $this->plugin_path )
       $this->plugin_path = dirname( $this->plugin_file );
-
-    if ( $this->api_loader ) {
-      $this->api_loader = "{$this->plugin_path}/{$this->api_loader}";
-    }
 
     if ( ! $this->plugin_slug )
       $this->plugin_slug = str_replace( '_', '-', $this->plugin_name );
@@ -1237,9 +1278,6 @@ HTML;
      */
     $form = $this->_forms[$form_name] = new Sidecar_Form( $form_name, $form );
 
-    if ( ! $this->api && $form->requires_api )
-      $this->initialize_api();
-
     $this->current_form = $form;
     $this->initialize_form( $form );
     $form->initialize();
@@ -1335,7 +1373,7 @@ HTML;
    * @return bool
    */
   function needs_grant() {
-    return ! empty( $this->api_loader );
+    return $this->has_api();
   }
   /**
    * Determines if the currently stored settings contain a grant to access the API.
@@ -1346,8 +1384,7 @@ HTML;
     $has_grant = false;
     if ( $this->needs_grant() ) {
       $auth_settings = $this->get_auth_form()->get_settings();
-      $this->initialize_api();
-      $has_grant = $this->api->is_grant( $auth_settings );
+      $has_grant = $this->get_api()->is_grant( $auth_settings );
     }
     return $has_grant;
   }
@@ -1361,7 +1398,7 @@ HTML;
     /**
      * @var RESTian_Auth_Provider_Base $auth_provider
      */
-    $auth_provider = $this->api->get_auth_provider();
+    $auth_provider = $this->get_api()->get_auth_provider();
     return $auth_provider->extract_grant( $this->get_auth_form()->get_settings() );
   }
 
@@ -1374,7 +1411,7 @@ HTML;
     /**
      * @var RESTian_Auth_Provider_Base $auth_provider
      */
-    $auth_provider = $this->api->get_auth_provider();
+    $auth_provider = $this->get_api()->get_auth_provider();
     return $auth_provider->extract_credentials( $this->get_auth_form()->get_settings() );
   }
 
@@ -1435,12 +1472,12 @@ HTML;
        * previously had a _credentials element then reauthenticate and record that change.
        */
       $settings = $this->get_settings();
-      if ( $this->api_loader ) {
-        $this->initialize_api();
+      if ( $this->has_api() ) {
+        $api = $this->get_api();
         /**
          * @var RESTian_Auth_Provider_Base $auth_provider
          */
-        $auth_provider = $this->api->get_auth_provider();
+        $auth_provider = $api->get_auth_provider();
         /**
          * $settings['_account'] contains a credentials and grant merged
          */
@@ -1453,7 +1490,7 @@ HTML;
             /**
              * Attempt to authenticate with available credentials
              */
-            $response = $this->api->authenticate( $credentials );
+            $response = $api->authenticate( $credentials );
             /**
              * If authenticated get the updated grant otherwise get an empty grant
              */
@@ -1468,20 +1505,6 @@ HTML;
       $settings['installed_version'] = $this->plugin_version;
       $this->update_settings( $settings );
     }
-  }
-  function initialize_api() {
-    if ( ! $this->api && $this->api_class && file_exists( $this->api_loader ) ) {
-      require_once( $this->api_loader );
-      if ( class_exists( $this->api_class ) ) {
-        $class_name = $this->api_class;
-        /**
-         * @var RESTian_Client
-         */
-        $this->api = new $class_name();
-        $this->api->caller = $this;
-      }
-    }
-    $this->api->initialize_client();
   }
   /**
    * @return Sidecar_Form
