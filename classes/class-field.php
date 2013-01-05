@@ -112,12 +112,12 @@ class Sidecar_Field {
   /**
    * @return string
    */
-  function get_field_html() {
+  function get_html() {
     /**
      * @todo: Get options with all expected elements initialized
      */
     $form = $this->form;
-    $settings = $form->get_settings( $this->form->settings_key );
+    $settings = $form->get_settings();
     $value = isset( $settings[$this->field_name] ) ? esc_attr( $settings[$this->field_name] ) : false;
     $input_name = "{$this->plugin->option_name}[{$form->settings_key}][{$this->field_name}]";
     /**

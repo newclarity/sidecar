@@ -123,6 +123,10 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
    */
   protected $_settings = array();
   /**
+   * @var bool
+   */
+  protected $_settings_dirty = false;
+  /**
    * @var string
    */
   var $option_name;
@@ -218,6 +222,7 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
     add_action( 'wp_loaded', array( $this, '_wp_loaded' ) );
     add_action( 'wp_print_styles', array( $this, '_wp_print_styles' ) );
     add_action( 'save_post', array( $this, '_save_post' ) );
+    add_action( 'shutdown', array( $this, '_shutdown' ) );
 
     $this->plugin_class_base = preg_replace( '#^(.*?)_Plugin$#', '$1', $this->plugin_class );
 
@@ -467,15 +472,29 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
    * @return array
    */
   function get_settings() {
-    if ( ! $this->_initialized )
-      $this->initialize();
-    $settings = get_option( $this->option_name );
-    if (  $this->has_forms() )
-      /** @var Sidecar_Form $form */
-      foreach( $this->get_forms() as $form ) {
-        $settings[$form->settings_key] = $this->get_form_settings( $form );
-      }
-    return is_array( $settings ) ? $settings : array();
+    if ( ! $this->_settings ) {
+      if ( ! $this->_initialized )
+        $this->initialize();
+      $settings = get_option( $this->option_name );
+      if ( ! is_array( $settings ) )
+        $settings = array();
+      $settings['state'] = array( 'decrypted' => array() );
+      if (  $this->has_forms() )
+        foreach( $this->get_forms() as $form ) {
+          /**
+           * @var Sidecar_Form $form
+           */
+          $settings[$form->settings_key] = $form->get_settings( $settings );
+        }
+    }
+    return $this->_settings;
+  }
+
+  /**
+   * @param array $settings
+   */
+  function set_settings( $settings ) {
+    $this->_settings = $settings;
   }
 
   /**
@@ -492,24 +511,9 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
    * @return array
    */
   function get_form_settings( $form ) {
-    if ( is_array( $form ) )
-      $form = $this->promote_form( $form );
-    if ( is_string( $form ) && $this->has_form( $form ) )
+    if ( ! $form instanceof Sidecar_Form )
       $form = $this->get_form( $form );
-    if ( ! isset( $form->settings_key ) || ! isset( $this->_settings[$form->settings_key] ) ) {
-      $this->initialize_settings( $form );
-    }
-    if ( ! isset( $this->_settings['state']['decrypted'][$form->form_name] ) ) {
-      if ( method_exists( $this, 'decrypt_settings' ) ) {
-        $this->_settings[$form->settings_key] = call_user_func(
-          array( $this, 'decrypt_settings' ),
-          $this->_settings[$form->settings_key],
-          $form, $this->_settings
-        );
-      }
-      $this->_settings['state']['decrypted'][$form->form_name] = true;
-    }
-    return $this->_settings[$form->settings_key];
+    return $this->get_settings();
   }
 
   /**
@@ -521,103 +525,60 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
 
   /**
    * @param array $settings
+   * @param bool $set_dirty
    */
-  function update_settings( $settings ) {
-    if ( $this->has_forms() ) {
-      /**
-       * @var Sidecar_Form
-       */
-      foreach( $this->get_forms() as $key => $form ) {
-        if ( method_exists( $this, 'encrypt_settings' ) ) {
-          $settings[$form->settings_key] = call_user_func(
-            array( $this, 'encrypt_settings' ),
-            $settings[$form->settings_key],
-            $form, $this->_settings
-          );
+  function update_settings( $settings, $set_dirty = true ) {
+    $this->_settings = $settings;
+    if ( $set_dirty )
+      $this->_settings_dirty = true;
+  }
+
+  /**
+   * Save options if they need to be saved.
+   */
+  function _shutdown() {
+    if ( $this->_settings_dirty ) {
+      if ( $this->has_forms() ) {
+        /**
+         * Encrypt anything that needs to be unencrpted.
+         *
+         * @var Sidecar_Form
+         */
+        foreach( $this->get_forms() as $key => $form ) {
+          if ( method_exists( $this, 'encrypt_settings' ) ) {
+            $this->_settings[$form->settings_key] = call_user_func(
+              array( $this, 'encrypt_settings' ),
+              $this->_settings[$form->settings_key],
+              $form, $this->_settings
+            );
+          }
         }
       }
+      unset( $this->_settings['state'] );
+      update_option( $this->option_name, $this->_settings );
     }
-    unset( $settings['state'] );
-    update_option( $this->option_name, $settings );
-    $this->_settings = $settings;
   }
 
   /**
    * @param string|Sidecar_Form $form
+   * @param string $setting_key
    * @return array
    */
-  function initialize_settings( $form ) {
-    if ( is_string( $form ) && $this->has_form( $form ) )
+  function get_form_setting( $form, $setting_key ) {
+    if ( ! $form instanceof Sidecar_Form )
       $form = $this->get_form( $form );
-
-    if ( 0 == count( $this->_settings ) ) {
-      $this->_settings = get_option( $this->option_name );
-      $this->_settings['state'] = array( 'decrypted' => array() );
-    }
-
-    if ( ! isset( $this->_settings[$form->settings_key] ) )
-      $this->_settings[$form->settings_key] = array();
-
-    if ( $form instanceof Sidecar_Form ) {
-      $this->_settings[$form->settings_key] = array_merge(
-        $form->get_new_settings(),
-        $this->_settings[$form->settings_key]
-      );
-    }
+    return $form->get_setting( $setting_key );
   }
 
   /**
    * @param string|Sidecar_Form $form
-   * @param string $setting_name
-   * @return bool
-   */
-  function has_form_setting( $form, $setting_name ) {
-    if ( ! $form instanceof Sidecar_Form )
-      if ( is_string( $form ) && $this->has_form( $form ) ) {
-        $form = $this->get_form( $form );
-      }
-    if ( ! isset( $this->_settings[$form->settings_key] ) ) {
-      /*
-       * Call to initialize settings
-       */
-      $this->initialize_settings( $form );
-    }
-    return isset( $this->_settings[$form->settings_key][$setting_name] );
-  }
-//  /**
-//   * @param string|Sidecar_Form $form
-//   * @param string $setting_name
-//   * @return string
-//   */
-//  function get_form_setting( $form, $setting_name ) {
-//    $value = false;
-//    if ( $this->has_form_setting( $form, $setting_name ) )
-//      $value = $this->_settings[$form->settings_key][$setting_name];
-//    return $value;
-//  }
-  /**
-   * @param string $setting_name
-   * @param string $form_name
-   * @param array $args
+   * @param string $setting_key
    * @return array
    */
-  function get_form_setting( $setting_name, $form_name, $args = array() ) {
-    $settings = $this->get_form_settings( $form_name, $args );
-    return isset( $settings[$setting_name] ) ? $settings[$setting_name] : false;
-  }
-
-    /**
-   * @param string|Sidecar_Form $form
-   * @param string $setting_name
-   * @param mixed $value
-   */
-  function set_form_setting( $form, $setting_name, $value ) {
+  function update_form_setting( $form, $setting_key, $value ) {
     if ( ! $form instanceof Sidecar_Form )
-      if ( is_string( $form ) && $this->has_form( $form ) ) {
-        $form = $this->get_form( $form );
-      }
-    if ( $form instanceof Sidecar_Form && isset( $this->_settings[$form->settings_key] ) )
- 	    $this->_settings[$form->settings_key][$setting_name] = $value;
+      $form = $this->get_form( $form );
+    return $form->update_setting( $setting_key );
   }
 
   /**
@@ -1311,7 +1272,7 @@ HTML;
      * @var Sidecar_Field $field
      */
     $field = $this->get_form_field( $field_name, $form_name );
-    return $field->get_field_html();
+    return $field->get_html();
   }
 
   /**
@@ -1416,11 +1377,14 @@ HTML;
   }
 
   /**
+   * Capture values from form but cause update_option() to be bypassed. We'll update in the shutdown hook.
+   *
    * @param array $newvalue
    * @param array $oldvalue
    * @return array
    */
   function pre_update_option( $newvalue, $oldvalue ) {
+    $return_value = $oldvalue;
     /**
      * This only going to be saving one form's worth of data yet the settings can have many forms, like:
      *
@@ -1434,16 +1398,10 @@ HTML;
      */
     $settings_key = "_{$newvalue['state']['form']}";
     $oldvalue[$settings_key] = $newvalue[$settings_key];
-    $newvalue = $oldvalue;
-    if ( method_exists( $this, 'encrypt_settings' ) ) {
-      /**
-       * @todo auto-encrypt credentials
-       */
-      $newvalue[$settings_key] = call_user_func( array( $this, 'encrypt_settings' ), $newvalue[$settings_key], $this->current_form, $newvalue );
-    }
-    unset( $newvalue['state'] ); // We don't need to save this.
+    $oldvalue['state'] = $newvalue['state'];
+    $this->update_settings( $oldvalue );
     remove_filter( current_filter(), array( $this, 'pre_update_option' ) );
-    return $newvalue;
+    return $return_value;
   }
   /**
 
@@ -1478,29 +1436,45 @@ HTML;
          * @var RESTian_Auth_Provider_Base $auth_provider
          */
         $auth_provider = $api->get_auth_provider();
+
+        $account = $this->get_form( 'account' )->get_settings( $settings );
+        $credentials = $auth_provider->extract_credentials( $account );
+        $credentials = array_merge( $auth_provider->get_new_credentials(), $credentials );
+        $credentials = $auth_provider->prepare_credentials( $credentials );
+
         /**
-         * $settings['_account'] contains a credentials and grant merged
+         * 'account' contains credentials and grant merged
          */
-        $new_account = array_merge( $auth_provider->get_new_credentials(), $auth_provider->get_new_grant() );
-        if ( ! isset( $settings['_account'] ) ) {
-          $settings['_account'] = $new_account;
+        if ( ! $auth_provider->is_credentials( $credentials ) ) {
+          /**
+           * Allow the auth provider to establish defaults in the grant if needed.
+           * This is an unusual need, but Lexity.com needed it.
+           */
+          $grant = $auth_provider->prepare_grant( $auth_provider->get_new_grant(), $credentials );
+          $account = array_merge( $credentials, $grant );
+
         } else {
-          $credentials = $auth_provider->extract_credentials( $settings['_account'] );
-          if ( $auth_provider->is_credentials( $credentials ) ) {
-            /**
-             * Attempt to authenticate with available credentials
-             */
-            $response = $api->authenticate( $credentials );
-            /**
-             * If authenticated get the updated grant otherwise get an empty grant
-             */
-            $grant = $response->authenticated ? $response->grant : $auth_provider->get_new_grant();
-            /**
-             * Merge credentials and grant back into $settings['_account']
-             */
-            $settings['_account'] = array_merge( $settings['_account'], $grant );
-          }
+          /**
+           * Attempt to authenticate with available credentials
+           */
+          $response = $api->authenticate( $credentials );
+          /**
+           * If authenticated get the updated grant otherwise get an empty grant
+           */
+          $grant = $response->authenticated ? $response->grant : $auth_provider->get_new_grant();
+
+          /**
+           * Allow the auth provider to establish defaults in the grant if needed.
+           * This is an unusual need, but Lexity.com needed it.
+           */
+          $grant = $auth_provider->prepare_grant( $grant, $credentials );
+
+          /**
+           * Merge credentials and grant back into $settings['_account']
+           */
+          $account = array_merge( $credentials, $grant );
         }
+        $settings = $this->get_form( 'account' )->update_settings( $account );
       }
       $settings['installed_version'] = $this->plugin_version;
       $this->update_settings( $settings );

@@ -95,10 +95,8 @@ class Sidecar_Admin_Tab {
      * @var string|array|Sidecar_Form $form
      */
     foreach( $this->forms as $index => $form ) {
-      if ( is_string( $form ) )
+      if ( ! is_object( $form ) )
         $form = $this->plugin->get_form( $form );
-      if ( is_array( $form ) )
-        $this->forms[$index] = $this->plugin->promote_form( $form );
       if ( $form->requires_api ) {
         $requires_api = true;
         break;

@@ -162,13 +162,13 @@ class Sidecar_Form {
    * @return array
    */
   function the_form() {
-    echo $this->get_form_html();
+    echo $this->get_html();
     return $this;
   }
   /**
    * @return string
    */
-  function get_form_html() {
+  function get_html() {
     ob_start();
     /**
      * Get the HTML for the hidden fields from the Settings API
@@ -181,7 +181,7 @@ class Sidecar_Form {
      */
     global $wp_settings_fields;
     $hidden_fields = array();
-    $settings = $this->get_settings( $this->form_name );
+    $settings = $this->get_settings();
     if ( isset( $wp_settings_fields[$this->plugin->option_name] ) ) {
       foreach( $wp_settings_fields[$this->plugin->option_name] as $section_name => $section ) {
         foreach( $section as $field_name => $field ) {
@@ -198,7 +198,7 @@ class Sidecar_Form {
      */
     $hidden_fields_html = array();
     foreach( $hidden_fields as $hidden_field ) {
-      $hidden_fields_html[] = $hidden_field->get_field_html();
+      $hidden_fields_html[] = $hidden_field->get_html();
     }
     $hidden_fields_html = implode( "\n", $hidden_fields_html );
 
@@ -278,17 +278,17 @@ HTML;
     if ( ! $this->has_fields()  ) {
       $this->plugin->initialize_form( $this );
     }
-    /**
-     * Load the settings for this form
-     */
-    $this->initialize_settings( $this->form_name );
+//    /**
+//     * Load the settings for this form
+//     */
+//    $this->initialize_settings( $this->form_name );
   }
 
   /**
    * @param Sidecar_Plugin_Base $plugin
    */
   function initialize_sections( $plugin ) {
-    $settings = $this->get_settings( $this->form_name );
+    $settings = $this->get_settings();
     foreach( $this->get_sections() as $section_name => $section ) {
       if ( ! $section->section_handler )
         $section->section_handler = array( $plugin, 'the_form_section' );
@@ -424,42 +424,78 @@ HTML;
  	}
 
   /**
+   * @param bool|array $plugin_settings
    * @return array
    */
-  function get_settings() {
-    return $this->plugin->get_form_settings( $this );
-  }
+  function get_settings( $plugin_settings = false ) {
+    if ( ! $plugin_settings )
+      $plugin_settings = $this->plugin->get_settings();
 
-  /**
-   *
-   */
-  function initialize_settings() {
-    $this->plugin->initialize_settings( $this );
+    $form_settings = isset( $plugin_settings[$this->settings_key] ) ? $plugin_settings[$this->settings_key] : array();
+
+    $form_settings = array_merge( $this->get_new_settings(), $form_settings );
+
+    if ( ! isset( $plugin_settings['state']['decrypted'][$this->form_name] ) ) {
+      if ( method_exists( $this->plugin, 'decrypt_settings' ) ) {
+        $form_settings = call_user_func( array( $this->plugin, 'decrypt_settings' ), $form_settings, $this, $plugin_settings );
+     	}
+      $plugin_settings['state']['decrypted'][$this->form_name] = true;
+    }
+
+    $plugin_settings[$this->settings_key] = $form_settings;
+
+    $this->plugin->update_settings( $plugin_settings, $set_dirty = false );
+
+    return $form_settings;
   }
 
   /**
    * @param string $setting_name
+   * @param bool|array $plugin_settings
    *
    * @return bool
    */
-  function has_setting( $setting_name ) {
-    return $this->plugin->has_form_setting( $this, $setting_name );
+  function has_setting( $setting_name, $plugin_settings = false ) {
+    if ( ! $plugin_settings )
+      $plugin_settings = $this->plugin->get_settings();
+    return isset( $plugin_settings[$this->settings_key][$setting_name] );
   }
 
   /**
    * @param string $setting_name
+   * @param bool|array $plugin_settings
    *
    * @return mixed
    */
-  function get_setting( $setting_name ) {
-    return $this->plugin->get_form_setting( $this, $setting_name );
+  function get_setting( $setting_name, $plugin_settings = false ) {
+    if ( ! $plugin_settings )
+      $plugin_settings = $this->plugin->get_settings();
+    return $plugin_settings[$this->settings_key][$setting_name];
  	}
 
   /**
    * @param string $setting_name
    * @param mixed $value
+   * @param bool|array $plugin_settings
+   * @return array
    */
-  function set_setting( $setting_name, $value ) {
-    $this->plugin->set_form_setting( $this, $setting_name, $value );
+  function update_setting( $setting_name, $value, $plugin_settings = false ) {
+    if ( ! $plugin_settings )
+      $plugin_settings = $this->plugin->get_settings();
+    $plugin_settings[$this->settings_key][$setting_name] = $value;
+    $this->plugin->update_settings( $plugin_settings );
+    return $plugin_settings[$this->settings_key];
+  }
+  /**
+   * @param array $form_settings
+   * @param bool|array $plugin_settings
+   * @return array
+   */
+  function update_settings( $form_settings, $plugin_settings = false ) {
+    if ( ! $plugin_settings )
+      $plugin_settings = $this->plugin->get_settings();
+    $plugin_settings[$this->settings_key] = $form_settings;
+    $this->plugin->update_settings( $plugin_settings );
+    return $plugin_settings;
   }
 }
