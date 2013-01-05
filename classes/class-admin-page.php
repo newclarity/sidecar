@@ -163,6 +163,11 @@ class Sidecar_Admin_Page {
        */
       wp_die( __( 'Sorry, you do not have sufficient priviledges.' ) );
     }
+
+    if ( $this->get_current_tab()->requires_api() ) {
+      $this->plugin->initialize_api();
+    }
+
     if ( method_exists( $this, 'initialize_postback' ) )
       $this->plugin->initialize_postback();
 
@@ -176,12 +181,14 @@ class Sidecar_Admin_Page {
     $form_values = $input[$form->settings_key];
     /**
      * Check with the API to see if we are authenticated
+     * @var RESTian_Client $api
      */
     $api = $this->plugin->api;
     if ( $api && ( $page->is_authentication_tab() || ! $page->has_tabs() ) ) {
       if ( ! $api->is_credentials( $form_values ) ) {
-        add_settings_error( $page->plugin->option_name, 'sidecar-no-credentials', __( 'You must enter both a username and a password', 'sidecar' ) );
-      } else if ( $api->authenticate( $form_values ) ) {
+        add_settings_error( $page->plugin->option_name, 'sidecar-no-credentials', $api->get_message() );
+      } else if ( $response = $api->authenticate( $form_values ) ) {
+        $form_values = array_merge( $form_values, $response->grant );
         $form_values['authenticated'] = true;
         add_settings_error( $page->plugin->option_name, 'sidecar-updated', __( 'Authentication successful. Settings saved.', 'sidecar' ), 'updated' );
       } else {
@@ -198,13 +205,14 @@ class Sidecar_Admin_Page {
     } else if ( isset( $settings['action']['reset'] ) ) {
       $form_values = $this->plugin->current_form->get_new_settings();
       add_settings_error( $page->plugin->option_name, 'sidecar-reset', __( 'Defaults reset.', 'sidecar' ), 'updated' );
-    } else if ( method_exists( $this->plugin, 'validate_settings' ) ) {
+    } else {
       $form_values = array_map( 'rtrim', (array)$form_values );
       add_filter( $action_key = "pre_update_option_{$this->plugin->option_name}", array( $this->plugin, 'pre_update_option' ), 10, 2 );
       /**
        * @todo How to signal a failed validation?
        */
-      $form_values = call_user_func( array( $this->plugin, 'validate_settings' ), $form_values, $this->plugin->current_form );
+      if ( method_exists( $this->plugin, 'validate_settings' ) )
+        $form_values = call_user_func( array( $this->plugin, 'validate_settings' ), $form_values, $this->plugin->current_form );
       /**
        * @var Sidecar_Field $field
        */
@@ -290,6 +298,9 @@ class Sidecar_Admin_Page {
    * @param array $args
    */
   function add_tab( $tab_slug, $tab_text, $args = array() ) {
+    $args['plugin'] = $this->plugin;
+    if ( ! $this->_auth_form && 'account' == $tab_slug )
+      $this->_auth_form = 'account';
     $this->_tabs[$tab_slug] = $tab = new Sidecar_Admin_Tab( $tab_slug, $tab_text, $args );
  	}
 

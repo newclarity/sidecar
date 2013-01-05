@@ -4,6 +4,10 @@
  */
 class Sidecar_Admin_Tab {
   /**
+   * @var Sidecar_Plugin_Base
+   */
+  var $plugin;
+  /**
    * @var string
    */
   var $tab_slug;
@@ -35,12 +39,6 @@ class Sidecar_Admin_Tab {
    * @var string|Sidecar_Form
    */
   var $forms = array();
-  /**
-   * @return bool
-   */
-  function has_forms() {
-    return is_array( $this->forms );
-  }
 
   /**
    * @param string $tab_slug
@@ -78,6 +76,35 @@ class Sidecar_Admin_Tab {
       $this->forms = array( $args['form'] );
      // $this->forms = array( isset( $args['form'] ) ? $args['form'] : $tab_slug );
     }
-
   }
+  /**
+   * @return bool
+   */
+  function has_forms() {
+    return is_array( $this->forms );
+  }
+
+  /**
+   * Determines if this tab has one of more form(s) that require an API.
+   *
+   * @return bool
+   */
+  function requires_api() {
+    $requires_api = false;
+    /**
+     * @var string|array|Sidecar_Form $form
+     */
+    foreach( $this->forms as $index => $form ) {
+      if ( is_string( $form ) )
+        $form = $this->plugin->get_form( $form );
+      if ( is_array( $form ) )
+        $this->forms[$index] = $this->plugin->promote_form( $form );
+      if ( $form->requires_api ) {
+        $requires_api = true;
+        break;
+      }
+    }
+    return $requires_api;
+  }
+
 }

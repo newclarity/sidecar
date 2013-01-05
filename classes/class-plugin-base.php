@@ -194,6 +194,12 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
          */
         $this->plugin_id = filter_input( INPUT_GET, 'plugin', FILTER_SANITIZE_STRING );
         $this->plugin_file = WP_PLUGIN_DIR . '/' . $this->plugin_id;
+      } else if ( file_exists( $plugin ) ) {
+        /**
+         * This is evidently the case during activation using Imperative
+         */
+        $this->plugin_file = $plugin;
+        $this->plugin_id = basename( dirname( $plugin ) ) . '/' . basename( $plugin );
       } else {
         /*
          * Another plugin is being activated
@@ -364,6 +370,16 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
   }
 
   /**
+   * Used to check if we are activating a plugin.
+   *
+   * @return bool
+   */
+  function is_plugin_activation() {
+    return $this->is_plugin_page_action()
+      && 'activate' == $_GET['action'];
+  }
+
+  /**
    * This is used for the "activate_{$this->plugin_id}" hook
    * when $this->is_plugin_page_action().
    */
@@ -414,7 +430,7 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
       foreach( $this->get_forms() as $form ) {
         $settings[$form->settings_key] = $this->get_form_settings( $form );
       }
-    return $settings;
+    return is_array( $settings ) ? $settings : array();
   }
 
   /**
@@ -1221,9 +1237,9 @@ HTML;
      */
     $form = $this->_forms[$form_name] = new Sidecar_Form( $form_name, $form );
 
-    if ( $form->requires_api ) {
+    if ( ! $this->api && $form->requires_api )
       $this->initialize_api();
-    }
+
     $this->current_form = $form;
     $this->initialize_form( $form );
     $form->initialize();
@@ -1293,6 +1309,8 @@ HTML;
    */
   function add_form( $form_name, $args = array() ) {
     $args['form_name'] = $form_name;
+    if ( ! isset( $args['requires_api'] ) && 'account' == $form_name )
+      $args['requires_api'] = true;
     $this->_forms[$form_name] = $args;
   }
   /**
@@ -1328,14 +1346,36 @@ HTML;
     $has_grant = false;
     if ( $this->needs_grant() ) {
       $auth_settings = $this->get_auth_form()->get_settings();
-      /**
-       * The line above MUST be called before the line below.
-       * Do NOT refactor and combine them or api won't have a value
-       * get_settings() creates the api if not there.
-       */
+      $this->initialize_api();
       $has_grant = $this->api->is_grant( $auth_settings );
     }
     return $has_grant;
+  }
+
+  /**
+   * Get grant from the currently stored account settings
+   *
+   * @return array
+   */
+  function get_grant() {
+    /**
+     * @var RESTian_Auth_Provider_Base $auth_provider
+     */
+    $auth_provider = $this->api->get_auth_provider();
+    return $auth_provider->extract_grant( $this->get_auth_form()->get_settings() );
+  }
+
+  /**
+   * Get credentials from the currently stored account settings
+   *
+   * @return array
+   */
+  function get_credentials() {
+    /**
+     * @var RESTian_Auth_Provider_Base $auth_provider
+     */
+    $auth_provider = $this->api->get_auth_provider();
+    return $auth_provider->extract_credentials( $this->get_auth_form()->get_settings() );
   }
 
   /**
@@ -1386,22 +1426,42 @@ HTML;
       $msg = __( 'Your site needs to be running PHP %s or later in order to use %s.', 'sidecar' );
       trigger_error( sprintf( $msg, $this->min_php, $this->plugin_title ), E_USER_ERROR );
     } else {
-// @todo Add simplified support for cron when we see a use-case for it.
-//      if ( ! wp_next_scheduled( $this->cron_key ) ) {
-//        wp_schedule_event( time(), $this->cron_recurrance, $this->cron_key );
-//      }
+      // @todo Add simplified support for cron when we see a use-case for it.
+      //if ( ! wp_next_scheduled( $this->cron_key ) ) {
+      //  wp_schedule_event( time(), $this->cron_recurrance, $this->cron_key );
+      //}
       /*
        * If we have existing settings and we are either upgrading or reactivating we
        * previously had a _credentials element then reauthenticate and record that change.
        */
       $settings = $this->get_settings();
-      $auth_form = $this->get_auth_form();
-      if ( $auth_form ) {
-        $auth_key = $auth_form->settings_key;
-        if ( isset( $settings[$auth_key] ) ) {
-          $this->initialize_api();
-          if ( $this->api ) {
-            $settings[$auth_key]['authenticated'] = $this->api->authenticate( $settings[$auth_key] );
+      if ( $this->api_loader ) {
+        $this->initialize_api();
+        /**
+         * @var RESTian_Auth_Provider_Base $auth_provider
+         */
+        $auth_provider = $this->api->get_auth_provider();
+        /**
+         * $settings['_account'] contains a credentials and grant merged
+         */
+        $new_account = array_merge( $auth_provider->get_new_credentials(), $auth_provider->get_new_grant() );
+        if ( ! isset( $settings['_account'] ) ) {
+          $settings['_account'] = $new_account;
+        } else {
+          $credentials = $auth_provider->extract_credentials( $settings['_account'] );
+          if ( $auth_provider->is_credentials( $credentials ) ) {
+            /**
+             * Attempt to authenticate with available credentials
+             */
+            $response = $this->api->authenticate( $credentials );
+            /**
+             * If authenticated get the updated grant otherwise get an empty grant
+             */
+            $grant = $response->authenticated ? $response->grant : $auth_provider->get_new_grant();
+            /**
+             * Merge credentials and grant back into $settings['_account']
+             */
+            $settings['_account'] = array_merge( $settings['_account'], $grant );
           }
         }
       }
@@ -1410,7 +1470,7 @@ HTML;
     }
   }
   function initialize_api() {
-    if ( $this->api_class && file_exists( $this->api_loader ) ) {
+    if ( ! $this->api && $this->api_class && file_exists( $this->api_loader ) ) {
       require_once( $this->api_loader );
       if ( class_exists( $this->api_class ) ) {
         $class_name = $this->api_class;
@@ -1418,8 +1478,10 @@ HTML;
          * @var RESTian_Client
          */
         $this->api = new $class_name();
+        $this->api->caller = $this;
       }
     }
+    $this->api->initialize_client();
   }
   /**
    * @return Sidecar_Form
