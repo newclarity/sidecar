@@ -5,7 +5,7 @@
     { "type": "git", "url": "https://github.com/newclarity/restian.git" }
   ],
   "suggest": {
-    "newclarity/restian": "0.1.*"
+    "newclarity/restian": "v0.2.2"
   },
   "require":{
     "php":">=5.2.4"
