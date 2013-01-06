@@ -513,7 +513,7 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
   function get_form_settings( $form ) {
     if ( ! $form instanceof Sidecar_Form )
       $form = $this->get_form( $form );
-    return $this->get_settings();
+    return $form->get_settings();
   }
 
   /**
