@@ -573,12 +573,13 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
   /**
    * @param string|Sidecar_Form $form
    * @param string $setting_key
+   * @param string $value
    * @return array
    */
   function update_form_setting( $form, $setting_key, $value ) {
     if ( ! $form instanceof Sidecar_Form )
       $form = $this->get_form( $form );
-    return $form->update_setting( $setting_key );
+    return $form->update_setting( $setting_key, $value );
   }
 
   /**
