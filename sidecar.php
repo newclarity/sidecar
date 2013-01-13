@@ -3,7 +3,7 @@
  * Plugin Name: Sidecar for WordPress
  * Plugin URI: http://github.com/newclarity/sidecar
  * Description:
- * Version: 0.3.2
+ * Version: 0.3.3
  * Author: NewClarity, MikeSchinkel
  * Author URI: http://newclarity.net
  * Text Domain: sidecar
@@ -28,7 +28,7 @@ define( 'SIDECAR_FILE', __FILE__ );
 define( 'SIDECAR_DIR', dirname( __FILE__ ) );
 define( 'SIDECAR_PATH', plugin_dir_path( __FILE__ ) );
 
-define( 'SIDECAR_VER', '0.3.2' );
+define( 'SIDECAR_VER', '0.3.3' );
 define( 'SIDECAR_MIN_PHP', '5.2.4' );
 define( 'SIDECAR_MIN_WP', '3.2' );
 
@@ -36,13 +36,13 @@ define( 'SIDECAR_MIN_WP', '3.2' );
  * TODO: Change this to use a class auto-loader (maybe)
  */
 
-require( SIDECAR_DIR . '/classes/class-singleton-base.php' );
-require( SIDECAR_DIR . '/classes/class-plugin-base.php' );
-require( SIDECAR_DIR . '/classes/class-admin-page.php' );
-require( SIDECAR_DIR . '/classes/class-admin-tab.php' );
-require( SIDECAR_DIR . '/classes/class-form.php' );
-require( SIDECAR_DIR . '/classes/class-field.php' );
-require( SIDECAR_DIR . '/classes/class-shortcode.php' );
+require(SIDECAR_DIR . '/classes/class-singleton-base.php');
+require(SIDECAR_DIR . '/classes/class-plugin-base.php');
+require(SIDECAR_DIR . '/classes/class-admin-page.php');
+require(SIDECAR_DIR . '/classes/class-admin-tab.php');
+require(SIDECAR_DIR . '/classes/class-form.php');
+require(SIDECAR_DIR . '/classes/class-field.php');
+require(SIDECAR_DIR . '/classes/class-shortcode.php');
 
 /**
  *

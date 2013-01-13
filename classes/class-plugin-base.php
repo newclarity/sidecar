@@ -294,7 +294,7 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
         exit;
       }
       $this->plugin_id = basename( dirname( $this->plugin_file ) ) . '/' . basename( $this->plugin_file );
-      require_once( ABSPATH . 'wp-admin/includes/plugin.php' );
+      require_once(ABSPATH . 'wp-admin/includes/plugin.php');
       if ( ! is_plugin_active( $this->plugin_id ) ) {
         trigger_error( sprintf( __( 'Plugin %s is not an active plugin or is not installed in a subdirectory of %s.' ),
           $this->plugin_name,

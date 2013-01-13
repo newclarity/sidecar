@@ -162,7 +162,7 @@ abstract class Sidecar_Singleton_Base {
             continue;
           } if ( 1 < count( $matches[1] ) ) {
             $calls = implode( "::{$call['function']}() or ", $matches[1] ) . "{$call['function']}()";
-            trigger_error( sprintf( 'Too many calls to static method ::%s() on line %d of %s; can only one of: %s',
+            trigger_error( sprintf( __( 'Too many calls to static method ::%s() on line %d of %s; can only have one of: %s', 'sidecar' ),
               $call['function'], $call['line'], $call['file'], $calls
             ));
           } else {
@@ -173,6 +173,26 @@ abstract class Sidecar_Singleton_Base {
       }
       return $classes[$key];
     }
+  }
+
+//  static function instantiate() {
+//    $class_name = self::_get_hooked_class();
+//    self::$_instances[$class_name] = new $class_name();
+//  }
+
+  /**
+   * @return bool
+   */
+  private static function _get_hooked_class() {
+    $hooked_class = false;
+    $backtrace = debug_backtrace( false );
+    for( $index = 2; $index < count( $backtrace ); $index++ ) {
+      if ( 'call_user_func_array' == $backtrace[$index]['function'] ) {
+        $hooked_class = $backtrace[$index]['args'][0][0];
+        break;
+      }
+    }
+    return $hooked_class;
   }
 
 }
