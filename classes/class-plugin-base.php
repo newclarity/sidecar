@@ -782,8 +782,8 @@ HTML;
          */
         $this->initialize_admin();
 
-        if ( $this->plugin_version )
-          $this->plugin_title .= sprintf( ' v%s', $this->plugin_version );
+//        if ( $this->plugin_version )
+//          $this->plugin_title .= sprintf( ' v%s', $this->plugin_version );
 
       }
     }

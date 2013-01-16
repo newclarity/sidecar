@@ -60,7 +60,7 @@ class Sidecar_Admin_Tab {
       }
     }
 
-    if ( ! $this->page_title )
+    if ( empty( $this->page_title ) && false !== $this->page_title )
       $this->page_title = $tab_text;
 
     if ( ! $this->forms && isset( $args['form'] ) ) {
