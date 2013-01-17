@@ -172,8 +172,9 @@ class Sidecar_Admin_Page {
      * as well as special 'clear' and 'reset' for clearing and resetting the form respectively.
      */
     $settings = $_POST[$_POST['option_page']];
-    $page = $this->plugin->current_page = $this->plugin->get_admin_page( $settings['state']['page'] );
-    $form = $this->plugin->current_form = $this->plugin->get_form( $settings['state']['form'] );
+    $this->plugin->set_current_admin_page( $page = $this->plugin->get_admin_page( $settings['state']['page'] ) );
+    $this->plugin->set_current_form( $form = $this->plugin->get_form( $settings['state']['form'] ) );
+
     $form_values = $input[$form->settings_key];
     /**
      * Check with the API to see if we are authenticated
@@ -208,7 +209,7 @@ class Sidecar_Admin_Page {
       $message = __( 'Form values cleared.%s%sNOTE:%s Your browser may still be displaying values from its cache but this plugin has indeed cleared these values.%s', 'sidecar' );
       add_settings_error( $page->plugin->option_name, "sidecar-clear", sprintf( $message, "<br/><br/>&nbsp;&nbsp;&nbsp;", '<em>', '</em>', '<br/><br/>' ), 'updated' );
     } else if ( isset( $settings['action']['reset'] ) ) {
-      $form_values = $this->plugin->current_form->get_new_settings();
+      $form_values = $this->plugin->get_current_form()->get_new_settings();
       add_settings_error( $page->plugin->option_name, 'sidecar-reset', __( 'Defaults reset.', 'sidecar' ), 'updated' );
     } else {
       $form_values = array_map( 'rtrim', (array)$form_values );
@@ -217,7 +218,7 @@ class Sidecar_Admin_Page {
        * @todo How to signal a failed validation?
        */
       if ( method_exists( $this->plugin, 'validate_settings' ) )
-        $form_values = call_user_func( array( $this->plugin, 'validate_settings' ), $form_values, $this->plugin->current_form );
+        $form_values = call_user_func( array( $this->plugin, 'validate_settings' ), $form_values, $this->plugin->get_current_form() );
       /**
        * @var Sidecar_Field $field
        */
@@ -266,7 +267,8 @@ class Sidecar_Admin_Page {
       }
     }
     $input[$form->settings_key] = $form_values;
-    return $input;
+
+    return method_exists( $this->plugin, 'filter_postback' ) ? $this->plugin->filter_postback( $input ) : $input;
   }
 
 

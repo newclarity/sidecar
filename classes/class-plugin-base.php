@@ -107,12 +107,12 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
   /**
    * @var Sidecar_Admin_Page
    */
-  var $current_page;
+  protected $_current_admin_page;
 
   /**
    * @var Sidecar_Form
    */
-  var $current_form;
+  protected $_current_form;
 
   /**
    * @var bool
@@ -1217,7 +1217,7 @@ HTML;
    */
   function the_form( $form = false ) {
     if ( ! $form )
-      $form = $this->current_form;
+      $form = $this->get_current_form();
     return $form->the_form();
  	}
 
@@ -1240,7 +1240,7 @@ HTML;
      */
     $form = $this->_forms[$form_name] = new Sidecar_Form( $form_name, $form );
 
-    $this->current_form = $form;
+    $this->set_current_form( $form );
     $this->initialize_form( $form );
     $form->initialize();
     return $form;
@@ -1378,14 +1378,57 @@ HTML;
   }
 
   /**
+   * @return Sidecar_Admin_Page
+   */
+  function get_current_admin_page() {
+    if ( ! isset( $this->_current_admin_page ) ) {
+      if ( ! isset( $_GET['page'] ) || ! isset( $_GET['tab'] ) || ! is_admin() ) {
+        $this->_current_admin_page = false;
+      } else {
+        /**
+         * If we have a $_GET['page'] then is should be "{$plugin_slug}-{$page_slug}"
+         * Scan through the array to find it.
+         */
+        foreach( array_keys( $this->_admin_pages ) as $admin_page_slug ) {
+          if ( "{$this->plugin_slug}-{$admin_page_slug}" == $_GET['page'] ) {
+            $this->_current_admin_page = $this->get_admin_page( $admin_page_slug );
+            break;
+          }
+        }
+      }
+    }
+    return $this->_current_admin_page;
+  }
+
+  /**
+   * @param Sidecar_Admin_Page $current_admin_page
+   */
+  function set_current_admin_page( $current_admin_page ) {
+    $this->_current_admin_page = $current_admin_page;
+  }
+
+  /**
+   * @return Sidecar_Form
+   */
+  function get_current_form() {
+    return $this->_current_form;
+  }
+
+  /**
+   * @param Sidecar_Admin_Page $current_form
+   */
+  function set_current_form( $current_form ) {
+    $this->_current_form = $current_form;
+  }
+
+  /**
    * Capture values from form but cause update_option() to be bypassed. We'll update in the shutdown hook.
    *
-   * @param array $newvalue
-   * @param array $oldvalue
+   * @param array $new_value
+   * @param array $old_value
    * @return array
    */
-  function pre_update_option( $newvalue, $oldvalue ) {
-    $return_value = $oldvalue;
+  function pre_update_option( $new_value, $old_value ) {
     /**
      * This only going to be saving one form's worth of data yet the settings can have many forms, like:
      *
@@ -1397,11 +1440,16 @@ HTML;
      *
      * So the next 3 lines grab all the old values of the other forms and uses the new values for this form.
      */
-    $settings_key = "_{$newvalue['state']['form']}";
-    $oldvalue[$settings_key] = $newvalue[$settings_key];
-    $oldvalue['state'] = $newvalue['state'];
-    $this->update_settings( $oldvalue );
-    remove_filter( current_filter(), array( $this, 'pre_update_option' ) );
+    if ( ! isset( $new_value['state'] ) ) {
+      $return_value = $new_value;
+    } else {
+      $return_value = $old_value;
+      $settings_key = "_{$new_value['state']['form']}";
+      $old_value[$settings_key] = $new_value[$settings_key];
+      $old_value['state'] = $new_value['state'];
+      $this->update_settings( $old_value );
+    }
+
     return $return_value;
   }
   /**
