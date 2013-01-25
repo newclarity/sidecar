@@ -262,7 +262,7 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
       register_activation_hook( $this->plugin_id, array( $this, '_activate' ) );
     } else if ( $this->is_plugin_deletion() ) {
       if ( preg_match( '#^uninstall_(.*?)$#', current_filter(), $match ) ) {
-        $this->plugin_file = $match[1];
+        $this->plugin_file = WP_PLUGIN_DIR . "/{$match[1]}";
       } else {
         /*
          * @todo My god this is a hack! I really need help from WordPress core here.
@@ -347,55 +347,36 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
   }
 
   /**
-   * @return bool|string
-   */
-  protected static function _get_current_filter_class_name() {
-    $class_name = false;
-    global $wp_filter;
-    foreach( $wp_filter[current_filter()] as $filters ) {
-      foreach( $filters as $hook ) {
-        if ( isset( $hook['function'] ) && isset( $hook['function'][0] ) && is_string( $hook['function'][0] ) && self::$_this[$hook['function'][0]] ) {
-          $class_name = $hook['function'][0];
-          break;
-        }
-      }
-    }
-
-    return $class_name;
-  }
-  /**
    *
    */
   static function uninstall() {
 
-    if ( $plugin_class = self::_get_current_filter_class_name() ) {
+    /**
+     * @var Sidecar_Plugin_Base $plugin
+     */
+    $plugin = self::this();
 
-      /**
-       * @var Sidecar_Plugin_Base $plugin
-       */
-      $plugin = call_user_func( array( $plugin_class, 'me' ) );
+    /**
+     * Initialize it so we can ensure all properties are set in case $plugin->uninstall_plugin() needs them.
+     */
+    $plugin->initialize();
 
-      /**
-       * Initialize it so we can ensure all properties are set in case $plugin->uninstall_plugin() needs them.
-       */
-      $plugin->initialize();
+    /**
+     * Delete settings
+     */
+    delete_option( $plugin->option_name );
 
-      /**
-       * Delete settings
-       */
-      delete_option( $plugin->option_name );
-
-      /*
-       * Call subclass' uninstall if applicable.
-       */
-      $plugin->uninstall_plugin();
+    /*
+     * Call subclass' uninstall if applicable.
+     */
+    $plugin->uninstall_plugin();
 
   //    /**
   //     * Delete cron tasks
   //     */
   //    $next_run = wp_next_scheduled( $plugin->cron_key );
   //    wp_unschedule_event( $next_run, $plugin->cron_key );
-    }
+
   }
 
   /**
