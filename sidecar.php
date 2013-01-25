@@ -58,3 +58,4 @@ class Sidecar {
     echo '<div class="error"><p><strong>ERROR</strong>[Sidecar]: ' . call_user_func_array( 'sprintf', $args ) . '</p></div>';
   }
 }
+
