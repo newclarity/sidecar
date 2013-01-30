@@ -735,11 +735,55 @@ HTML;
  	 */
  	function is_page_url() {
  		if ( ! isset( $this->_is_page_url ) ) {
- 			$this_url = site_url( $_SERVER['REQUEST_URI'] );
  			$base_url = $this->get_base_page_url();
-      $this->_is_page_url = $base_url == substr( $this_url, 0, strlen( $base_url ) );
+ 			/*
+ 			 * Test to see if the left-most characters of this URL match the base URL, i.e. this is match
+ 			 *
+ 			 *  base_url = http://example.com/wp/wp-admin/options-general.php?page=my-plugin-settings
+ 			 *  this_url = http://example.com/wp/wp-admin/options-general.php?page=my-plugin-settings OR
+ 			 *  this_url = http://example.com/wp/wp-admin/options-general.php?page=my-plugin-settings&tab=support
+ 			 *
+ 			 * This is NOT a match:
+ 			 *
+ 			 *  base_url = http://example.com/wp/wp-admin/options-general.php?page=my-plugin-settings
+ 			 *  this_url = http://example.com/wp/wp-admin/options-general.php OR
+ 			 *  this_url = http://example.com/wp/wp-admin/edit-comments.php OR
+ 			 *  this_url = http://example.com/wp/wp-admin/
+ 			 *
+ 			 */
+      $this->_is_page_url = $base_url == substr( $this->_this_url(), 0, strlen( $base_url ) );
  		}
  		return $this->_is_page_url;
+ 	}
+
+  /**
+ 	 * Returns the current URL.
+ 	 *
+ 	 * @return bool
+ 	 */
+ 	private function _this_url() {
+    /**
+     * Whittle down site_url() to just protocol (http(s)://) and domain (foo.example.com)
+     */
+    $site_url = rtrim( site_url(), '/' );
+ 	  while ( 2 < substr_count( $site_url, '/' ) )
+       $site_url = dirname( $site_url );
+
+    if ( ! isset( $_SERVER['REQUEST_URI'] ) ) {
+      /**
+       * fix for Microsoft IIS
+       */
+      if ( empty( $_SERVER['QUERY_STRING'] ) ) {
+        $_SERVER['REQUEST_URI'] = $_SERVER['SCRIPT_NAME'];
+      } else {
+        $_SERVER['REQUEST_URI'] = "{$_SERVER['SCRIPT_NAME']}?{$_SERVER['QUERY_STRING']}";
+      }
+    }
+
+    /**
+     * Add REQUEST_URI to domain.
+     */
+ 		return "{$site_url}{$_SERVER['REQUEST_URI']}";
  	}
 
   /**
