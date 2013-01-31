@@ -790,8 +790,9 @@ HTML;
    * @return bool
    */
   function is_postback_update() {
+    global $pagenow;
     $is_postback_update = false;
-    if ( isset( $_POST['action'] ) && 'update' == $_POST['action'] && preg_match( '#/wp-admin/options\.php$#', $this->_this_url() ) ) {
+    if ( isset( $_POST['action'] ) && 'update' == $_POST['action'] && 'options.php' == $pagenow ) {
       $this->initialize();
       $is_postback_update = isset( $_POST[$this->plugin->option_name] );
     }
