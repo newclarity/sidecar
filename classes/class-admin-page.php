@@ -86,7 +86,6 @@ class Sidecar_Admin_Page {
    */
   protected $_auth_form = false;
 
-
   /**
    * @param $page_name
    * @param array $args
@@ -751,39 +750,9 @@ HTML;
  			 *  this_url = http://example.com/wp/wp-admin/
  			 *
  			 */
-      $this->_is_page_url = $base_url == substr( $this->_this_url(), 0, strlen( $base_url ) );
+      $this->_is_page_url = $base_url == substr( Sidecar::this_url(), 0, strlen( $base_url ) );
  		}
  		return $this->_is_page_url;
- 	}
-
-  /**
- 	 * Returns the current URL.
- 	 *
- 	 * @return bool
- 	 */
- 	private function _this_url() {
-    /**
-     * Whittle down site_url() to just protocol (http(s)://) and domain (foo.example.com)
-     */
-    $site_url = rtrim( site_url(), '/' );
- 	  while ( 2 < substr_count( $site_url, '/' ) )
-       $site_url = dirname( $site_url );
-
-    if ( ! isset( $_SERVER['REQUEST_URI'] ) ) {
-      /**
-       * fix for Microsoft IIS
-       */
-      if ( empty( $_SERVER['QUERY_STRING'] ) ) {
-        $_SERVER['REQUEST_URI'] = $_SERVER['SCRIPT_NAME'];
-      } else {
-        $_SERVER['REQUEST_URI'] = "{$_SERVER['SCRIPT_NAME']}?{$_SERVER['QUERY_STRING']}";
-      }
-    }
-
-    /**
-     * Add REQUEST_URI to domain.
-     */
- 		return "{$site_url}{$_SERVER['REQUEST_URI']}";
  	}
 
   /**

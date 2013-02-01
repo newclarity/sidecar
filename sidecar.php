@@ -3,7 +3,7 @@
  * Plugin Name: Sidecar for WordPress
  * Plugin URI: http://github.com/newclarity/sidecar
  * Description:
- * Version: 0.4.3
+ * Version: 0.4.4
  * Author: NewClarity, MikeSchinkel
  * Author URI: http://newclarity.net
  * Text Domain: sidecar
@@ -28,7 +28,7 @@ define( 'SIDECAR_FILE', __FILE__ );
 define( 'SIDECAR_DIR', dirname( __FILE__ ) );
 define( 'SIDECAR_PATH', plugin_dir_path( __FILE__ ) );
 
-define( 'SIDECAR_VER', '0.4.3' );
+define( 'SIDECAR_VER', '0.4.4' );
 define( 'SIDECAR_MIN_PHP', '5.2.4' );
 define( 'SIDECAR_MIN_WP', '3.2' );
 
@@ -47,7 +47,22 @@ require(SIDECAR_DIR . '/classes/class-shortcode.php');
 /**
  *
  */
-class Sidecar {
+final class Sidecar {
+  /**
+   * @var string
+   */
+  private static $_installed_dir = false;
+
+  /**
+   * @var string
+   */
+  private static $_this_url = false;
+
+  /**
+   * @var string
+   */
+  private static $_this_domain = false;
+
 
   /**
    * @param string $message
@@ -57,5 +72,47 @@ class Sidecar {
     $args = func_get_args();
     echo '<div class="error"><p><strong>ERROR</strong>[Sidecar]: ' . call_user_func_array( 'sprintf', $args ) . '</p></div>';
   }
+
+  /**
+ 	 * Returns the domain for this site.
+   *
+ 	 * @return string
+ 	 */
+ 	static function this_domain() {
+ 	  if ( ! self::$_this_domain ) {
+ 	    $parts = explode( '/', site_url() );
+      self::$_this_domain = $parts[2];
+     }
+     return self::$_this_domain;
+  }
+
+  /**
+ 	 * Returns the directory in which WordPress is installed, or '/' if root.
+   *
+   * Preceded with a '/' but no trailing '/'
+ 	 *
+ 	 * @return string
+ 	 */
+ 	static function installed_dir() {
+ 	  if ( ! self::$_installed_dir ) {
+ 	    $regex = '^https?://' . preg_quote( self::this_domain() ) . '(/.*)/?$';
+      self::$_installed_dir = preg_replace( "#{$regex}#", '$1', site_url() );
+    }
+    return self::$_installed_dir;
+  }
+
+  /**
+   * Returns the current URL.
+   *
+   * @return bool
+   */
+  static function this_url() {
+ 	  if ( ! self::$_this_url ) {
+       $installed_dir = self::installed_dir();
+       $requested_path = substr( $_SERVER['REQUEST_URI'], strlen( $installed_dir ) );
+       self::$_this_url = site_url( $requested_path );
+    }
+    return self::$_this_url;
+ 	}
 }
 
