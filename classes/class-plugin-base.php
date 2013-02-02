@@ -231,7 +231,6 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
 //    if ( ! $this->cron_key )
 //      $this->cron_key = "{$this->plugin_name}_cron";
 
-    global $imperative_loading_plugins;
     if ( $this->is_plugin_page_action() ) {
       global $plugin;
       if ( ! isset( $plugin ) ) {
@@ -256,7 +255,7 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
       add_action( 'plugins_loaded', array( $this, '_plugins_loaded' ) );
       add_action( "activate_{$this->plugin_id}", array( $this, '_activate_plugin' ), 0 );
       register_activation_hook( $this->plugin_id, array( $this, '_activate' ) );
-    } else if ( ! $imperative_loading_plugins && $this->is_verified_plugin_deletion() ) {
+    } else if ( ! WP_Library_Manager::$loading_plugin_loaders && $this->is_verified_plugin_deletion() ) {
       if ( preg_match( '#^uninstall_(.*?)$#', current_filter(), $match ) ) {
         $this->plugin_file = WP_PLUGIN_DIR . "/{$match[1]}";
       } else {
@@ -273,6 +272,14 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
         }
       }
       $this->plugin_id = basename( dirname( $this->plugin_file ) ) . '/' . basename( $this->plugin_file );
+    } else if ( preg_match( '#' . preg_quote( WP_Library_Manager::$uninstalling_plugin ) . '$#', $GLOBALS['plugin'] ) ) {
+      /**
+       * We are uninstalling a plugin, and the plugin we are uninstalling matches the global $plugin value
+       * which means we ar loading the plugin we want to uninstall (vs. loading a different plugin on same page load.)
+       */
+      global $plugin;
+      $this->plugin_file = $plugin;
+      $this->plugin_id = WP_Library_Manager::$uninstalling_plugin;
     } else {
       /**
        * Grab the plugin file name from one the global values set when the plugin is included.
