@@ -50,10 +50,6 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
    * @var string
    */
   var $plugin_file;
-//  /**
-//   * @var string
-//   */
-//  var $plugin_file_base;
   /**
    * @var string
    */
@@ -235,7 +231,7 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
 //    if ( ! $this->cron_key )
 //      $this->cron_key = "{$this->plugin_name}_cron";
 
-
+    global $imperative_loading_plugins;
     if ( $this->is_plugin_page_action() ) {
       global $plugin;
       if ( ! isset( $plugin ) ) {
@@ -260,12 +256,13 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
       add_action( 'plugins_loaded', array( $this, '_plugins_loaded' ) );
       add_action( "activate_{$this->plugin_id}", array( $this, '_activate_plugin' ), 0 );
       register_activation_hook( $this->plugin_id, array( $this, '_activate' ) );
-    } else if ( $this->is_plugin_deletion() ) {
+    } else if ( ! $imperative_loading_plugins && $this->is_verified_plugin_deletion() ) {
       if ( preg_match( '#^uninstall_(.*?)$#', current_filter(), $match ) ) {
         $this->plugin_file = WP_PLUGIN_DIR . "/{$match[1]}";
       } else {
         /*
          * @todo My god this is a hack! I really need help from WordPress core here.
+         * @todo Blame: http://core.trac.wordpress.org/ticket/22802#comment:41
          */
         $backtrace = debug_backtrace();
         foreach( $backtrace as $index => $call ) {
@@ -335,15 +332,34 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
   }
 
   /**
-   * Used to check if the plugin is currently being deleted.
+   * Used to check if we are on a plugin page that is asking about deletion.
+   *
+   * @return bool
+   */
+  function is_confirm_plugin_deletion() {
+    return $this->is_plugin_deletion()
+      && ! isset( $_POST['verify-delete'] );
+  }
+
+  /**
+   * Used to check if we are on a plugin page that is deleting (a) plugin(s).
+   *
+   * @return bool
+   */
+  function is_verified_plugin_deletion() {
+    return $this->is_plugin_deletion()
+      && isset( $_POST['verify-delete'] ) &&  '1' == $_POST['verify-delete'];
+  }
+
+  /**
+   * Used to check if we are a plugin page askin about deletion or processing deletion request.
    *
    * @return bool
    */
   function is_plugin_deletion() {
     return $this->is_plugin_page()
       && isset( $_GET['action'] ) &&  'delete-selected' == $_GET['action']
-      && isset( $_POST['verify-delete'] ) &&  '1' == $_POST['verify-delete']
-      && isset( $_POST['checked'] ) && count( $_POST['checked'] );
+      && isset( $_REQUEST['checked'] ) && count( $_REQUEST['checked'] );
   }
 
   /**
@@ -400,15 +416,15 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
       && isset( $_GET['plugin'] );
   }
 
-  /**
-   * Used to check if we are activating a plugin.
-   *
-   * @return bool
-   */
-  function is_plugin_activation() {
-    return $this->is_plugin_page_action()
-      && 'activate' == $_GET['action'];
-  }
+//  /**
+//   * Used to check if we are activating a plugin.
+//   *
+//   * @return bool
+//   */
+//  function is_plugin_activation() {
+//    return $this->is_plugin_page_action()
+//      && 'activate' == $_GET['action'];
+//  }
 
   /**
    * This is used for the "activate_{$this->plugin_id}" hook
@@ -656,7 +672,7 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
   /**
    */
   function _admin_notices() {
-    if ( $this->needs_settings && ! $this->has_required_settings() && $this->is_plugin_page() ) {
+    if ( $this->needs_settings && ! $this->has_required_settings() && $this->is_plugin_page() && ! $this->is_confirm_plugin_deletion() ) {
     $icon_html = $this->has_url( 'logo_icon' ) ? "<span class=\"sidecar-logo-icon\"></span><img src=\"{$this->logo_icon_url}\" /></span>" : '';
     $message = sprintf( __( 'The <em>%s</em> plugin it now activated. Please configure it\'s <a href="%s"><strong>settings</strong></a>.', 'sidecar' ),
       $this->plugin_title,

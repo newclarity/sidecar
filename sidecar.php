@@ -3,7 +3,7 @@
  * Plugin Name: Sidecar for WordPress
  * Plugin URI: http://github.com/newclarity/sidecar
  * Description:
- * Version: 0.4.4
+ * Version: 0.4.5
  * Author: NewClarity, MikeSchinkel
  * Author URI: http://newclarity.net
  * Text Domain: sidecar
@@ -28,7 +28,7 @@ define( 'SIDECAR_FILE', __FILE__ );
 define( 'SIDECAR_DIR', dirname( __FILE__ ) );
 define( 'SIDECAR_PATH', plugin_dir_path( __FILE__ ) );
 
-define( 'SIDECAR_VER', '0.4.4' );
+define( 'SIDECAR_VER', '0.4.5' );
 define( 'SIDECAR_MIN_PHP', '5.2.4' );
 define( 'SIDECAR_MIN_WP', '3.2' );
 
@@ -95,8 +95,13 @@ final class Sidecar {
  	 */
  	static function installed_dir() {
  	  if ( ! self::$_installed_dir ) {
- 	    $regex = '^https?://' . preg_quote( self::this_domain() ) . '(/.*)/?$';
-      self::$_installed_dir = preg_replace( "#{$regex}#", '$1', site_url() );
+ 	    $site_url = site_url();
+      if ( 2 == substr_count( $site_url, '/' ) ) {
+        self::$_installed_dir = '/';
+      } else {
+        $regex = '^https?://' . preg_quote( self::this_domain() ) . '(/.*)/?$';
+        self::$_installed_dir = preg_replace( "#{$regex}#", '$1', site_url() );
+      }
     }
     return self::$_installed_dir;
   }
