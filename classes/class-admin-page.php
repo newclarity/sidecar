@@ -316,11 +316,15 @@ class Sidecar_Admin_Page {
   function get_default_tab() {
     return reset( $this->_tabs );
   }
+
   /**
+   * Test to see if the current tab is the authentication tab
+   *
    * @return bool
    */
   function is_authentication_tab() {
-    return is_object( $this->get_authentication_tab() );
+    $tab = $this->get_authentication_tab();
+    return is_object( $tab ) && $tab === $this->get_current_tab();
   }
   /**
    * @return Sidecar_Admin_Tab
