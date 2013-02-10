@@ -755,10 +755,6 @@ HTML;
          */
         $shortcode->add_the_content_filter();
       }
-    /*
-     * We only need to do the first time.
-     */
-    remove_action( 'the_content', array( $this, '_the_content' ), -1000 );
     return $content;
   }
 
