@@ -1452,6 +1452,10 @@ HTML;
       $settings_key = "_{$new_value['state']['form']}";
       $old_value[$settings_key] = $new_value[$settings_key];
       $old_value['state'] = $new_value['state'];
+      /**
+       * Set the 'decrytped' value to 'true' for the form that is being submitted.
+       */
+      $old_value['state']['decrypted'][$new_value['state']['form']] = true;
       $this->update_settings( $old_value );
     }
 
