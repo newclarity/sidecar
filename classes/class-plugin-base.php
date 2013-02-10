@@ -473,9 +473,10 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
   }
 
   /**
+   * @param array $args
    * @return array
    */
-  function get_settings() {
+  function get_settings( $args = array() ) {
     if ( ! $this->_settings ) {
       if ( ! $this->_initialized )
         $this->initialize();
@@ -484,7 +485,10 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
         $settings = array();
       $settings['state'] = array( 'decrypted' => array() );
       if (  $this->has_forms() )
-        foreach( $this->get_forms() as $form ) {
+        $forms = $this->get_forms();
+        if ( isset( $args['omit_form'] ) )
+          unset( $forms[$args['omit_form']] );
+        foreach( $forms as $form ) {
           /**
            * @var Sidecar_Form $form
            */
@@ -543,13 +547,14 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
   function _shutdown() {
     if ( $this->_settings_dirty ) {
       if ( $this->has_forms() ) {
+        $decrypted = $this->_settings['state']['decrypted'];
         /**
          * Encrypt anything that needs to be unencrpted.
          *
          * @var Sidecar_Form
          */
         foreach( $this->get_forms() as $key => $form ) {
-          if ( method_exists( $this, 'encrypt_settings' ) ) {
+          if ( Sidecar::element_is( $decrypted, $form->form_name ) && method_exists( $this, 'encrypt_settings' ) ) {
             $this->_settings[$form->settings_key] = call_user_func(
               array( $this, 'encrypt_settings' ),
               $this->_settings[$form->settings_key],

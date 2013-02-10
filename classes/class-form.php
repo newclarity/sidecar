@@ -429,7 +429,7 @@ HTML;
    */
   function get_settings( $plugin_settings = false ) {
     if ( ! $plugin_settings )
-      $plugin_settings = $this->plugin->get_settings();
+      $plugin_settings = $this->plugin->get_settings( array( 'omit_form' => $this->form_name ) );
 
     $form_settings = isset( $plugin_settings[$this->settings_key] ) ? $plugin_settings[$this->settings_key] : array();
 
