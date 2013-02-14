@@ -821,7 +821,7 @@ HTML;
        /**
         * If there is a tab and we are not already on the authentication tab
         */
-       if ( $auth_tab && $auth_tab->tab_slug != $_GET['tab'] ) {
+       if ( $auth_tab && ( ! isset( $_GET['tab'] ) || $auth_tab->tab_slug != $_GET['tab'] ) ) {
  				/**
  				 * ...and we are NOT on the authentication tab then redirect to the 'account' tab.
  				 *
