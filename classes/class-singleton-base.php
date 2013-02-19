@@ -144,13 +144,19 @@ abstract class Sidecar_Singleton_Base {
        * @see http://stackoverflow.com/a/7904487/102699 for our inspiration
        */
       $backtrace = debug_backtrace( false );
+      $class_names = implode( '|', array_keys( self::$_instances ) );
       for( $level = 1; $level < count( $backtrace ); $level++ ) {
         $call = $backtrace[$level];
         $key = "{$call['file']}/{$call['function']}/{$call['line']}";
         if ( isset( $classes[$key] ) ) {
           break;
         } else {
-          $class_names = implode( '|', array_keys( self::$_instances ) );
+          if ( empty( $call['file'] ) ) {
+            /**
+             * Added this for 5.2.x
+             */
+            continue;
+          }
           $lines = file($call['file']);
           preg_match_all(
             "#({$class_names})::{$call['function']}(\s*|=|\()#",
@@ -167,6 +173,21 @@ abstract class Sidecar_Singleton_Base {
             ));
           } else {
             $classes[$key] = $matches[1][0];
+            break;
+          }
+        }
+      }
+
+      if ( ! isset( $classes[$key] ) ) {
+        /**
+         * Added this for 5.2.x on uninstall
+         */
+        foreach( $backtrace as $call ) {
+          if ( ! empty( $call['function'] ) && 'call_user_func_array' == $call['function'] &&
+               ! empty( $call['file'] ) && preg_match( '#/wp-includes/plugin\.php$#', $call['file'] ) &&
+               ! empty( $call['args'][0][0] ) && preg_match( "#^({$class_names})$#", $call['args'][0][0] ) ) {
+            $key = "{$call['file']}/{$call['function']}/{$call['line']}";
+            $classes[$key] = $call['args'][0][0];
             break;
           }
         }
