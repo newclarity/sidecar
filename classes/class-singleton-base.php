@@ -15,9 +15,9 @@ abstract class Sidecar_Singleton_Base {
   private static $_is_php53;
 
   /**
-   *
+   * @param array $args
    */
-  function __construct() {
+  function __construct( $args = array() ) {
     if ( ! isset( self::$_is_php53 ) )
       self::$_is_php53 = version_compare( PHP_VERSION, '5.3.0', '>=' );
 
@@ -32,7 +32,7 @@ abstract class Sidecar_Singleton_Base {
     self::$_instances[$this_class] = &$this;
 
     if ( method_exists( $this, 'on_load' ) ) {
-      $this->on_load();
+      $this->on_load( $args );
     }
   }
 
