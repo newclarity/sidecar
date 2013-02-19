@@ -272,7 +272,7 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
         }
       }
       $this->plugin_id = basename( dirname( $this->plugin_file ) ) . '/' . basename( $this->plugin_file );
-    } else if ( preg_match( '#' . preg_quote( WP_Library_Manager::$uninstalling_plugin ) . '$#', $GLOBALS['plugin'] ) ) {
+    } else if ( false !== WP_Library_Manager::$uninstalling_plugin && preg_match( '#' . preg_quote( WP_Library_Manager::$uninstalling_plugin ) . '$#', $GLOBALS['plugin'] ) ) {
       /**
        * We are uninstalling a plugin, and the plugin we are uninstalling matches the global $plugin value
        * which means we ar loading the plugin we want to uninstall (vs. loading a different plugin on same page load.)
