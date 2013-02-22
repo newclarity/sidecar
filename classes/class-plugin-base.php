@@ -494,6 +494,7 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
            */
           $settings[$form->settings_key] = $form->get_settings( $settings );
         }
+      $this->_settings = $settings;
     }
     return $this->_settings;
   }
