@@ -164,7 +164,7 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
        */
       $filepath= '/' == $this->_api['filepath'] ? $this->_api['filepath'] : "{$this->plugin_path}/{$this->_api['filepath']}";
 
-      if ( file_exists( $filepath) ) {
+      if ( is_file( $filepath) ) {
         require_once( $filepath );
         if ( class_exists( $this->_api['class_name'] ) ) {
           $class_name = $this->_api['class_name'];
