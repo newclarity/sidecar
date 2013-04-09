@@ -687,7 +687,7 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
   function _admin_notices() {
     if ( $this->needs_settings && ! $this->has_required_settings() && $this->is_plugin_page() && ! $this->is_confirm_plugin_deletion() ) {
     $icon_html = $this->has_url( 'logo_icon' ) ? "<span class=\"sidecar-logo-icon\"></span><img src=\"{$this->logo_icon_url}\" /></span>" : '';
-    $message = sprintf( __( 'The <em>%s</em> plugin it now activated. Please configure it\'s <a href="%s"><strong>settings</strong></a>.', 'sidecar' ),
+    $message = sprintf( __( 'The <em>%s</em> plugin is now activated. Please configure it\'s <a href="%s"><strong>settings</strong></a>.', 'sidecar' ),
       $this->plugin_title,
       $this->get_settings_url()
     );
