@@ -109,7 +109,7 @@ abstract class Sidecar_Singleton_Base {
  		return $value;
  	}
  	/**
- 	 * Adds an action hook for an object
+ 	 * Adds an action hook for an objectx`x``x``  `
  	 *
  	 * 	$this->add_action( 'init' );
  	 * 	$this->add_action( 'init', 11 );

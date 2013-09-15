@@ -136,6 +136,12 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
   var $needs_settings = true;
 
   /**
+   * @var bool
+   */
+  protected $_admin_initialized = false;
+
+
+  /**
    * @param $class_name
    * @param $filepath
    */
@@ -162,7 +168,7 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
       /**
        * @todo fix this to work on Windows
        */
-      $filepath= '/' == $this->_api['filepath'] ? $this->_api['filepath'] : "{$this->plugin_path}/{$this->_api['filepath']}";
+      $filepath= '/' == $this->_api['filepath'][0] ? $this->_api['filepath'] : "{$this->plugin_path}/{$this->_api['filepath']}";
 
       if ( is_file( $filepath) ) {
         require_once( $filepath );
@@ -184,13 +190,45 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
    * @param RESTian_Client $api
    */
   function set_api( $api ) {
+    if ( empty( $this->_forms ) ) {
+      /**
+       * What about plugins with an API but no need for forms?  Is that possible since forms=settings in Sidecar?
+       */
+      $error_message = __( '$plugin->set_api($api) cannot be called before forms have been added. Please call $plugin->add_form() in $plugin->initialize_plugin() at least once prior to calling set_api().', 'sidecar' );
+      trigger_error( $error_message );
+      exit;
+    }
+    $api->caller = $this;
+    $api->initialize_client();
     $this->_api = $api;
+    if ( $this->_admin_initialized ) {
+      /**
+       * If Admin has been initialized then set grant.
+       * If not, wait to set until after initialization
+       * otherwise we get into a bad spiral of not-defined-yet.
+       */
+      $this->_api->set_grant( $this->get_grant() );
+    }
   }
 
+  function is_saving_widget() {
+    global $pagenow;
+    return isset( $_POST['action'] ) && isset( $_POST['id_base'] )
+      && 'admin-ajax.php' == $pagenow && 'save-widget' == $_POST['action'];
+  }
   /**
    * @param array $args
    */
   function on_load( $args = array() ) {
+
+    /**
+     * If we are saving a widget then of course we need ajax,
+     * and I'm pretty sure we'll need to add a lot of checks here
+     * as new AJAX use-cases are discovered.
+     */
+    if ( ! $this->needs_ajax && $this->is_saving_widget() ) {
+      $this->needs_ajax = true;
+    }
     /*
      * If running an AJAX callback and either $this->needs_ajax or $args['needs_ajax'] is false then bypass the plugin.
      *
@@ -275,7 +313,7 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
     } else if ( false !== WP_Library_Manager::$uninstalling_plugin && preg_match( '#' . preg_quote( WP_Library_Manager::$uninstalling_plugin ) . '$#', $GLOBALS['plugin'] ) ) {
       /**
        * We are uninstalling a plugin, and the plugin we are uninstalling matches the global $plugin value
-       * which means we ar loading the plugin we want to uninstall (vs. loading a different plugin on same page load.)
+       * which means we ar loading the plugin we want to uninstall (vs. loading a different plugin on `same page load.)
        */
       global $plugin;
       $this->plugin_file = $plugin;
@@ -456,7 +494,7 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
     $has_required_settings = true;
     if ( ! $this->_initialized )
       $this->initialize();
-    if (  $this->has_forms() ) {
+    if ( $this->has_forms() ) {
       $settings = $this->get_settings();
       /** @var Sidecar_Form $form */
       foreach( $this->get_forms() as $form_name => $form ) {
@@ -468,6 +506,9 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
           }
         }
       }
+    }
+    if ( method_exists( $this, 'filter_has_required_settings' ) ) {
+      $has_required_settings = $this->filter_has_required_settings( $has_required_settings, $settings );
     }
     return $has_required_settings;
   }
@@ -496,6 +537,10 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
         }
       $this->_settings = $settings;
     }
+
+    if ( method_exists( $this, 'filter_settings' ) )
+      $this->_settings = $this->filter_settings( $this->_settings, $args );
+
     return $this->_settings;
   }
 
@@ -686,8 +731,8 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
    */
   function _admin_notices() {
     if ( $this->needs_settings && ! $this->has_required_settings() && $this->is_plugin_page() && ! $this->is_confirm_plugin_deletion() ) {
-    $icon_html = $this->has_url( 'logo_icon' ) ? "<span class=\"sidecar-logo-icon\"></span><img src=\"{$this->logo_icon_url}\" /></span>" : '';
-    $message = sprintf( __( 'The <em>%s</em> plugin is now activated. Please configure it\'s <a href="%s"><strong>settings</strong></a>.', 'sidecar' ),
+      $icon_html = $this->has_url( 'logo_icon' ) ? "<span class=\"sidecar-logo-icon\"></span><img src=\"{$this->logo_icon_url}\" /></span>" : '';
+      $message = sprintf( __( 'The <em>%s</em> plugin is now activated. Please configure it\'s <a href="%s"><strong>settings</strong></a>.', 'sidecar' ),
       $this->plugin_title,
       $this->get_settings_url()
     );
@@ -724,6 +769,8 @@ HTML;
       $settings_page->initialize();
       $settings_url = $this->get_admin_page( 'settings' )->get_page_url( null );
     }
+    if ( method_exists( $this, 'filter_settings_url' ) )
+      $settings_url = $this->filter_settings_url( $settings_url );
     return $settings_url;
   }
   /**
@@ -786,7 +833,7 @@ HTML;
         /**
          * Call the subclass and ask it to initialize itself
          */
-        $this->initialize_admin();
+        $this->_initialize_admin();
 
 //        if ( $this->plugin_version )
 //          $this->plugin_title .= sprintf( ' v%s', $this->plugin_version );
@@ -967,7 +1014,8 @@ HTML;
    * @return Sidecar_Admin_Page
    */
   function get_admin_page( $page_name ) {
-    return isset( $this->_admin_pages[$page_name] ) ? $this->_admin_pages[$page_name] : false ;
+    $page_slug = preg_replace( "#^{$this->plugin_slug}-(.*)$#", '$1', $page_name );
+    return isset( $this->_admin_pages[$page_slug] ) ? $this->_admin_pages[$page_slug] : false;
   }
 
   /**
@@ -1130,6 +1178,24 @@ HTML;
       }
     }
     return $url;
+ 	}
+
+  /**
+   * @param $url_name
+   *
+   * @return bool
+   */
+  function get_link_text( $url_name ) {
+    return isset( $this->_urls[$url_name]['link_text'] ) ? $this->_urls[$url_name]['link_text'] : false;
+ 	}
+
+  /**
+   * @param $url_name
+   *
+   * @return bool
+   */
+  function get_link_class( $url_name ) {
+    return isset( $this->_urls[$url_name]['link_class'] ) ? " class=\"{$this->_urls[$url_name]['link_class']}\"" : false;
  	}
 
   /**
@@ -1388,9 +1454,10 @@ HTML;
    */
   function get_current_admin_page() {
     if ( ! isset( $this->_current_admin_page ) ) {
-      if ( ! isset( $_GET['page'] ) || ! isset( $_GET['tab'] ) || ! is_admin() ) {
+      if ( ! isset( $_GET['page'] ) || ! is_admin() ) {
         $this->_current_admin_page = false;
       } else {
+        $tab = isset( $_GET['tab'] ) ? $_GET['tab'] : $this->get_admin_page($_GET['page'])->get_default_tab()->tab_slug;
         /**
          * If we have a $_GET['page'] then is should be "{$plugin_slug}-{$page_slug}"
          * Scan through the array to find it.
@@ -1434,7 +1501,7 @@ HTML;
    * @param array $old_value
    * @return array
    */
-  function pre_update_option( $new_value, $old_value ) {
+  function _pre_update_option( $new_value, $old_value ) {
     /**
      * This only going to be saving one form's worth of data yet the settings can have many forms, like:
      *
@@ -1470,6 +1537,9 @@ HTML;
     if ( ! $this->_initialized )
       $this->initialize();
 
+    if ( method_exists( $this, 'activate' ) )
+      $this->activate();
+
     global $wp_version;
     if ( version_compare( $wp_version, $this->min_wp, '<' ) ) {
       deactivate_plugins( basename( $this->plugin_file ) );
@@ -1495,8 +1565,11 @@ HTML;
          * @var RESTian_Auth_Provider_Base $auth_provider
          */
         $auth_provider = $api->get_auth_provider();
+        $auth_form = $this->get_auth_form();
+        if ( ! $auth_form )
+          wp_die( __( 'There is no auth form configured. Call $admin_page->set_auth_form( $form_name ) inside initialize_admin_page( $admin_page ).', 'sidecar' ) );
 
-        $account = $this->get_form( 'account' )->get_settings( $settings );
+        $account = $auth_form->get_settings( $settings );
         $credentials = $auth_provider->extract_credentials( $account );
         $credentials = array_merge( $auth_provider->get_new_credentials(), $credentials );
         $credentials = $auth_provider->prepare_credentials( $credentials );
@@ -1533,17 +1606,36 @@ HTML;
            */
           $account = array_merge( $credentials, $grant );
         }
-        $settings = $this->get_form( 'account' )->update_settings( $account );
+        $settings = $auth_form->update_settings( $account );
       }
       $settings['installed_version'] = $this->plugin_version;
       $this->update_settings( $settings );
+    }
+  }
+
+  /**
+   *
+   */
+  function _initialize_admin() {
+    if ( ! $this->_admin_initialized ) {
+      if ( ! method_exists( $this, 'initialize_admin' ) ) {
+        trigger_error( __( 'Plugin must define a $plugin->initialize_admin() method..', 'sidecar' ) );
+        exit;
+      }
+      $this->initialize_admin();
+
+      $this->_admin_initialized = true;
+
+      if ( $this->_api )
+        $this->_api->maybe_set_grant( $this->get_grant() );
+
     }
   }
   /**
    * @return Sidecar_Form
    */
   function get_auth_form() {
-    $this->initialize_admin();
+    $this->_initialize_admin();
     $auth_form = false;
     /**
      * @var Sidecar_Admin_Page $page
@@ -1557,6 +1649,7 @@ HTML;
     }
     return $auth_form;
   }
+
   /**
    * @param $property_name
    * @return bool|string
@@ -1572,7 +1665,15 @@ HTML;
        * Enables embedding in a HEREDOC or other doublequoted string
        * without requiring an intermediate variable.
        */
-      $value = call_user_func( array( $this, "get_url" ), $match[1] );
+      $value = $this->get_url( $match[1] );
+    } else if ( preg_match( '#^(.*?)_link$#', $property_name, $match ) && $this->has_url( $match[1] ) ) {
+      /**
+       * Same kind of this as _url above.
+       */
+      $url = $this->get_url( $match[1] );
+      $link_text = $this->get_link_text( $match[1] );
+      $class = $this->get_link_class( $match[1] );
+      $value = "<a target=\"_blank\"{$class} href=\"{$url}\">{$link_text}</A>";
     } else {
       Sidecar::show_error( 'No property named %s on %s class.', $property_name, get_class( $this ) );
     }

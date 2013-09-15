@@ -1,68 +1,85 @@
 <?php
+
 /**
- *
+ * Class Sidecar_Admin_Page
  */
 class Sidecar_Admin_Page {
+
   /**
    * @var Sidecar_Plugin_Base
    */
   var $plugin;
+
   /**
    * @var null|array Array contains Sidecar_Form objects
    */
   protected $_forms = array();
+
   /**
    * @var array
    */
   protected $_tabs = array();
+
   /**
    * @var string
    */
   protected $_page_url;
+
   /**
    * @var bool
    */
   protected $_is_page_url;
+
   /**
    * @var Sidecar_Admin_Tab
    */
   protected $_authentication_tab;
+
   /**
    * @var string
    */
   protected $_settings_group_name;
+
   /**
    * @var bool
    */
   protected $_initialized = false;
+
   /**
    * @var string
    */
   var $parent_slug = 'options-general.php';
+
   /**
    * @var string
    */
   var $page_name;
+
   /**
    * @var string
    */
   var $page_slug;
+
   /**
    * @var string
    */
   var $page_title;
+
   /**
    * @var string
    */
   var $menu_title;
+
   /**
    * @var string
    */
   var $menu_page;
+
   /**
    * @var string
    */
   var $capability_required = 'manage_options';
+
   /**
    * @var string One of the built in icons (below), or a custom icon starting with 'http://' or 'https://'
    * @example:
@@ -122,7 +139,7 @@ class Sidecar_Admin_Page {
    * @throws Exception
    */
   function initialize() {
-    $this->_call_plugin( 'initialize_admin_page', $this );
+    $this->_do_plugin_action( 'initialize_admin_page', $this );
     $current_tab = $this->has_tabs() ? $this->get_current_tab() : false;
     if ( $current_tab && $current_tab->has_forms() ) {
       register_setting( $this->plugin->option_name, $this->plugin->option_name, array( $this, 'filter_postback' ) );
@@ -149,12 +166,15 @@ class Sidecar_Admin_Page {
    */
   function filter_postback( $input ) {
     static $called_already;
-    if ( isset( $called_already ) ) {
+    if ( isset( $called_already ) || empty( $_POST ) ) {
       /**
        * When using the Settings API this filter will be called twice when the option needs to be added.
+       * This happens because of how WordPress is implemented and not something we can control.
+       * IOW, it's a hack but not a hack we can avoid unless WordPress makes changes.
        */
       return $input;
     }
+    $unfiltered_input = $input;
     $called_already = true;
     if ( ! current_user_can( 'manage_options' ) ) {
       /**
@@ -163,16 +183,15 @@ class Sidecar_Admin_Page {
       wp_die( __( 'Sorry, you do not have sufficient priviledges.' ) );
     }
 
-    if ( method_exists( $this, 'initialize_postback' ) )
-      $this->plugin->initialize_postback();
+    $this->_do_plugin_action( 'initialize_postback' );
 
     /**
      * Get the array that contains names of 'plugin', 'page', 'tab', 'form' and 'settings'
      * as well as special 'clear' and 'reset' for clearing and resetting the form respectively.
      */
     $settings = $_POST[$_POST['option_page']];
-    $this->plugin->set_current_admin_page( $page = $this->plugin->get_admin_page( $settings['state']['page'] ) );
-    $this->plugin->set_current_form( $form = $this->plugin->get_form( $settings['state']['form'] ) );
+    $this->plugin->set_current_admin_page( $this );
+    $this->plugin->set_current_form( $form = $this->plugin->get_form( $form_name = $settings['state']['form'] ) );
 
     $form_values = $input[$form->settings_key];
     /**
@@ -180,9 +199,9 @@ class Sidecar_Admin_Page {
      * @var RESTian_Client $api
      */
     $api = $this->plugin->get_api();
-    if ( $api && ( $page->is_authentication_tab() || ! $page->has_tabs() ) ) {
+    if ( $api && ( $this->is_authentication_tab() || ! $this->has_tabs() ) && $form == $this->get_auth_form() ) {
       if ( ! $api->is_credentials( $form_values ) ) {
-        add_settings_error( $page->plugin->option_name, 'sidecar-no-credentials', $api->get_message() );
+        add_settings_error( $this->plugin->option_name, 'sidecar-no-credentials', $api->get_message() );
       } else {
         /**
          * @var RESTian_Response
@@ -193,36 +212,42 @@ class Sidecar_Admin_Page {
           if ( ! ( $message = $response->get_error()->message ) ) {
             $message = 'Please try again.';
           };
-          add_settings_error( $page->plugin->option_name, 'sidecar-login-failed', __( "Authentication Failed. {$message}", 'sidecar' ) );
+          add_settings_error( $this->plugin->option_name, 'sidecar-not-authenticated', __( "Authentication Failed. {$message}", 'sidecar' ) );
         } else {
           $form_values = array_merge( $form_values, $response->grant );
           $form_values['authenticated'] = true;
-          add_settings_error( $page->plugin->option_name, 'sidecar-updated', __( 'Authentication successful. Settings saved.', 'sidecar' ), 'updated' );
+          $message = $this->_apply_plugin_filter( 'filter_authentication_success_message', __( 'Authentication successful. Settings saved.', 'sidecar' ) );
+          if ( $message )
+            add_settings_error( $this->plugin->option_name, 'sidecar-authenticated', $message, 'updated' );
         }
       }
     }
-    $this->plugin->set_api( $api );
+    //$this->plugin->set_api( $api );
 
     if ( isset( $settings['action']['clear'] ) ) {
       $form_values = $form->get_empty_settings();
       $message = __( 'Form values cleared.%s%sNOTE:%s Your browser may still be displaying values from its cache but this plugin has indeed cleared these values.%s', 'sidecar' );
-      add_settings_error( $page->plugin->option_name, "sidecar-clear", sprintf( $message, "<br/><br/>&nbsp;&nbsp;&nbsp;", '<em>', '</em>', '<br/><br/>' ), 'updated' );
+      add_settings_error( $this->plugin->option_name, "sidecar-clear", sprintf( $message, "<br/><br/>&nbsp;&nbsp;&nbsp;", '<em>', '</em>', '<br/><br/>' ), 'updated' );
     } else if ( isset( $settings['action']['reset'] ) ) {
       $form_values = $this->plugin->get_current_form()->get_new_settings();
-      add_settings_error( $page->plugin->option_name, 'sidecar-reset', __( 'Defaults reset.', 'sidecar' ), 'updated' );
+      add_settings_error( $this->plugin->option_name, 'sidecar-reset', __( 'Defaults reset.', 'sidecar' ), 'updated' );
     } else {
-      $form_values = array_map( 'rtrim', (array)$form_values );
-      add_filter( $action_key = "pre_update_option_{$this->plugin->option_name}", array( $this->plugin, 'pre_update_option' ), 10, 2 );
+      /**
+       * @todo Maybe $form->get_empty_settings() instead of $form->get_field_defaults()?
+       */
+      $form_values = array_merge( $form->get_field_defaults(), array_map( 'rtrim', (array)$form_values ) );
+      add_filter( $action_key = "pre_update_option_{$this->plugin->option_name}", array( $this->plugin, '_pre_update_option' ), 10, 2 );
       /**
        * @todo How to signal a failed validation?
        */
-      if ( method_exists( $this->plugin, 'validate_settings' ) )
-        $form_values = call_user_func( array( $this->plugin, 'validate_settings' ), $form_values, $this->plugin->get_current_form() );
+      $form_values = $this->_apply_plugin_filter( 'validate_settings', $form_values, $this->plugin->get_current_form() );
       /**
        * @var Sidecar_Field $field
        */
       foreach( $form->get_fields() as $field_name => $field ) {
         $validation_options = false;
+        if ( $field->field_allow_html )
+          $form_values[$field_name] = htmlentities( $form_values[$field_name] );
    			/**
    			 * Default to FILTER_SANITIZE_STRING if ['validator'] not set.
    			 */
@@ -237,24 +262,22 @@ class Sidecar_Admin_Page {
           $validator = $field->field_validator ? $field->field_validator : FILTER_SANITIZE_STRING;
           $validated_value = filter_var( $form_values[$field_name], $validator );
         }
-        if ( method_exists( $this->plugin, $method = "sanitize_setting_{$field_name}" ) ) {
-          $validated_value = call_user_func( array( $this->plugin, $method ), $validated_value, $field, $form );
-        }
+        $validated_value = $this->_apply_plugin_filter( "sanitize_setting_{$field_name}", $validated_value, $field, $form );
         if ( $validation_options || $validated_value != $form_values[$field_name] ) {
           if ( ! $validation_options ) {
-            add_settings_error( $page->plugin->option_name, 'sidecar-value', sprintf(
+            add_settings_error( $this->plugin->option_name, 'sidecar-value', sprintf(
               __( 'Please enter a valid value for "%s."', 'sidecar' ), $field->field_label
             ));
           } else {
             if ( isset( $validation_options['min'] ) && $validation_options['min'] > intval( $form_values[$field_name] ) ) {
-              add_settings_error( $page->plugin->option_name, 'sidecar-min', sprintf(
+              add_settings_error( $this->plugin->option_name, 'sidecar-min', sprintf(
                 __( 'Please enter a value greater than or equal to %d for "%s."', 'sidecar' ),
                   $validation_options['min'],
                   $field->field_label
               ));
             }
             if ( isset( $validation_options['max'] ) && $validation_options['max'] < intval( $form_values[$field_name] ) ) {
-              add_settings_error( $page->plugin->option_name, 'sidecar-max', sprintf(
+              add_settings_error( $this->plugin->option_name, 'sidecar-max', sprintf(
                 __( 'Please enter a value less than or equal to %d for "%s."', 'sidecar' ),
                   $validation_options['max'],
                   $field->field_label
@@ -265,9 +288,37 @@ class Sidecar_Admin_Page {
         }
       }
     }
+
+    $form_values = $this->_apply_plugin_filter( $method_name = "process_form_{$form_name}", $form_values );
+    if ( method_exists( $this->plugin, $method_name ) ) {
+      /**
+       * This presumes that "process_form_{$form_name}" uses the $api.
+       * We may need to make it a bit more generic, i.e. allow setting a message on the plugin
+       * and then our process form would need to set the plugin's message.
+       */
+      if ( ! empty( $api->response->message ) ) {
+        $message_type = $api->response->has_error() ? 'error' : 'updated';
+        add_settings_error( $this->plugin->option_name, "sidecar-form-processed-{$form_name}", $api->response->message, $message_type );
+      }
+    }
+
+
     $input[$form->settings_key] = $form_values;
 
-    return method_exists( $this->plugin, 'filter_postback' ) ? $this->plugin->filter_postback( $input ) : $input;
+    $input = $this->_apply_plugin_filter( 'filter_postback', $input );
+
+    $postback_info = (object)array(
+      'admin_page' => $this,
+      'form' => $form,
+      'form_values' => $form_values,
+      'input' => $input,
+      'unfiltered' => $unfiltered_input
+    );
+
+    $this->_do_plugin_action( "set_postback_{$form->form_name}_{$this->page_name}_message", $postback_info );
+    $this->_do_plugin_action( 'set_postback_message', $this, $form, $postback_info );
+
+    return $input;
   }
 
 
@@ -277,6 +328,7 @@ class Sidecar_Admin_Page {
   function get_auth_credentials() {
     return $this->get_auth_form()->get_settings();
   }
+
   /**
    * @return Sidecar_Form
    */
@@ -337,6 +389,7 @@ class Sidecar_Admin_Page {
       foreach( $this->_tabs as $tab ) {
         if ( in_array( $this->_auth_form, $tab->forms ) ) {
           $this->_authentication_tab = $tab;
+          break;
         }
       }
     }
@@ -344,7 +397,7 @@ class Sidecar_Admin_Page {
   }
 
   /**
-   * Calls a method in the plugin
+   * Filters a value by calling a method in the plugin.
    *
    * Captures whatever additional parameters and passes them on.
    *
@@ -352,7 +405,24 @@ class Sidecar_Admin_Page {
    *
    * @return bool|mixed
    */
-  protected function _call_plugin( $method ) {
+  protected function _apply_plugin_filter( $method ) {
+    $args = func_get_args();
+    array_shift( $args );
+    $result = $args[0];
+    if ( method_exists( $this->plugin, $method ) )
+      $result = call_user_func_array( array( $this->plugin, $method ), $args );
+    return $result;
+  }
+  /**
+   * Executes an action by calling a method in the plugin.
+   *
+   * Captures whatever additional parameters and passes them on.
+   *
+   * @param string $method
+   *
+   * @return bool|mixed
+   */
+  protected function _do_plugin_action( $method ) {
     $result = false;
     $args = func_get_args();
     array_shift( $args );
@@ -360,6 +430,19 @@ class Sidecar_Admin_Page {
       $result = call_user_func_array( array( $this->plugin, $method ), $args );
     return $result;
   }
+  /**
+   * Retrieves a value from the plugin.
+   *
+   * Captures whatever additional parameters and passes them on.
+   *
+   * @param string $method
+   *
+   * @return bool|mixed
+   */
+  protected function _get_plugin_value( $method ) {
+    return call_user_func_array( array( $this, '_do_plugin_action' ), func_get_args() );
+  }
+
   /**
    *
    */
@@ -374,8 +457,13 @@ class Sidecar_Admin_Page {
        */
       $this->initialize();
 
-      $this->verify_current_tab();
-
+      /**
+       * Call the plugin's $this->verify_current_tab() method, if it exists.
+       * Return true if all is okay and you don't want to run the default,
+       * return false if you want to run the default, or
+       * redirect and exit inside the method.
+       */
+      $this->_get_plugin_value( 'verify_current_tab', $this );
     }
 
     /**
@@ -409,8 +497,8 @@ class Sidecar_Admin_Page {
    * @todo Call this from HEAD instead of from here.
    */
   function the_css() {
-    $css = $this->_call_plugin( 'get_admin_page_css', $this );
-    if ( ! empty( $css ) ) {
+    $css = $this->_get_plugin_value( 'get_admin_page_css', $this );
+    if ( $css ) {
       $css_html =<<<HTML
 <style type="text/css">
 {$css}
@@ -429,7 +517,10 @@ HTML;
     $this->the_css();
     $tab = $this->get_current_tab();
     $tab_class= $tab ? " tab-{$tab->tab_slug}" : false;
- 	  echo "\n<div class=\"wrap{$tab_class}\">";
+    $id = rtrim( "{$this->page_slug}-" . ltrim( $tab->tab_slug ), '-' );
+ 	  echo <<<HTML
+\n<div id="{$id}" class="wrap {$this->plugin->css_base}-admin {$this->page_name}-page{$tab_class}">
+HTML;
  	  $this->the_icon();
     $this->the_title_and_tabs( $tab );
     $this->the_page_content();
@@ -476,7 +567,9 @@ HTML;
    *
    */
   function the_page_content() {
-    echo '<div id="admin-content">';
+    echo <<<HTML
+<div id="admin-content">
+HTML;
     /**
      * @var bool|Sidecar_Admin_Tab
      */
@@ -538,7 +631,7 @@ HTML;
       }
     }
     if ( is_callable( $handler ) ) {
-      $this->_call_plugin( 'initialize_tab', $current_tab, $this );
+      $this->_do_plugin_action( 'initialize_tab', $current_tab, $this );
       call_user_func( $handler, $this );
     }
 
@@ -551,22 +644,51 @@ HTML;
    * @todo Research to see if we need to support something other than icon32
    *
    */
-   function the_icon() {
-    if ( $this->icon ) {
-      echo "\n" . '<div class="icon32"';
+  function the_icon() {
+    if ( $icon_html = $this->_get_plugin_value( 'get_icon_html', $this ) ) {
+      $icon_html = <<<HTML
+<div class="icon32">{$icon_html}</div>
+HTML;
+    } else if ( $this->icon ) {
+      /**
+       * $this->icon contains a URL for an image.
+       */
       if ( preg_match( '#^https?://#', $this->icon, $m ) ) {
-        echo "\n" . '><img height="34" width="36" src=' . $this->icon . '>';
+        list( $width, $height ) = explode( 'x', $this->_apply_plugin_filter( 'get_icon_dimensions', '36x34' ) );
+        $icon_html_fragment =<<<HTML
+><img height="{$height}" style="background:none;" width="{$width}" src="{$this->icon}>
+HTML;
       } else {
-        echo "\n" . ' id="icon-' . $this->icon . '"><br/>';
+        /**
+         * This means $this->icon contains an idea value such as
+         */
+        $icon_html_fragment = " id=\"icon-{$this->icon}\"><br/>";
       }
-      echo '</div>';
+      /**
+       * Note that there is no trailing ">" on the first <div>.
+       * Instead, the $icon_html_fragment contains it.
+       */
+      $icon_html = <<<HTML
+<div class="icon32"{$icon_html_fragment}</div>
+HTML;
     }
-   }
+    if ( $icon_html )
+      echo $icon_html;
+  }
   /**
    *
    */
   function get_tabs() {
  	  return $this->_tabs;
+ 	}
+
+  /**
+   * @param string $tab_name
+   *
+   * @return bool|Sidecar_Admin_Tab
+   */
+  function get_tab( $tab_name ) {
+ 	  return isset( $this->_tabs[$tab_name] ) ? $this->_tabs[$tab_name] : false;
  	}
   /**
    *
@@ -582,7 +704,7 @@ HTML;
     if ( $this->page_title || $this->has_tabs() ) {
       echo "\n" . '<h2 class="nav-tab-wrapper">';
       if ( $this->page_title )
-        echo "\n" . $this->page_title;
+        echo "\n<span class=\"admin-page-title\">{$this->page_title}</span>";
       if ( $this->has_tabs() )
         echo "\n" . $this->get_tabs_html();
       echo "\n" . '</h2>';
@@ -624,6 +746,26 @@ HTML;
   function get_page_url() {
     return $this->get_tab_url(null);
  	}
+
+  /**
+   * @return string|void
+   */
+  /**
+   * @param null|bool|string|Sidecar_Admin_Tab $tab
+   * @param string $text
+   * @param bool $blank
+   *
+   * @return string|void
+   */
+  function get_tab_link( $tab, $text, $blank = false ) {
+    $url = $this->get_tab_url( $tab );
+    if ( $blank )
+      $blank = ' target="_blank"';
+    return <<<HTML
+<a{$blank} href="{$url}">{$text}</a>
+HTML;
+ 	}
+
   /**
    * @param null|bool|string|Sidecar_Admin_Tab $tab If null is passed then don't add a default tab.
    * @return string|void

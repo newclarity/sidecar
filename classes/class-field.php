@@ -27,6 +27,11 @@ class Sidecar_Field {
   /**
    * @var string
    */
+  var $field_slug;
+
+  /**
+   * @var string
+   */
   var $field_label;
 
   /**
@@ -79,6 +84,16 @@ class Sidecar_Field {
   var $api_var;
 
   /**
+   * @var array
+   */
+  var $_extra = array();
+
+  /**
+   * @var array
+   */
+  var $field_allow_html = false;
+
+  /**
    * @param string $field_name
    * @param array $args
    */
@@ -92,6 +107,8 @@ class Sidecar_Field {
         $this->$property = $value;
       } else if ( property_exists( $this, $property = "field_{$property}" ) ) {
         $this->$property = $value;
+      } else {
+        $this->_extra[$property] = $value;
       }
     }
     if ( ! $this->field_type )
@@ -105,8 +122,12 @@ class Sidecar_Field {
     if ( ! $this->field_size )
       $this->field_size = preg_match( '#(text|password)#', $this->field_type ) ? 40 : false;
 
+    if ( ! $this->field_slug )
+      $this->field_slug = str_replace( array( '_', ' ' ), '-', $this->field_name );
+
     if ( is_null( $this->api_var ) )
       $this->api_var = $this->field_name;
+
   }
 
   /**
@@ -135,7 +156,7 @@ class Sidecar_Field {
       $html = array( "<ul id=\"{$input_id}-radio-field-options\" class=\"radio-field-options\">" );
       $this_value = $settings[$this->field_name];
       foreach( $this->field_options as $value => $label ) {
-        $checked = ( ! empty( $this_value ) && $value == $this_value ) ? 'checked="checked" ' : '';
+        $checked = ( ! empty( $this_value ) && $value == $this_value ) ? 'checked="checked" ' : false;
         $value = esc_attr( $value );
         $html[] =<<<HTML
 <li><input type="radio" id="{$input_id}" class="{$css_base}-field" name="{$input_name}" value="{$value}" {$checked}/>
@@ -143,15 +164,67 @@ class Sidecar_Field {
 HTML;
       }
       $html = implode( "\n", $html ) . "</ul>{$help_html}";
+    } else if ( 'select' == $this->field_type ) {
+      $html = array( "<select id=\"{$input_id}-select-field-options\" name=\"{$input_name}\" class=\"select-field-options\">" );
+      $this_value = $settings[$this->field_name];
+      foreach( $this->field_options as $value => $label ) {
+        $selected = ( ! empty( $this_value ) && $value == $this_value ) ? ' selected="selected"' : false;
+        $value = esc_attr( $value );
+        $html[] =<<<HTML
+<option value="{$value}"{$selected}>{$label}</option>
+HTML;
+      }
+      $html = implode( "\n", $html ) . "</select>{$help_html}";
+    } else if ( 'checkbox' == $this->field_type ) {
+      $checked = ! empty( $settings[$this->field_name] ) ? 'checked="checked" ' : false;
+      $html =<<<HTML
+<input type="checkbox" id="{$input_id}" class="{$css_base}-field" name="{$input_name}" value="1" {$checked}/>
+<label for="{$input_id}">{$this->field_label}</label>
+HTML;
     } else if ( 'hidden' == $this->field_type ) {
       $html =<<<HTML
 <input type="hidden" id="{$input_id}" name="{$input_name}" value="{$value}" />
+HTML;
+    } else if ( 'textarea' == $this->field_type ) {
+//      $value = htmlentities( $value );
+      if ( $rows = $this->get_extra( 'rows' ) )
+        $rows = " rows=\"{$rows}\"";
+      if ( $cols = $this->get_extra( 'cols' ) )
+        $cols = " cols=\"{$cols}\"";
+      $html =<<<HTML
+<textarea id="{$input_id}" name="{$input_name}"{$rows}{$cols}>{$value}</textarea>{$help_html}
 HTML;
     } else {
       $html =<<<HTML
 <input type="{$this->field_type}" id="{$input_id}" name="{$input_name}" value="{$value}" class="{$css_base}-field"{$size_html}/>{$help_html}
 HTML;
   }
+    $field_wrapper_id = $this->get_wrapper_id();
+    $html =<<<HTML
+<div id="{$field_wrapper_id}" class="{$this->field_type}">{$html}</div>
+HTML;
     return $html;
+  }
+
+  /**
+   * @param string|$property_name
+   *
+   * @return null|int|string
+   */
+  function get_extra( $property_name ) {
+    $value = null;
+    if ( isset( $this->_extra[$prefixed_name = "field_{$property_name}"] ) ) {
+      $value = $this->_extra[$prefixed_name];
+    } else if ( isset( $this->_extra[$property_name] ) ) {
+      $value = $this->_extra[$property_name];
+    }
+    return $value;
+  }
+
+  /**
+   * @return string
+   */
+  function get_wrapper_id() {
+    return "field-{$this->field_slug}-input";
   }
 }

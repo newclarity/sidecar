@@ -16,6 +16,10 @@ class Sidecar_Form {
    */
   var $form_name;
   /**
+   * @var string
+   */
+  var $form_label;
+  /**
    * @var array
    */
   protected $_default_settings = array();
@@ -180,14 +184,28 @@ class Sidecar_Form {
      * Adding to internal $hidden_fields
      */
     global $wp_settings_fields;
+    $save_wp_settings_fields = $wp_settings_fields;
     $hidden_fields = array();
     $settings = $this->get_settings();
+    $fields = $this->get_fields();
     if ( isset( $wp_settings_fields[$this->plugin->option_name] ) ) {
       foreach( $wp_settings_fields[$this->plugin->option_name] as $section_name => $section ) {
         foreach( $section as $field_name => $field ) {
-          if ( 'hidden' == $field['args']['field']->field_type ) {
+          $unset = false;
+          if ( ! isset( $fields[$field_name] ) ) {
+            $unset = true;
+          } else if ( 'hidden' == $field['args']['field']->field_type ) {
             $hidden_fields[] = $field['args']['field'];
+            $unset = true;
+          }
+          if ( $unset ) {
             unset( $wp_settings_fields[$this->plugin->option_name][$section_name][$field_name] );
+          } else {
+            /**
+             * @var Sidecar_Field $field_object
+             */
+            $field_object = $field['args']['field'];
+            $wp_settings_fields[$this->plugin->option_name][$section_name][$field_name]['args']['label_for'] = $field_object->get_wrapper_id();
           }
         }
       }
@@ -247,6 +265,7 @@ HTML;
   </div>
 </form>
 HTML;
+    $wp_settings_fields = $save_wp_settings_fields;
     return $form;
   }
 
@@ -272,6 +291,14 @@ HTML;
     $this->_buttons[$button_name] = (object)$args;
   }
 
+  /**
+   * @param string $button_name
+   *
+   * @return bool
+   */
+  function get_button( $button_name ) {
+    return isset( $this->_buttons[$button_name] ) ? $this->_buttons[$button_name] : false;
+  }
   /**
    */
   function initialize() {
@@ -301,7 +328,8 @@ HTML;
       foreach( $section->fields as $field_name => $field ) {
         if ( ! $field->field_handler )
           $field->field_handler = array( $this, '_the_form_field_callback' );
-        add_settings_field( $field_name, $field->field_label, $field->field_handler, $this->plugin->option_name, $section_name, array(
+        $field_label = 'checkbox' != $field->field_type ? $field->field_label : false;
+        add_settings_field( $field_name, $field_label, $field->field_handler, $this->plugin->option_name, $section_name, array(
           'field' => $field,
           'section' => $section,
           'form' => $this,
@@ -434,6 +462,9 @@ HTML;
     $form_settings = isset( $plugin_settings[$this->settings_key] ) ? $plugin_settings[$this->settings_key] : array();
 
     $form_settings = array_merge( $this->get_new_settings(), $form_settings );
+
+    if ( method_exists( $this->plugin, $method_name = "filter_form_settings_{$this->form_name}" ) )
+      $form_settings = call_user_func( array( $this->plugin, $method_name ), $form_settings );
 
     if ( ! isset( $plugin_settings['state']['decrypted'][$this->form_name] ) ) {
       if ( method_exists( $this->plugin, 'decrypt_settings' ) ) {
