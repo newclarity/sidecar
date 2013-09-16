@@ -133,50 +133,77 @@ class Sidecar_Field {
   /**
    * @return string
    */
+  function get_input_name() {
+    return "{$this->plugin->option_name}[{$this->form->form_name}][{$this->field_name}]";
+  }
+
+  /**
+   * Sets HTML id like the following:
+   *
+   * @example
+   *  HTML name = my_plugin_settings[_form-name}[field-name]
+   *  HTML id =>  my-plugin-settings--form-name-field-name
+   *
+   * @return string
+   */
+  function get_input_id() {
+    $input_name = $this->get_input_name();
+    $input_id = str_replace( array( '[_', '_', '][', '[', ']' ), array( '--', '-', '-', '-', '' ), $input_name );
+    return $input_id;
+  }
+
+  /**
+   * @return string
+   */
+  function get_input_size_html() {
+    return $this->field_size ? " size=\"{$this->field_size}\"" : '';
+  }
+
+  /**
+   * @return string
+   */
+  function get_input_help_html() {
+    return $this->field_help ? "\n<br />\n<span class=\"{$css_base}-field-help\">{$this->field_help}</span>" : false;
+  }
+
+  /**
+   * @return string
+   */
   function get_html() {
     /**
      * @todo: Get options with all expected elements initialized
      */
     $form = $this->form;
-    $settings = $form->get_settings();
-    $value = isset( $settings[$this->field_name] ) ? esc_attr( $settings[$this->field_name] ) : false;
-    $input_name = "{$this->plugin->option_name}[{$form->settings_key}][{$this->field_name}]";
-    /**
-     * Sets HTML id like the following:
-     * @example
-     *  HTML name = my_plugin_settings[_form-name}[field-name]
-     *  HTML id =>  my-plugin-settings--form-name-field-name
-     */
-    $input_id = str_replace( array( '[_', '_', '][', '[', ']' ), array( '--', '-', '-', '-', '' ), $input_name );
-    $size_html = $this->field_size ? " size=\"{$this->field_size}\"" : '';
+    $value = $form->get_setting( $this->field_name );
+    $input_name = $this->get_input_name();
+    $input_id = $this->get_input_id();
+    $size_html = $this->get_input_size_html();
     $css_base = $this->plugin->css_base;
-    $help_html = $this->field_help ? "\n<br />\n<span class=\"{$css_base}-field-help\">{$this->field_help}</span>" : false;
+    $help_html = $this->get_input_help_html();
 
     if ( 'radio' == $this->field_type ) {
       $html = array( "<ul id=\"{$input_id}-radio-field-options\" class=\"radio-field-options\">" );
-      $this_value = $settings[$this->field_name];
-      foreach( $this->field_options as $value => $label ) {
-        $checked = ( ! empty( $this_value ) && $value == $this_value ) ? 'checked="checked" ' : false;
-        $value = esc_attr( $value );
+      foreach( $this->field_options as $option_value => $option_label ) {
+        $checked = ( ! empty( $value ) && $option_value == $value ) ? 'checked="checked" ' : false;
+        $option_value = esc_attr( $option_value );
         $html[] =<<<HTML
-<li><input type="radio" id="{$input_id}" class="{$css_base}-field" name="{$input_name}" value="{$value}" {$checked}/>
-<label for={$input_id}">{$label}</label></li>
+<li><input type="radio" id="{$input_id}" class="{$css_base}-field" name="{$input_name}" value="{$option_value}" {$checked}/>
+<label for={$input_id}">{$option_label}</label></li>
 HTML;
       }
       $html = implode( "\n", $html ) . "</ul>{$help_html}";
     } else if ( 'select' == $this->field_type ) {
       $html = array( "<select id=\"{$input_id}-select-field-options\" name=\"{$input_name}\" class=\"select-field-options\">" );
-      $this_value = $settings[$this->field_name];
-      foreach( $this->field_options as $value => $label ) {
-        $selected = ( ! empty( $this_value ) && $value == $this_value ) ? ' selected="selected"' : false;
-        $value = esc_attr( $value );
+      foreach( $this->field_options as $option_value => $option_label ) {
+        $selected = ( ! empty( $value ) && $option_value == $value ) ? ' selected="selected"' : false;
+        $option_value = esc_attr( $option_value );
         $html[] =<<<HTML
-<option value="{$value}"{$selected}>{$label}</option>
+<option value="{$option_value}"{$selected}>{$option_label}</option>
 HTML;
       }
       $html = implode( "\n", $html ) . "</select>{$help_html}";
     } else if ( 'checkbox' == $this->field_type ) {
-      $checked = ! empty( $settings[$this->field_name] ) ? 'checked="checked" ' : false;
+      $checked = ! empty( $value ) ? 'checked="checked" ' : false;
       $html =<<<HTML
 <input type="checkbox" id="{$input_id}" class="{$css_base}-field" name="{$input_name}" value="1" {$checked}/>
 <label for="{$input_id}">{$this->field_label}</label>

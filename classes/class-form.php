@@ -7,46 +7,61 @@ class Sidecar_Form {
    * @var Sidecar_Plugin_Base
    */
   var $plugin;
+
   /**
    * @var Sidecar_Admin_Page
    */
   var $admin_page;
+
   /**
    * @var string
    */
   var $form_name;
+
   /**
    * @var string
    */
   var $form_label;
-  /**
-   * @var array
-   */
-  protected $_default_settings = array();
-  /**
-   * @var array
-   */
-  protected $_settings;
-  /**
-   * @var array
-   */
-  var $_fields = array();
-  /**
-   * @var array
-   */
-  var $_sections = array();
-  /**
-   * @var array
-   */
-  var $_buttons = array();
-  /**
-   * @var string
-   */
-  var $settings_key;
+
   /**
    * @var bool
    */
   var $requires_api;
+
+  /**
+   * @var Sidecar_Settings
+   */
+  private $_settings;
+
+  /**
+   * @var array
+   */
+  private $_default_settings_values;
+
+  /**
+   * @var array
+   */
+  private $_fields = array();
+
+  /**
+   * @var array
+   */
+  private $_sections = array();
+
+  /**
+   * @var array
+   */
+  private $_buttons = array();
+
+  /**
+   * @var bool
+   */
+  private $_initialized = false;
+
+  /**
+   * @var array
+   */
+  private $_required_field_names;
 
   /**
    * @param string $form_name
@@ -64,38 +79,31 @@ class Sidecar_Form {
         $this->$property = $value;
       }
     }
-    $this->settings_key = "_{$form_name}";
 
   }
 
-  /**
-   * @return array
-   */
-  function get_field_defaults() {
-    $field_defaults = array();
-    foreach( $this->get_fields() as $field ) {
-      $field_defaults[$field->field_name] = isset( $field->field_default ) ? $field->field_default : '';
-    }
-    return $field_defaults;
-  }
   /**
    * @return array
    */
   function get_sections() {
     return $this->_sections;
   }
+
   /**
    * @return array
    */
   function get_fields() {
     return $this->_fields;
   }
+
   /**
-   * @return Sidecar_Field
+   * @param string $field_name
+   * @return bool|Sidecar_Field
    */
   function get_field( $field_name ) {
     return isset( $this->_fields[$field_name] ) ? $this->_fields[$field_name] : false;
   }
+
   /**
    * @param string $field_name
    * @return bool
@@ -103,6 +111,7 @@ class Sidecar_Form {
   function has_field( $field_name ) {
     return isset( $this->_fields[$field_name] );
   }
+
   /**
    * @return bool
    */
@@ -117,6 +126,7 @@ class Sidecar_Form {
   function get_section( $section_name ) {
     return isset( $this->_sections[$section_name] ) ? $this->_sections[$section_name] : false;
   }
+
   /**
    * @param string $section_name
    * @return bool
@@ -124,6 +134,7 @@ class Sidecar_Form {
   function has_section( $section_name ) {
     return isset( $this->_sections[$section_name] );
   }
+
   /**
    * @return bool
    */
@@ -138,6 +149,7 @@ class Sidecar_Form {
   function get_field_names( $section_name ) {
     return array_keys( $this->_sections[$section_name]->fields );
   }
+
   /**
    * @param bool|string $section_name
    *
@@ -150,6 +162,7 @@ class Sidecar_Form {
     }
     return $has_fields;
   }
+
   /**
    * @param bool|string $section_name
    *
@@ -162,6 +175,7 @@ class Sidecar_Form {
     }
     return $fields;
   }
+
   /**
    * @return array
    */
@@ -169,6 +183,7 @@ class Sidecar_Form {
     echo $this->get_html();
     return $this;
   }
+
   /**
    * @return string
    */
@@ -186,7 +201,6 @@ class Sidecar_Form {
     global $wp_settings_fields;
     $save_wp_settings_fields = $wp_settings_fields;
     $hidden_fields = array();
-    $settings = $this->get_settings();
     $fields = $this->get_fields();
     if ( isset( $wp_settings_fields[$this->plugin->option_name] ) ) {
       foreach( $wp_settings_fields[$this->plugin->option_name] as $section_name => $section ) {
@@ -299,16 +313,18 @@ HTML;
   function get_button( $button_name ) {
     return isset( $this->_buttons[$button_name] ) ? $this->_buttons[$button_name] : false;
   }
+
   /**
    */
   function initialize() {
-    if ( ! $this->has_fields()  ) {
-      $this->plugin->initialize_form( $this );
+    if ( ! $this->_initialized ) {
+
+      if ( ! $this->has_fields()  ) {
+        $this->plugin->initialize_form( $this );
+      }
+      $this->_initialized = true;
+
     }
-//    /**
-//     * Load the settings for this form
-//     */
-//    $this->initialize_settings( $this->form_name );
   }
 
   /**
@@ -339,12 +355,14 @@ HTML;
       }
     }
   }
+
   /**
    * @param array $args
    */
   function _the_form_field_callback( $args ) {
     $this->plugin->the_form_field( $args['field']->field_name, $args['form']->form_name );
   }
+
   /**
    * @param Sidecar_Plugin_Base $plugin
    */
@@ -392,6 +410,7 @@ HTML;
 
     return $this->_sections[$section_name] = $args;
   }
+
   /**
    * @param string        $field_name
    * @param array         $args
@@ -427,8 +446,9 @@ HTML;
     $this->_fields[$field_name] = &$field;
     $this->_sections[$section_name]->fields[$field_name] = &$field;
   }
+
   /**
-   * Get an array of new settings (empty string; '').
+   * Get an array of new setting values (empty string; '').
    *
    * Override in subclass to add more specific setting defaults.
    * @return array
@@ -436,97 +456,100 @@ HTML;
    * @todo Cache new settings in a setting so that loading from front end does...
    * @todo ...require setting the admin form and traversing through these fields.
    */
-  function get_new_settings() {
-    if ( 0 == count( $this->_default_settings ) ) {
-      $this->_default_settings = $this->get_field_defaults();
+  function get_default_settings_values() {
+    if ( ! isset( $this->_default_settings_values ) ) {
+      $default_settings_values = array();
+      foreach( $this->get_fields() as $field ) {
+        $default_settings_values[$field->field_name] = isset( $field->field_default ) ? $field->field_default : '';
+      }
+      $this->_default_settings_values = $default_settings_values;
     }
- 		return $this->_default_settings;
+ 		return $this->_default_settings_values;
  	}
 
   /**
    * @return array
    */
-  function get_empty_settings() {
-    $new_settings = $this->get_new_settings();
- 		return array_fill_keys( array_keys( $new_settings ), '' );
- 	}
+  function get_empty_settings_values() {
+    return $this->get_settings()->get_empty_settings_values();
+  }
 
   /**
-   * @param bool|array $plugin_settings
    * @return array
    */
-  function get_settings( $plugin_settings = false ) {
-    if ( ! $plugin_settings )
-      $plugin_settings = $this->plugin->get_settings( array( 'omit_form' => $this->form_name ) );
+  function get_settings_values() {
+    return $this->get_settings()->get_settings_values();
+  }
 
-    $form_settings = isset( $plugin_settings[$this->settings_key] ) ? $plugin_settings[$this->settings_key] : array();
-
-    $form_settings = array_merge( $this->get_new_settings(), $form_settings );
-
-    if ( method_exists( $this->plugin, $method_name = "filter_form_settings_{$this->form_name}" ) )
-      $form_settings = call_user_func( array( $this->plugin, $method_name ), $form_settings );
-
-    if ( ! isset( $plugin_settings['state']['decrypted'][$this->form_name] ) ) {
-      if ( method_exists( $this->plugin, 'decrypt_settings' ) ) {
-        $form_settings = call_user_func( array( $this->plugin, 'decrypt_settings' ), $form_settings, $this, $plugin_settings );
-     	}
-      $plugin_settings['state']['decrypted'][$this->form_name] = true;
+  /**
+   * @return Sidecar_Settings
+   */
+  function get_settings() {
+    if ( ! isset( $this->_settings ) ) {
+      $this->_settings = $this->plugin->get_form_settings( $this->form_name );
     }
-
-    $plugin_settings[$this->settings_key] = $form_settings;
-
-    $this->plugin->update_settings( $plugin_settings, $set_dirty = false );
-
-    return $form_settings;
+    return $this->_settings;
   }
 
   /**
    * @param string $setting_name
-   * @param bool|array $plugin_settings
-   *
    * @return bool
    */
-  function has_setting( $setting_name, $plugin_settings = false ) {
-    if ( ! $plugin_settings )
-      $plugin_settings = $this->plugin->get_settings();
-    return isset( $plugin_settings[$this->settings_key][$setting_name] );
+  function has_setting( $setting_name ) {
+    return $this->get_settings()->has_setting( $setting_name );
   }
 
   /**
    * @param string $setting_name
-   * @param bool|array $plugin_settings
-   *
    * @return mixed
    */
-  function get_setting( $setting_name, $plugin_settings = false ) {
-    if ( ! $plugin_settings )
-      $plugin_settings = $this->plugin->get_settings();
-    return $plugin_settings[$this->settings_key][$setting_name];
+  function get_setting( $setting_name ) {
+    $this->get_settings()->get_setting( $setting_name );
  	}
 
   /**
    * @param string $setting_name
    * @param mixed $value
-   * @param bool|array $plugin_settings
    * @return array
    */
-  function update_setting( $setting_name, $value, $plugin_settings = false ) {
-    if ( ! $plugin_settings )
-      $plugin_settings = $this->plugin->get_settings();
-    $plugin_settings[$this->settings_key][$setting_name] = $value;
-    $this->plugin->update_settings( $plugin_settings );
-    return $plugin_settings[$this->settings_key];
+  function update_settings_value( $setting_name, $value ) {
+    $this->get_settings()->update_settings_value( $setting_name, $value );
+  }
+
+  /**
+   * @param array $form_settings
+   * @return array
+   */
+  function update_settings( $form_settings ) {
+    $this->get_settings()->update_settings( $form_settings );
   }
   /**
    * @param array $form_settings
-   * @param bool|array $plugin_settings
    * @return array
    */
-  function update_settings( $form_settings, $plugin_settings = false ) {
-    if ( ! $plugin_settings )
-      $plugin_settings = $this->plugin->get_settings();
-    $plugin_settings[$this->settings_key] = $form_settings;
-    $this->plugin->update_settings( $plugin_settings );
-    return $plugin_settings;
+  function update_settings_values( $form_settings ) {
+    $this->get_settings()->update_settings_values( $form_settings );
   }
+
+  /**
+   * @return array
+   */
+  function get_required_field_names() {
+    if ( ! isset( $this->_required_field_names ) ) {
+      $required_field_names = array();
+      $this->initialize();
+      $form_settings = $this->get_settings();
+      foreach( $this->get_fields() as $field_name => $field ) {
+        if ( $field->field_required && $form_settings->has_setting( $field_name ) ) {
+          $required_field_names[] = $field_name;
+        }
+      }
+      if ( method_exists( $this, 'filter_required_field_names' ) ) {
+        $required_field_names = $this->filter_required_field_names( $required_field_names, $settings );
+      }
+      $this->_required_field_names = $required_field_names;
+    }
+    return $this->_required_field_names;
+  }
+
 }

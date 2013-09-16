@@ -7,30 +7,36 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
    * @var string
    */
   var $plugin_class;
+
   /**
    * @var string
    */
   var $plugin_class_base;
+
   /**
    * @var string
    */
   var $plugin_name;
+
   /**
    * Dashed version of $this->plugin_name
    *
    * @var string
    */
   var $plugin_slug;
+
   /**
    * ID of plugin used by WordPress in get_option('active_plugins')
    *
    * @var string
    */
   var $plugin_id;
+
   /**
    * @var string
    */
   var $plugin_version;
+
   /**
    * @var string
    */
@@ -50,14 +56,17 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
    * @var string
    */
   var $plugin_file;
+
   /**
    * @var string
    */
   var $plugin_path;
+
   /**
    * @var string Minimum PHP version, defaults to min version for WordPress
    */
   var $min_php = '5.2.4';
+
   /**
    * @var string Minimum WordPress version, defaults to first version requiring PHP 5.2.4.
    */
@@ -70,26 +79,32 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
 //   * @var string Key used for cron for this plugin
 //   */
 //  var $cron_key;
+
   /**
    * @var array Array of URLs defined for handle use by plugin.
    */
   protected $_urls = array();
+
   /**
    * @var array Array of Image file names defined for handle use by plugin.
    */
   protected $_images = array();
+
   /**
    * @var bool|array
    */
   protected $_shortcodes = false;
+
   /**
    * @var bool|array
    */
   protected $_forms = false;
+
   /**
    * @var bool|array
    */
   protected $_admin_pages = array();
+
   /**
    * @var array Array of Meta Links for the WordPress plugin page.
    */
@@ -114,22 +129,27 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
    * @var bool
    */
   protected $_initialized = false;
+
   /**
-   * @var array
+   * @var Sidecar_Settings
    */
-  protected $_settings = array();
+  protected $_settings;
+
   /**
-   * @var bool
+   * @var
    */
-  protected $_settings_dirty = false;
+  protected $_default_settings_values;
+
   /**
    * @var string
    */
   var $option_name;
+
   /**
    * @var string
    */
   var $needs_ajax = false;
+
   /**
    * @var bool
    */
@@ -139,6 +159,8 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
    * @var bool
    */
   protected $_admin_initialized = false;
+
+
 
 
   /**
@@ -256,7 +278,6 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
     add_action( 'wp_loaded', array( $this, '_wp_loaded' ) );
     add_action( 'wp_print_styles', array( $this, '_wp_print_styles' ) );
     add_action( 'save_post', array( $this, '_save_post' ) );
-    add_action( 'shutdown', array( $this, '_shutdown' ) );
 
     $this->plugin_class_base = preg_replace( '#^(.*?)_Plugin$#', '$1', $this->plugin_class );
 
@@ -425,7 +446,7 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
     /**
      * Delete settings
      */
-    delete_option( $plugin->option_name );
+    $plugin->delete_settings();
 
     /*
      * Call subclass' uninstall if applicable.
@@ -488,70 +509,6 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
   }
 
   /**
-   * @return bool
-   */
-  function has_required_settings() {
-    $has_required_settings = true;
-    if ( ! $this->_initialized )
-      $this->initialize();
-    if ( $this->has_forms() ) {
-      $settings = $this->get_settings();
-      /** @var Sidecar_Form $form */
-      foreach( $this->get_forms() as $form_name => $form ) {
-        /** @var Sidecar_Field $field */
-        foreach( $form->get_fields() as $field_name => $field ) {
-          if ( $field->field_required && empty( $settings[$form->settings_key][$field_name] ) ) {
-            $has_required_settings = false;
-            break;
-          }
-        }
-      }
-    }
-    if ( method_exists( $this, 'filter_has_required_settings' ) ) {
-      $has_required_settings = $this->filter_has_required_settings( $has_required_settings, $settings );
-    }
-    return $has_required_settings;
-  }
-
-  /**
-   * @param array $args
-   * @return array
-   */
-  function get_settings( $args = array() ) {
-    if ( ! $this->_settings ) {
-      if ( ! $this->_initialized )
-        $this->initialize();
-      $settings = get_option( $this->option_name );
-      if ( ! is_array( $settings ) )
-        $settings = array();
-      $settings['state'] = array( 'decrypted' => array() );
-      if (  $this->has_forms() )
-        $forms = $this->get_forms();
-        if ( isset( $args['omit_form'] ) )
-          unset( $forms[$args['omit_form']] );
-        foreach( $forms as $form ) {
-          /**
-           * @var Sidecar_Form $form
-           */
-          $settings[$form->settings_key] = $form->get_settings( $settings );
-        }
-      $this->_settings = $settings;
-    }
-
-    if ( method_exists( $this, 'filter_settings' ) )
-      $this->_settings = $this->filter_settings( $this->_settings, $args );
-
-    return $this->_settings;
-  }
-
-  /**
-   * @param array $settings
-   */
-  function set_settings( $settings ) {
-    $this->_settings = $settings;
-  }
-
-  /**
    * @return array|bool
    */
   function get_forms() {
@@ -560,81 +517,12 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
         $this->_forms[$form_name] = $this->promote_form( $form );
     return $this->_forms;
   }
-  /**
-   * @param string|Sidecar_Form $form
-   * @return array
-   */
-  function get_form_settings( $form ) {
-    if ( ! $form instanceof Sidecar_Form )
-      $form = $this->get_form( $form );
-    return $form->get_settings();
-  }
 
   /**
    * @return bool
    */
   function has_forms() {
     return is_array( $this->_forms ) && count( $this->_forms );
-  }
-
-  /**
-   * @param array $settings
-   * @param bool $set_dirty
-   */
-  function update_settings( $settings, $set_dirty = true ) {
-    $this->_settings = $settings;
-    if ( $set_dirty )
-      $this->_settings_dirty = true;
-  }
-
-  /**
-   * Save options if they need to be saved.
-   */
-  function _shutdown() {
-    if ( $this->_settings_dirty ) {
-      if ( $this->has_forms() ) {
-        $decrypted = $this->_settings['state']['decrypted'];
-        /**
-         * Encrypt anything that needs to be unencrpted.
-         *
-         * @var Sidecar_Form
-         */
-        foreach( $this->get_forms() as $key => $form ) {
-          if ( Sidecar::element_is( $decrypted, $form->form_name ) && method_exists( $this, 'encrypt_settings' ) ) {
-            $this->_settings[$form->settings_key] = call_user_func(
-              array( $this, 'encrypt_settings' ),
-              $this->_settings[$form->settings_key],
-              $form, $this->_settings
-            );
-          }
-        }
-      }
-      unset( $this->_settings['state'] );
-      update_option( $this->option_name, $this->_settings );
-    }
-  }
-
-  /**
-   * @param string|Sidecar_Form $form
-   * @param string $setting_key
-   * @return array
-   */
-  function get_form_setting( $form, $setting_key ) {
-    if ( ! $form instanceof Sidecar_Form )
-      $form = $this->get_form( $form );
-    return $form->get_setting( $setting_key );
-  }
-
-  /**
-   * @param string|Sidecar_Form $form
-   * @param string $setting_key
-   * @param string $value
-   * @return array
-   */
-  function update_form_setting( $form, $setting_key, $value ) {
-    if ( ! $form instanceof Sidecar_Form )
-      $form = $this->get_form( $form );
-    return $form->update_setting( $setting_key, $value );
   }
 
   /**
@@ -701,6 +589,125 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
     if ( ! $this->css_base )
       $this->css_base = $this->plugin_slug;
 
+    $this->_settings = new Sidecar_Settings( $this->option_name, $this );
+
+    $this->_settings->initialize_settings( $this->get_default_settings_values() );
+
+  }
+
+  /**
+   * @return array
+   */
+  function get_default_settings_values() {
+    if ( ! isset( $this->_default_settings_values ) ) {
+      $default_settings_values = array();
+      foreach( $this->get_forms() as $form ) {
+        /**
+         * @var Sidecar_Form $form
+         */
+        $default_settings_values[$form->form_name] = $form->get_default_settings_values();
+      }
+      $this->_default_settings_values = $default_settings_values;
+    }
+    return $this->_default_settings_values;
+  }
+
+  /**
+   * @param array $settings_values
+   */
+  function update_settings_values( $settings_values ) {
+    $this->get_settings()->update_settings_values( $settings_values );
+  }
+
+  /**
+   * @param object $settings_option
+   * @param bool $set_dirty
+   */
+  function update_settings_option( $settings_option, $set_dirty = true ) {
+    $this->get_settings()->update_settings_option( $settings_option, $set_dirty );
+  }
+
+  /**
+   * @param string|Sidecar_Form $form
+   * @param string $setting_name
+   * @return array
+   */
+  function get_form_settings_value( $form, $setting_name ) {
+    if ( ! $form instanceof Sidecar_Form )
+      $form = $this->get_form( $form );
+    return $this->get_setting( $form )->get_setting( $setting_name );
+
+  }
+
+  /**
+   * @param string|Sidecar_Form $form
+   * @param string $setting_name
+   * @param string $value
+   * @return array
+   */
+  function update_form_settings_value( $form, $setting_name, $value ) {
+    if ( ! $form instanceof Sidecar_Form )
+      $form = $this->get_form( $form );
+    return $form->update_settings_value( $setting_name, $value );
+  }
+
+  /**
+   * @return bool
+   */
+  function has_required_settings() {
+    $has_required_settings = true;
+    if ( ! $this->_initialized )
+      $this->initialize();
+    if ( $this->has_forms() ) {
+      $settings = $this->get_settings();
+      /** @var Sidecar_Form $form */
+      foreach( $this->get_forms() as $form_name => $form ) {
+        $form_settings = $settings->get_setting( $form->form_name );
+        if ( ! $form_settings->has_required_settings( $form->get_required_field_names() ) ) {
+          $has_required_settings = false;
+          break;
+        }
+      }
+    }
+    if ( method_exists( $this, 'filter_has_required_settings' ) ) {
+      $has_required_settings = $this->filter_has_required_settings( $has_required_settings, $settings );
+    }
+    return $has_required_settings;
+  }
+
+
+  /**
+   * @param Sidecar_Settings $settings
+   */
+  function set_settings( $settings ) {
+    $this->_settings = $settings;
+  }
+
+  /**
+   * @return Sidecar_Settings
+   */
+  function get_settings() {
+    if ( ! $this->_initialized )
+      $this->initialize();
+    return $this->_settings;
+  }
+  /**
+   * @param string|Sidecar_Form $form
+   * @return mixed
+   */
+  function get_form_settings( $form ) {
+    if ( ! $form instanceof Sidecar_Form )
+      $form = $this->get_form( $form );
+    return $this->get_settings()->get_setting( $form->form_name );
+  }
+
+  /**
+   * Delete the persisted settings on disk.
+   *
+   * @return bool
+   */
+  function delete_settings() {
+    $this->get_settings()->delete_settings();
   }
 
   /**
@@ -1417,8 +1424,7 @@ HTML;
   function has_grant() {
     $has_grant = false;
     if ( $this->needs_grant() ) {
-      $auth_settings = $this->get_auth_form()->get_settings();
-      $has_grant = $this->get_api()->is_grant( $auth_settings );
+      $has_grant = $this->get_api()->is_grant( $this->get_auth_form()->get_settings_values() );
     }
     return $has_grant;
   }
@@ -1433,7 +1439,7 @@ HTML;
      * @var RESTian_Auth_Provider_Base $auth_provider
      */
     $auth_provider = $this->get_api()->get_auth_provider();
-    return $auth_provider->extract_grant( $this->get_auth_form()->get_settings() );
+    return $auth_provider->extract_grant( $this->get_auth_form()->get_settings_values() );
   }
 
   /**
@@ -1446,7 +1452,7 @@ HTML;
      * @var RESTian_Auth_Provider_Base $auth_provider
      */
     $auth_provider = $this->get_api()->get_auth_provider();
-    return $auth_provider->extract_credentials( $this->get_auth_form()->get_settings() );
+    return $auth_provider->extract_credentials( $this->get_auth_form()->get_settings_values() );
   }
 
   /**
@@ -1517,14 +1523,21 @@ HTML;
       $return_value = $new_value;
     } else {
       $return_value = $old_value;
-      $settings_key = "_{$new_value['state']['form']}";
-      $old_value[$settings_key] = $new_value[$settings_key];
+      $form_name = $new_value['state']['form'];
+      $old_value[$form_name] = $new_value[$form_name];
       $old_value['state'] = $new_value['state'];
       /**
        * Set the 'decrytped' value to 'true' for the form that is being submitted.
        */
       $old_value['state']['decrypted'][$new_value['state']['form']] = true;
-      $this->update_settings( $old_value );
+
+      /*
+       * @todo Need to fix this update_settings_option() to save the correct info.
+       * @todo Also need to provide an extensibility method.
+       */
+      $this->update_settings_option( (object)array(
+
+      ));
     }
 
     return $return_value;
@@ -1558,7 +1571,6 @@ HTML;
        * If we have existing settings and we are either upgrading or reactivating we
        * previously had a _credentials element then reauthenticate and record that change.
        */
-      $settings = $this->get_settings();
       if ( $this->has_api() ) {
         $api = $this->get_api();
         /**
@@ -1569,8 +1581,8 @@ HTML;
         if ( ! $auth_form )
           wp_die( __( 'There is no auth form configured. Call $admin_page->set_auth_form( $form_name ) inside initialize_admin_page( $admin_page ).', 'sidecar' ) );
 
-        $account = $auth_form->get_settings( $settings );
-        $credentials = $auth_provider->extract_credentials( $account );
+        $account_settings = $auth_form->get_settings();
+        $credentials = $auth_provider->extract_credentials( $account_settings->get_settings_values() );
         $credentials = array_merge( $auth_provider->get_new_credentials(), $credentials );
         $credentials = $auth_provider->prepare_credentials( $credentials );
 
@@ -1583,7 +1595,6 @@ HTML;
            * This is an unusual need, but Lexity.com needed it.
            */
           $grant = $auth_provider->prepare_grant( $auth_provider->get_new_grant(), $credentials );
-          $account = array_merge( $credentials, $grant );
 
         } else {
           /**
@@ -1601,15 +1612,18 @@ HTML;
            */
           $grant = $auth_provider->prepare_grant( $grant, $credentials );
 
-          /**
-           * Merge credentials and grant back into $settings['_account']
-           */
-          $account = array_merge( $credentials, $grant );
         }
-        $settings = $auth_form->update_settings( $account );
+        /**
+         * Merge credentials and grant back into $settings['_account']
+         */
+        $account_settings->update_settings_values( array_merge( $credentials, $grant ) );
+
       }
-      $settings['installed_version'] = $this->plugin_version;
-      $this->update_settings( $settings );
+
+      $settings = $this->get_settings();
+      $settings->installed_version = $this->plugin_version;
+      $settings->update_settings();
+
     }
   }
 

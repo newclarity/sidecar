@@ -189,11 +189,12 @@ class Sidecar_Admin_Page {
      * Get the array that contains names of 'plugin', 'page', 'tab', 'form' and 'settings'
      * as well as special 'clear' and 'reset' for clearing and resetting the form respectively.
      */
-    $settings = $_POST[$_POST['option_page']];
+    $post_values = $_POST[$_POST['option_page']];
     $this->plugin->set_current_admin_page( $this );
-    $this->plugin->set_current_form( $form = $this->plugin->get_form( $form_name = $settings['state']['form'] ) );
+    $form = $this->plugin->get_form( $post_values['state']['form'] );
+    $this->plugin->set_current_form( $form );
 
-    $form_values = $input[$form->settings_key];
+    $form_values = $input[$form->form_name];
     /**
      * Check with the API to see if we are authenticated
      * @var RESTian_Client $api
@@ -224,23 +225,20 @@ class Sidecar_Admin_Page {
     }
     //$this->plugin->set_api( $api );
 
-    if ( isset( $settings['action']['clear'] ) ) {
-      $form_values = $form->get_empty_settings();
+    if ( isset( $post_values['action']['clear'] ) ) {
+      $form_values = $form->get_empty_settings_values();
       $message = __( 'Form values cleared.%s%sNOTE:%s Your browser may still be displaying values from its cache but this plugin has indeed cleared these values.%s', 'sidecar' );
       add_settings_error( $this->plugin->option_name, "sidecar-clear", sprintf( $message, "<br/><br/>&nbsp;&nbsp;&nbsp;", '<em>', '</em>', '<br/><br/>' ), 'updated' );
-    } else if ( isset( $settings['action']['reset'] ) ) {
-      $form_values = $this->plugin->get_current_form()->get_new_settings();
+    } else if ( isset( $post_values['action']['reset'] ) ) {
+      $form_values = $this->plugin->get_current_form()->get_default_settings_values();
       add_settings_error( $this->plugin->option_name, 'sidecar-reset', __( 'Defaults reset.', 'sidecar' ), 'updated' );
     } else {
-      /**
-       * @todo Maybe $form->get_empty_settings() instead of $form->get_field_defaults()?
-       */
-      $form_values = array_merge( $form->get_field_defaults(), array_map( 'rtrim', (array)$form_values ) );
+      $form_values = array_map( 'rtrim', (array)$form_values );
       add_filter( $action_key = "pre_update_option_{$this->plugin->option_name}", array( $this->plugin, '_pre_update_option' ), 10, 2 );
       /**
        * @todo How to signal a failed validation?
        */
-      $form_values = $this->_apply_plugin_filter( 'validate_settings', $form_values, $this->plugin->get_current_form() );
+      $form_values = $this->_apply_plugin_filter( 'validate_settings_values', $form_values, $form );
       /**
        * @var Sidecar_Field $field
        */
@@ -289,21 +287,21 @@ class Sidecar_Admin_Page {
       }
     }
 
-    $form_values = $this->_apply_plugin_filter( $method_name = "process_form_{$form_name}", $form_values );
+    $form_values = $this->_apply_plugin_filter( $method_name = "process_form_{$form->form_name}", $form_values );
     if ( method_exists( $this->plugin, $method_name ) ) {
       /**
-       * This presumes that "process_form_{$form_name}" uses the $api.
+       * This presumes that "process_form_{$form->form_name}" uses the $api.
        * We may need to make it a bit more generic, i.e. allow setting a message on the plugin
        * and then our process form would need to set the plugin's message.
        */
       if ( ! empty( $api->response->message ) ) {
         $message_type = $api->response->has_error() ? 'error' : 'updated';
-        add_settings_error( $this->plugin->option_name, "sidecar-form-processed-{$form_name}", $api->response->message, $message_type );
+        add_settings_error( $this->plugin->option_name, "sidecar-form-processed-{$form->form_name}", $api->response->message, $message_type );
       }
     }
 
 
-    $input[$form->settings_key] = $form_values;
+    $input[$form->form_name] = $form_values;
 
     $input = $this->_apply_plugin_filter( 'filter_postback', $input );
 
@@ -326,7 +324,7 @@ class Sidecar_Admin_Page {
    * @return array
    */
   function get_auth_credentials() {
-    return $this->get_auth_form()->get_settings();
+    return $this->get_auth_form()->get_settings_values();
   }
 
   /**
