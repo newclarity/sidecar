@@ -33,18 +33,6 @@ define( 'SIDECAR_MIN_PHP', '5.2.4' );
 define( 'SIDECAR_MIN_WP', '3.2' );
 
 /**
- * TODO: Change this to use a class auto-loader (maybe)
- */
-
-require(SIDECAR_DIR . '/classes/class-singleton-base.php');
-require(SIDECAR_DIR . '/classes/class-plugin-base.php');
-require(SIDECAR_DIR . '/classes/class-admin-page.php');
-require(SIDECAR_DIR . '/classes/class-admin-tab.php');
-require(SIDECAR_DIR . '/classes/class-form.php');
-require(SIDECAR_DIR . '/classes/class-field.php');
-require(SIDECAR_DIR . '/classes/class-shortcode.php');
-
-/**
  *
  */
 final class Sidecar {
@@ -63,6 +51,24 @@ final class Sidecar {
    */
   private static $_this_domain = false;
 
+  /**
+   *
+   */
+  static function on_load() {
+    spl_autoload_register( array( __CLASS__, 'autoloader' ) );
+  }
+
+  /**
+   *
+   */
+  static function autoloader( $class_name ) {
+    $suffix = preg_replace( '#^Sidecar_(.*)$#', '$1', $class_name );
+    $suffix = str_replace( '_', '-', strtolower( $suffix ) );
+    $filename = dirname( __FILE__ ) . "/classes/class-{$suffix}.php";
+    if ( is_file( $filename ) ) {
+      require( $filename );
+    }
+  }
 
   /**
    * @param string $message
@@ -133,4 +139,4 @@ final class Sidecar {
     return self::$_this_url;
  	}
 }
-
+Sidecar::on_load();
