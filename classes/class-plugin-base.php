@@ -131,9 +131,9 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
   protected $_initialized = false;
 
   /**
-   * @var Sidecar_Settings
+   * @var Sidecar_Plugin_Settings
    */
-  protected $_settings;
+  protected $_plugin_settings;
 
   /**
    * @var
@@ -370,6 +370,8 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
 
     register_uninstall_hook( $this->plugin_id, array( $this->plugin_class, 'uninstall' ) );
 
+    $this->_plugin_settings = new Sidecar_Plugin_Settings( $this, $this->option_name );
+
     /**
      * Ask subclass to initialize plugin which includes admin pages
      */
@@ -589,9 +591,7 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
     if ( ! $this->css_base )
       $this->css_base = $this->plugin_slug;
 
-    $this->_settings = new Sidecar_Settings( $this->option_name, $this );
-
-    $this->_settings->initialize_settings( $this->get_default_settings_values() );
+    $this->_plugin_settings->load_settings();
 
   }
 
@@ -616,15 +616,15 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
    * @param array $settings_values
    */
   function update_settings_values( $settings_values ) {
-    $this->get_settings()->update_settings_values( $settings_values );
+    $this->get_settings()->set_values( $settings_values );
   }
 
   /**
    * @param object $settings_option
    * @param bool $set_dirty
    */
-  function update_settings_option( $settings_option, $set_dirty = true ) {
-    $this->get_settings()->update_settings_option( $settings_option, $set_dirty );
+  function update_settings_option( $settings_option, $set_dirty ) {
+    $this->get_settings()->set_option( $settings_option, $set_dirty );
   }
 
   /**
@@ -635,7 +635,7 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
   function get_form_settings_value( $form, $setting_name ) {
     if ( ! $form instanceof Sidecar_Form )
       $form = $this->get_form( $form );
-    return $this->get_setting( $form )->get_setting( $setting_name );
+    return $this->get_form_settings( $form )->get_setting( $setting_name );
 
   }
 
@@ -659,18 +659,18 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
     if ( ! $this->_initialized )
       $this->initialize();
     if ( $this->has_forms() ) {
-      $settings = $this->get_settings();
       /** @var Sidecar_Form $form */
       foreach( $this->get_forms() as $form_name => $form ) {
-        $form_settings = $settings->get_setting( $form->form_name );
-        if ( ! $form_settings->has_required_settings( $form->get_required_field_names() ) ) {
+        $form_settings = $this->get_form_settings( $form->form_name );
+        $form_settings->set_required_fields( $form->get_required_field_names() );
+        if ( ! $form_settings->has_required_fields() ) {
           $has_required_settings = false;
           break;
         }
       }
     }
     if ( method_exists( $this, 'filter_has_required_settings' ) ) {
-      $has_required_settings = $this->filter_has_required_settings( $has_required_settings, $settings );
+      $has_required_settings = $this->filter_has_required_settings( $has_required_settings, $this->get_settings() );
     }
     return $has_required_settings;
   }
@@ -680,25 +680,63 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
    * @param Sidecar_Settings $settings
    */
   function set_settings( $settings ) {
-    $this->_settings = $settings;
+    $this->_plugin_settings = $settings;
   }
 
   /**
-   * @return Sidecar_Settings
+   * @return Sidecar_Plugin_Settings
    */
   function get_settings() {
     if ( ! $this->_initialized )
       $this->initialize();
-    return $this->_settings;
+    return $this->_plugin_settings;
   }
+
   /**
    * @param string|Sidecar_Form $form
-   * @return mixed
+   * @return mixed|Sidecar_Form_Settings
+   */
+  function get_form_field_values( $form ) {
+    return $this->get_form_settings( $form );
+  }
+
+  /**
+   * @param string|Sidecar_Form $form
+   * @param string $field_name
+   * @return mixed|Sidecar_Form_Settings
+   */
+  function get_form_field_value( $form, $field_name ) {
+    return $this->get_form_settings( $form )->get_values();
+  }
+
+  /**
+   * @param string|Sidecar_Form $form
+   * @param array $field_values
+   * @return mixed|Sidecar_Form_Settings
+   */
+  function set_form_field_values( $form, $field_values ) {
+    $this->set_form_settings( $form, $field_values );
+  }
+
+  /**
+   * @param string|Sidecar_Form $form
+   * @return mixed|Sidecar_Form_Settings
    */
   function get_form_settings( $form ) {
     if ( ! $form instanceof Sidecar_Form )
       $form = $this->get_form( $form );
     return $this->get_settings()->get_setting( $form->form_name );
+  }
+
+  /**
+   * @param string|Sidecar_Form $form
+   * @param mixed $setting_value
+   * @return mixed|Sidecar_Form_Settings
+   */
+  function set_form_settings( $form, $setting_value ) {
+    if ( ! $form instanceof Sidecar_Form )
+      $form = $this->get_form( $form );
+    $this->get_settings()->set_setting( $form->form_name, $setting_value );
   }
 
   /**
@@ -888,18 +926,21 @@ HTML;
     }
     return $attributes;
   }
+
   /**
    * @param Sidecar_Form $form
    */
   function initialize_form( $form ) {
     // Only here to keep PhpStorm from complaining that it's not defined.
   }
+
   /**
    *
    */
   function initialize_shortcodes() {
     // Only here to keep PhpStorm from complaining that it's not defined.
   }
+
   /**
    *
    */
@@ -913,6 +954,7 @@ HTML;
   function initialize_template() {
     // Only here to keep PhpStorm from complaining that it's not defined.
   }
+
   /**
    *
    */
@@ -926,12 +968,14 @@ HTML;
   function initialize_plugin() {
     throw new Exception( 'Class ' . get_class($this) . ' [subclass of ' . __CLASS__ . '] must define an initialize_plugin() method.' );
   }
+
   /**
    * @throws Exception
    */
   function initialize_admin() {
     throw new Exception( 'Class ' . get_class($this) . ' [subclass of ' . __CLASS__ . '] must define an initialize_admin() method.' );
   }
+
   /**
    * @param Sidecar_Admin_Page $admin_page
    * @throws Exception
@@ -939,6 +983,7 @@ HTML;
   function initialize_admin_page( $admin_page ) {
     throw new Exception( 'Class ' . get_class($this) . ' [subclass of ' . __CLASS__ . '] must define an initialize_admin_page() method.' );
   }
+
   /**
    * @param Sidecar_Shortcode $shortcode
    * @throws Exception
@@ -973,6 +1018,7 @@ HTML;
     $form = isset( $args['form'] ) ? $args['form'] : end( $this->_forms );
     return $form->add_button( 'save', __( 'Save Settings', 'sidecar' ), $args );
   }
+
   /**
    * @param string $button_name
    * @param string $button_text
@@ -1004,6 +1050,7 @@ HTML;
      */
     $this->_admin_pages[$page_name] = new Sidecar_Admin_Page( $page_name, $args );
   }
+
   /**
    * @param string $link_text
    * @param string $url
@@ -1047,6 +1094,7 @@ HTML;
   function get_shortcodes() {
     return $this->_shortcodes;
   }
+
   /**
    * @param bool|string $shortcode_name
    *
@@ -1391,7 +1439,9 @@ HTML;
     if ( ! isset( $args['requires_api'] ) && 'account' == $form_name )
       $args['requires_api'] = true;
     $this->_forms[$form_name] = $args;
+    $this->_plugin_settings->register_form_settings( $form_name );
   }
+
   /**
    * @param       $form_name
    * @param array $args
@@ -1411,11 +1461,14 @@ HTML;
   }
 
   /**
+   * This function name will be more logical to people, but underneath it is 'has_grant()'
+   *
    * @return bool
    */
-  function needs_grant() {
-    return $this->has_api();
+  function is_authenticated() {
+    return $this->has_grant();
   }
+
   /**
    * Determines if the currently stored settings contain a grant to access the API.
    *
@@ -1424,9 +1477,17 @@ HTML;
   function has_grant() {
     $has_grant = false;
     if ( $this->needs_grant() ) {
-      $has_grant = $this->get_api()->is_grant( $this->get_auth_form()->get_settings_values() );
+      $auth_form_values = $this->get_auth_form()->get_settings_values();
+      $has_grant = $this->get_api()->is_grant( $auth_form_values );
     }
     return $has_grant;
+  }
+
+  /**
+   * @return bool
+   */
+  function needs_grant() {
+    return $this->has_api();
   }
 
   /**
@@ -1519,32 +1580,19 @@ HTML;
      * This only going to be saving one form's worth of data yet the settings can have many forms, like:
      *
      *    $settings = array(
-     *      '_form1' => array( ... ),
-     *      '_form2' => array( ... ),
-     *      '_form3' => array( ... ),
+     *      'form1' => array( ... ),
+     *      'form2' => array( ... ),
+     *      'form3' => array( ... ),
      *    );
      *
      * So the next 3 lines grab all the old values of the other forms and uses the new values for this form.
      */
-    if ( ! isset( $new_value['state'] ) ) {
+    if ( ! isset( $new_value['_sidecar_form_meta'] ) ) {
       $return_value = $new_value;
     } else {
-      $return_value = $old_value;
-      $form_name = $new_value['state']['form'];
-      $old_value[$form_name] = $new_value[$form_name];
-      $old_value['state'] = $new_value['state'];
-      /**
-       * Set the 'decrytped' value to 'true' for the form that is being submitted.
-       */
-      $old_value['state']['decrypted'][$new_value['state']['form']] = true;
-
-      /*
-       * @todo Need to fix this update_settings_option() to save the correct info.
-       * @todo Also need to provide an extensibility method.
-       */
-      $this->update_settings_option( (object)array(
-
-      ));
+      $form_name = $new_value['_sidecar_form_meta']['form'];
+      $this->set_form_settings( $form_name, $new_value[$form_name] );
+      $return_value = $this->get_settings()->get_option();
     }
 
     return $return_value;
@@ -1589,7 +1637,7 @@ HTML;
           wp_die( __( 'There is no auth form configured. Call $admin_page->set_auth_form( $form_name ) inside initialize_admin_page( $admin_page ).', 'sidecar' ) );
 
         $account_settings = $auth_form->get_settings();
-        $credentials = $auth_provider->extract_credentials( $account_settings->get_settings_values() );
+        $credentials = $auth_provider->extract_credentials( $account_settings->get_values() );
         $credentials = array_merge( $auth_provider->get_new_credentials(), $credentials );
         $credentials = $auth_provider->prepare_credentials( $credentials );
 
@@ -1621,9 +1669,9 @@ HTML;
 
         }
         /**
-         * Merge credentials and grant back into $settings['_account']
+         * Merge credentials and grant back into $settings['account']
          */
-        $account_settings->update_settings_values( array_merge( $credentials, $grant ) );
+        $account_settings->set_values( array_merge( $credentials, $grant ) );
 
       }
 

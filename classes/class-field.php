@@ -163,7 +163,7 @@ class Sidecar_Field {
    * @return string
    */
   function get_input_help_html() {
-    return $this->field_help ? "\n<br />\n<span class=\"{$css_base}-field-help\">{$this->field_help}</span>" : false;
+    return $this->field_help ? "\n<br />\n<span class=\"{$this->plugin->css_base}-field-help\">{$this->field_help}</span>" : false;
   }
 
   /**

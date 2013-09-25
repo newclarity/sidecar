@@ -29,7 +29,7 @@ class Sidecar_Form {
   var $requires_api;
 
   /**
-   * @var Sidecar_Settings
+   * @var Sidecar_Form_Settings
    */
   private $_settings;
 
@@ -249,10 +249,10 @@ class Sidecar_Form {
       $tab_slug = $this->admin_page->get_current_tab()->tab_slug;
 
       $hidden_section_input_html = <<<HTML
-<input type="hidden" name="{$this->plugin->option_name}[state][plugin]" value="{$this->plugin->plugin_name}" />
-<input type="hidden" name="{$this->plugin->option_name}[state][page]" value="{$this->admin_page->page_name}" />
-<input type="hidden" name="{$this->plugin->option_name}[state][tab]" value="{$tab_slug}" />
-<input type="hidden" name="{$this->plugin->option_name}[state][form]" value="{$this->form_name}" />
+<input type="hidden" name="{$this->plugin->option_name}[_sidecar_form_meta][plugin]" value="{$this->plugin->plugin_name}" />
+<input type="hidden" name="{$this->plugin->option_name}[_sidecar_form_meta][page]" value="{$this->admin_page->page_name}" />
+<input type="hidden" name="{$this->plugin->option_name}[_sidecar_form_meta][tab]" value="{$tab_slug}" />
+<input type="hidden" name="{$this->plugin->option_name}[_sidecar_form_meta][form]" value="{$this->form_name}" />
 HTML;
     }
     $buttons_html = array();
@@ -445,6 +445,9 @@ HTML;
     $field = new Sidecar_Field( $field_name, $args );
     $this->_fields[$field_name] = &$field;
     $this->_sections[$section_name]->fields[$field_name] = &$field;
+
+    $this->get_settings()->register_setting( $field_name );
+
   }
 
   /**
@@ -470,19 +473,19 @@ HTML;
   /**
    * @return array
    */
-  function get_empty_settings_values() {
-    return $this->get_settings()->get_empty_settings_values();
+  function get_empty_field_values() {
+    return $this->get_settings()->get_empty_field_values();
   }
 
   /**
    * @return array
    */
   function get_settings_values() {
-    return $this->get_settings()->get_settings_values();
+    return $this->get_settings()->get_values();
   }
 
   /**
-   * @return Sidecar_Settings
+   * @return Sidecar_Form_Settings
    */
   function get_settings() {
     if ( ! isset( $this->_settings ) ) {
@@ -504,7 +507,7 @@ HTML;
    * @return mixed
    */
   function get_setting( $setting_name ) {
-    $this->get_settings()->get_setting( $setting_name );
+    return $this->get_settings()->get_setting( $setting_name );
  	}
 
   /**
@@ -528,7 +531,7 @@ HTML;
    * @return array
    */
   function update_settings_values( $form_settings ) {
-    $this->get_settings()->update_settings_values( $form_settings );
+    $this->get_settings()->set_values( $form_settings );
   }
 
   /**
@@ -550,6 +553,25 @@ HTML;
       $this->_required_field_names = $required_field_names;
     }
     return $this->_required_field_names;
+  }
+
+  /**
+   * Ensure their is a default value for every field w/o a matching array element.
+   *
+   * This is used to ensure forms POSTed back always have all fields. In cases of
+   * checkboxes or radio buttons they may not.
+   *
+   * @param array $field_values
+   *
+   * @return array
+   */
+  function ensure_default_values( $field_values ) {
+    foreach( $this->_fields as $field_name => $field ) {
+      if ( ! isset( $field_values[$field_name] ) ) {
+        $field_values[$field_name] = ! is_null( $field->field_default ) ? $field->field_default : false;
+      }
+    }
+    return $field_values;
   }
 
 }
