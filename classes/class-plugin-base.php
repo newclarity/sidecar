@@ -1463,7 +1463,14 @@ HTML;
       if ( ! isset( $_GET['page'] ) || ! is_admin() ) {
         $this->_current_admin_page = false;
       } else {
-        $tab = isset( $_GET['tab'] ) ? $_GET['tab'] : $this->get_admin_page($_GET['page'])->get_default_tab()->tab_slug;
+        if ( isset( $_GET['tab'] ) ) {
+          $tab = $_GET['tab'];
+        } else {
+          $page = $this->get_admin_page($_GET['page']);
+          if ( $page && method_exists( $page, 'get_default_tab' ) ) {
+            $tab = $page->get_default_tab()->tab_slug;
+          }
+        };
         /**
          * If we have a $_GET['page'] then is should be "{$plugin_slug}-{$page_slug}"
          * Scan through the array to find it.
