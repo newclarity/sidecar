@@ -620,14 +620,6 @@ class Sidecar_Plugin_Base extends Sidecar_Singleton_Base {
   }
 
   /**
-   * @param object $settings_option
-   * @param bool $set_dirty
-   */
-  function update_settings_option( $settings_option, $set_dirty ) {
-    $this->get_settings()->set_option( $settings_option, $set_dirty );
-  }
-
-  /**
    * @param string|Sidecar_Form $form
    * @param string $setting_name
    * @return array
@@ -1592,7 +1584,7 @@ HTML;
     } else {
       $form_name = $new_value['_sidecar_form_meta']['form'];
       $this->set_form_settings( $form_name, $new_value[$form_name] );
-      $return_value = $this->get_settings()->get_option();
+      $return_value = $this->get_settings()->get_data();
     }
 
     return $return_value;

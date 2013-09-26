@@ -120,46 +120,52 @@ class Sidecar_Plugin_Settings extends Sidecar_Settings_Base {
   }
 
   /**
-   * Updates the settings given the value stored in the wp_options table in the WordPress MySQL database.
+   * Accept an object that might have been serialized and stored in wp_options table in the WordPress MySQL database.
    *
-   * @param object $option
-   * @param bool $set_dirty
+   * @param string|object $data
    * @return array
-   * @todo Change this to UNserialize
    */
-  function set_option( $option, $set_dirty = true ) {
+  function set_data( $data ) {
 
-    $this->configured = isset( $option->configured ) ? $option->configured : false;
+    if ( $data ) {
+      if ( is_string( $data ) )
+        $data = unserialize( $data );
 
-    $this->installed_version = isset( $option->installed_version ) ? $option->installed_version : 'unknown';
+      if ( ! empty( $data ) && is_object( $data ) ) {
 
-    $is_dirty = $this->is_dirty();
+        $this->configured = isset( $data->configured ) ? $data->configured : false;
+        $this->installed_version = isset( $data->installed_version ) ? $data->installed_version : 'unknown';
 
-    if ( ! empty( $option->values ) && is_array( $option->values ) )
-      $this->set_values_deep( $option->values );
+        if ( ! empty( $data->values ) && is_array( $data->values ) ) {
+          $this->set_values_deep( $data->values );
+        }
 
-    if ( $set_dirty )
-      $this->set_dirty( true );
-    else if ( ! $is_dirty )
-      $this->set_dirty( false );
+        /**
+         * @todo Add logic to compare with current value to ensure dirty is not set unnecessarily.
+         */
+        $this->set_dirty( true );
+
+      }
+
+    }
+
   }
 
   /**
    * Load settings from the wp_options table in the WordPress MySQL database.
    */
   function load_settings() {
-    $option = get_option( $this->option_name );
-    $this->set_option( $option, $set_dirty = false );
+    $this->set_data( get_option( $this->option_name ) );
     if ( $this->is_encrypted() )
       $this->decrypt_settings();
     $this->set_dirty( false );
   }
 
+
   /**
-   * Save settings to the wp_options table in the WordPress MySQL database.
-   * @todo Change this to serialize
+   * Format the settings as an object that can be serialized to the wp_options table in the WordPress MySQL database.
    */
-  function get_option() {
+  function get_data() {
     return (object)array(
       'installed_version' => $this->installed_version,
       'configured'        => $this->configured,
@@ -173,7 +179,7 @@ class Sidecar_Plugin_Settings extends Sidecar_Settings_Base {
   function save_settings() {
     if ( ! $this->is_encrypted() )
       $this->encrypt_settings();
-    update_option( $this->option_name, $this->get_option() );
+    update_option( $this->option_name, $this->get_data() );
     $this->set_dirty( false );
   }
 
