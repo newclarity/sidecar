@@ -13,6 +13,7 @@ Sidecar provides an API for easily creating a **WordPress Plugin** that has the 
 - **Forms** &ndash; Zero (0) or more per Admin Tab and/or tab-less Admin Page.
 - **Form Fields** &ndash; One (1) or more per Form.
 - **Shortcodes** &ndash; Zero (0) or more.
+- **Settings** &ndash; Management object for lists of forms and their fields.
 
 Philosophy
 -

@@ -161,7 +161,6 @@ class Sidecar_Plugin_Settings extends Sidecar_Settings_Base {
     $this->set_dirty( false );
   }
 
-
   /**
    * Format the settings as an object that can be serialized to the wp_options table in the WordPress MySQL database.
    */
