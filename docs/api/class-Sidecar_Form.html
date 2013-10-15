@@ -7,7 +7,7 @@
 	<title>Class Sidecar_Form</title>
 
 	<script type="text/javascript" src="resources/combined.js?256349808"></script>
-	<script type="text/javascript" src="elementlist.js?41601976"></script>
+	<script type="text/javascript" src="elementlist.js?3432945308"></script>
 	<link rel="stylesheet" type="text/css" media="all" href="resources/style.css?3505392360" />
 
 </head>
@@ -39,8 +39,10 @@
 				<li><a href="class-Sidecar_Admin_Tab.html">Sidecar_Admin_Tab</a></li>
 				<li><a href="class-Sidecar_Field.html">Sidecar_Field</a></li>
 				<li class="active"><a href="class-Sidecar_Form.html">Sidecar_Form</a></li>
+				<li><a href="class-Sidecar_Form_Settings.html">Sidecar_Form_Settings</a></li>
 				<li><a href="class-Sidecar_Plugin_Base.html">Sidecar_Plugin_Base</a></li>
-				<li><a href="class-Sidecar_Settings.html">Sidecar_Settings</a></li>
+				<li><a href="class-Sidecar_Plugin_Settings.html">Sidecar_Plugin_Settings</a></li>
+				<li><a href="class-Sidecar_Settings_Base.html">Sidecar_Settings_Base</a></li>
 				<li><a href="class-Sidecar_Shortcode.html">Sidecar_Shortcode</a></li>
 				<li><a href="class-Sidecar_Singleton_Base.html">Sidecar_Singleton_Base</a></li>
 			</ul>
@@ -119,7 +121,7 @@
 		
 		
 
-		<b>Located at</b> <a href="source-class-Sidecar_Form.html#2-555" title="Go to source code">classes/class-form.php</a><br />
+		<b>Located at</b> <a href="source-class-Sidecar_Form.html#2-577" title="Go to source code">classes/class-form.php</a><br />
 	</div>
 
 
@@ -893,7 +895,7 @@ attributes. Other attributes can also be provided as a string such as
 
 		<td class="name"><div>
 		<a class="anchor" href="#_add_field">#</a>
-		<code><a href="source-class-Sidecar_Form.html#414-448" title="Go to source code">add_field</a>( <span>string <var>$field_name</var></span>, <span>array <var>$args</var> = <span class="php-keyword1">array</span>() </span> )</code>
+		<code><a href="source-class-Sidecar_Form.html#414-451" title="Go to source code">add_field</a>( <span>string <var>$field_name</var></span>, <span>array <var>$args</var> = <span class="php-keyword1">array</span>() </span> )</code>
 
 		<div class="description short">
 			
@@ -933,7 +935,7 @@ attributes. Other attributes can also be provided as a string such as
 
 		<td class="name"><div>
 		<a class="anchor" href="#_get_default_settings_values">#</a>
-		<code><a href="source-class-Sidecar_Form.html#450-468" title="Go to source code">get_default_settings_values</a>( )</code>
+		<code><a href="source-class-Sidecar_Form.html#453-471" title="Go to source code">get_default_settings_values</a>( )</code>
 
 		<div class="description short">
 			
@@ -966,7 +968,7 @@ attributes. Other attributes can also be provided as a string such as
 		</div>
 		</div></td>
 	</tr>
-	<tr data-order="get_empty_settings_values" id="_get_empty_settings_values">
+	<tr data-order="get_empty_field_values" id="_get_empty_field_values">
 
 		<td class="attributes"><code>
 			 public 
@@ -976,8 +978,8 @@ attributes. Other attributes can also be provided as a string such as
 		</td>
 
 		<td class="name"><div>
-		<a class="anchor" href="#_get_empty_settings_values">#</a>
-		<code><a href="source-class-Sidecar_Form.html#470-475" title="Go to source code">get_empty_settings_values</a>( )</code>
+		<a class="anchor" href="#_get_empty_field_values">#</a>
+		<code><a href="source-class-Sidecar_Form.html#473-478" title="Go to source code">get_empty_field_values</a>( )</code>
 
 		<div class="description short">
 			
@@ -1010,7 +1012,7 @@ attributes. Other attributes can also be provided as a string such as
 
 		<td class="name"><div>
 		<a class="anchor" href="#_get_settings_values">#</a>
-		<code><a href="source-class-Sidecar_Form.html#477-482" title="Go to source code">get_settings_values</a>( )</code>
+		<code><a href="source-class-Sidecar_Form.html#480-485" title="Go to source code">get_settings_values</a>( )</code>
 
 		<div class="description short">
 			
@@ -1036,14 +1038,14 @@ attributes. Other attributes can also be provided as a string such as
 
 		<td class="attributes"><code>
 			 public 
-			<code><a href="class-Sidecar_Settings.html">Sidecar_Settings</a></code>
+			<code><a href="class-Sidecar_Form_Settings.html">Sidecar_Form_Settings</a></code>
 			
 			</code>
 		</td>
 
 		<td class="name"><div>
 		<a class="anchor" href="#_get_settings">#</a>
-		<code><a href="source-class-Sidecar_Form.html#484-492" title="Go to source code">get_settings</a>( )</code>
+		<code><a href="source-class-Sidecar_Form.html#487-495" title="Go to source code">get_settings</a>( )</code>
 
 		<div class="description short">
 			
@@ -1056,7 +1058,7 @@ attributes. Other attributes can also be provided as a string such as
 
 				<h4>Returns</h4>
 				<div class="list">
-					<code><code><a href="class-Sidecar_Settings.html">Sidecar_Settings</a></code></code><br />
+					<code><code><a href="class-Sidecar_Form_Settings.html">Sidecar_Form_Settings</a></code></code><br />
 				</div>
 
 
@@ -1076,7 +1078,7 @@ attributes. Other attributes can also be provided as a string such as
 
 		<td class="name"><div>
 		<a class="anchor" href="#_has_setting">#</a>
-		<code><a href="source-class-Sidecar_Form.html#494-500" title="Go to source code">has_setting</a>( <span>string <var>$setting_name</var></span> )</code>
+		<code><a href="source-class-Sidecar_Form.html#497-503" title="Go to source code">has_setting</a>( <span>string <var>$setting_name</var></span> )</code>
 
 		<div class="description short">
 			
@@ -1114,7 +1116,7 @@ attributes. Other attributes can also be provided as a string such as
 
 		<td class="name"><div>
 		<a class="anchor" href="#_get_setting">#</a>
-		<code><a href="source-class-Sidecar_Form.html#502-508" title="Go to source code">get_setting</a>( <span>string <var>$setting_name</var></span> )</code>
+		<code><a href="source-class-Sidecar_Form.html#505-511" title="Go to source code">get_setting</a>( <span>string <var>$setting_name</var></span> )</code>
 
 		<div class="description short">
 			
@@ -1152,7 +1154,7 @@ attributes. Other attributes can also be provided as a string such as
 
 		<td class="name"><div>
 		<a class="anchor" href="#_update_settings_value">#</a>
-		<code><a href="source-class-Sidecar_Form.html#510-517" title="Go to source code">update_settings_value</a>( <span>string <var>$setting_name</var></span>, <span>mixed <var>$value</var></span> )</code>
+		<code><a href="source-class-Sidecar_Form.html#513-520" title="Go to source code">update_settings_value</a>( <span>string <var>$setting_name</var></span>, <span>mixed <var>$value</var></span> )</code>
 
 		<div class="description short">
 			
@@ -1192,7 +1194,7 @@ attributes. Other attributes can also be provided as a string such as
 
 		<td class="name"><div>
 		<a class="anchor" href="#_update_settings">#</a>
-		<code><a href="source-class-Sidecar_Form.html#519-525" title="Go to source code">update_settings</a>( <span>array <var>$form_settings</var></span> )</code>
+		<code><a href="source-class-Sidecar_Form.html#522-528" title="Go to source code">update_settings</a>( <span>array <var>$form_settings</var></span> )</code>
 
 		<div class="description short">
 			
@@ -1230,7 +1232,7 @@ attributes. Other attributes can also be provided as a string such as
 
 		<td class="name"><div>
 		<a class="anchor" href="#_update_settings_values">#</a>
-		<code><a href="source-class-Sidecar_Form.html#526-532" title="Go to source code">update_settings_values</a>( <span>array <var>$form_settings</var></span> )</code>
+		<code><a href="source-class-Sidecar_Form.html#529-535" title="Go to source code">update_settings_values</a>( <span>array <var>$form_settings</var></span> )</code>
 
 		<div class="description short">
 			
@@ -1268,7 +1270,7 @@ attributes. Other attributes can also be provided as a string such as
 
 		<td class="name"><div>
 		<a class="anchor" href="#_get_required_field_names">#</a>
-		<code><a href="source-class-Sidecar_Form.html#534-553" title="Go to source code">get_required_field_names</a>( )</code>
+		<code><a href="source-class-Sidecar_Form.html#537-556" title="Go to source code">get_required_field_names</a>( )</code>
 
 		<div class="description short">
 			
@@ -1278,6 +1280,53 @@ attributes. Other attributes can also be provided as a string such as
 			
 
 
+
+				<h4>Returns</h4>
+				<div class="list">
+					<code>array</code><br />
+				</div>
+
+
+
+
+		</div>
+		</div></td>
+	</tr>
+	<tr data-order="ensure_default_values" id="_ensure_default_values">
+
+		<td class="attributes"><code>
+			 public 
+			array
+			
+			</code>
+		</td>
+
+		<td class="name"><div>
+		<a class="anchor" href="#_ensure_default_values">#</a>
+		<code><a href="source-class-Sidecar_Form.html#558-575" title="Go to source code">ensure_default_values</a>( <span>array <var>$field_values</var></span> )</code>
+
+		<div class="description short">
+			
+<p>Ensure their is a default value for every field w/o a matching array
+element.</p>
+
+		</div>
+
+		<div class="description detailed hidden">
+			
+<p>Ensure their is a default value for every field w/o a matching array
+element.</p>
+
+<p>This is used to ensure forms POSTed back always have all fields. In cases of
+checkboxes or radio buttons they may not.</p>
+
+
+
+				<h4>Parameters</h4>
+				<div class="list"><dl>
+					<dt><var>$field_values</var></dt>
+					<dd><code>array</code><br>$field_values</dd>
+				</dl></div>
 
 				<h4>Returns</h4>
 				<div class="list">

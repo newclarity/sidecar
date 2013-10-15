@@ -20,29 +20,29 @@
 		<error severity="error" line="106" message="Missing description of method Sidecar_Admin_Page::__construct()" source="ApiGen.Documentation.Documentation"/>
 		<error severity="error" line="138" message="Missing description of method Sidecar_Admin_Page::initialize()" source="ApiGen.Documentation.Documentation"/>
 		<error severity="error" line="162" message="Missing description of method Sidecar_Admin_Page::filter_postback()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="323" message="Missing description of method Sidecar_Admin_Page::get_auth_credentials()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="330" message="Missing description of method Sidecar_Admin_Page::get_auth_form()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="337" message="Missing description of method Sidecar_Admin_Page::set_auth_form()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="351" message="Missing description of method Sidecar_Admin_Page::add_tab()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="363" message="Missing description of method Sidecar_Admin_Page::get_default_tab()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="379" message="Missing description of method Sidecar_Admin_Page::get_authentication_tab()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="444" message="Missing documentation of method Sidecar_Admin_Page::admin_menu()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="482" message="Missing documentation of method Sidecar_Admin_Page::admin_print_styles()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="494" message="Missing description of method Sidecar_Admin_Page::the_css()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="528" message="Missing description of method Sidecar_Admin_Page::the_tab_specific_content()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="564" message="Missing documentation of method Sidecar_Admin_Page::the_page_content()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="676" message="Missing documentation of method Sidecar_Admin_Page::get_tabs()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="683" message="Missing description of method Sidecar_Admin_Page::get_tab()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="691" message="Missing documentation of method Sidecar_Admin_Page::has_tabs()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="721" message="Missing documentation of return value of method Sidecar_Admin_Page::get_tab_links_html()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="741" message="Missing description of method Sidecar_Admin_Page::get_page_url()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="751" message="Missing description of method Sidecar_Admin_Page::get_tab_link()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="767" message="Missing description of method Sidecar_Admin_Page::get_tab_url()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="798" message="Missing description of method Sidecar_Admin_Page::get_base_page_url()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="857" message="Missing description of method Sidecar_Admin_Page::tab_count()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="902" message="Missing description of method Sidecar_Admin_Page::is_postback_update()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="986" message="Missing description of method Sidecar_Admin_Page::__get()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="warning" line="986" message="Invalid documentation &quot;$property_name&quot; of parameter Sidecar_Admin_Page::__get($property_name)" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="330" message="Missing description of method Sidecar_Admin_Page::get_auth_credentials()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="337" message="Missing description of method Sidecar_Admin_Page::get_auth_form()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="344" message="Missing description of method Sidecar_Admin_Page::set_auth_form()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="358" message="Missing description of method Sidecar_Admin_Page::add_tab()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="370" message="Missing description of method Sidecar_Admin_Page::get_default_tab()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="386" message="Missing description of method Sidecar_Admin_Page::get_authentication_tab()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="452" message="Missing documentation of method Sidecar_Admin_Page::admin_menu()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="490" message="Missing documentation of method Sidecar_Admin_Page::admin_print_styles()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="502" message="Missing description of method Sidecar_Admin_Page::the_css()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="536" message="Missing description of method Sidecar_Admin_Page::the_tab_specific_content()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="572" message="Missing documentation of method Sidecar_Admin_Page::the_page_content()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="684" message="Missing documentation of method Sidecar_Admin_Page::get_tabs()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="691" message="Missing description of method Sidecar_Admin_Page::get_tab()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="699" message="Missing documentation of method Sidecar_Admin_Page::has_tabs()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="729" message="Missing documentation of return value of method Sidecar_Admin_Page::get_tab_links_html()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="749" message="Missing description of method Sidecar_Admin_Page::get_page_url()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="759" message="Missing description of method Sidecar_Admin_Page::get_tab_link()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="775" message="Missing description of method Sidecar_Admin_Page::get_tab_url()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="806" message="Missing description of method Sidecar_Admin_Page::get_base_page_url()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="865" message="Missing description of method Sidecar_Admin_Page::tab_count()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="910" message="Missing description of method Sidecar_Admin_Page::is_postback_update()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="994" message="Missing description of method Sidecar_Admin_Page::__get()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="warning" line="994" message="Invalid documentation &quot;$property_name&quot; of parameter Sidecar_Admin_Page::__get($property_name)" source="ApiGen.Documentation.Documentation"/>
 	</file>
 	<file name="/Users/mikeschinkel/Libraries/sidecar/classes/class-admin-tab.php">
 		<error severity="error" line="2" message="Missing documentation of class Sidecar_Admin_Tab" source="ApiGen.Documentation.Documentation"/>
@@ -85,6 +85,10 @@
 		<error severity="warning" line="236" message="Invalid documentation &quot;string|$property_name&quot; of parameter Sidecar_Field::get_extra($property_name)" source="ApiGen.Documentation.Documentation"/>
 		<error severity="error" line="251" message="Missing description of method Sidecar_Field::get_wrapper_id()" source="ApiGen.Documentation.Documentation"/>
 	</file>
+	<file name="/Users/mikeschinkel/Libraries/sidecar/classes/class-form-settings.php">
+		<error severity="error" line="20" message="Missing description of method Sidecar_Form_Settings::get_empty_field_values()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="35" message="Missing description of method Sidecar_Form_Settings::has_required_fields()" source="ApiGen.Documentation.Documentation"/>
+	</file>
 	<file name="/Users/mikeschinkel/Libraries/sidecar/classes/class-form.php">
 		<error severity="error" line="2" message="Missing documentation of class Sidecar_Form" source="ApiGen.Documentation.Documentation"/>
 		<error severity="error" line="6" message="Missing description of property Sidecar_Form::$plugin" source="ApiGen.Documentation.Documentation"/>
@@ -113,21 +117,20 @@
 		<error severity="error" line="359" message="Missing description of method Sidecar_Form::_the_form_field_callback()" source="ApiGen.Documentation.Documentation"/>
 		<error severity="error" line="366" message="Missing description of method Sidecar_Form::initialize_buttons()" source="ApiGen.Documentation.Documentation"/>
 		<error severity="error" line="391" message="Missing description of method Sidecar_Form::add_section()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="414" message="Missing description of method Sidecar_Form::add_field()" source="ApiGen.Documentation.Documentation"/>
 		<error severity="warning" line="414" message="Existing documentation &quot;object&quot; of nonexistent return value of method Sidecar_Form::add_field()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="470" message="Missing description of method Sidecar_Form::get_empty_settings_values()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="477" message="Missing description of method Sidecar_Form::get_settings_values()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="484" message="Missing description of method Sidecar_Form::get_settings()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="494" message="Missing description of method Sidecar_Form::has_setting()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="502" message="Missing description of method Sidecar_Form::get_setting()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="warning" line="502" message="Existing documentation &quot;mixed&quot; of nonexistent return value of method Sidecar_Form::get_setting()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="warning" line="510" message="Existing documentation &quot;array&quot; of nonexistent return value of method Sidecar_Form::update_settings_value()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="510" message="Missing description of method Sidecar_Form::update_settings_value()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="warning" line="519" message="Existing documentation &quot;array&quot; of nonexistent return value of method Sidecar_Form::update_settings()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="519" message="Missing description of method Sidecar_Form::update_settings()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="526" message="Missing description of method Sidecar_Form::update_settings_values()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="warning" line="526" message="Existing documentation &quot;array&quot; of nonexistent return value of method Sidecar_Form::update_settings_values()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="534" message="Missing description of method Sidecar_Form::get_required_field_names()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="414" message="Missing description of method Sidecar_Form::add_field()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="473" message="Missing description of method Sidecar_Form::get_empty_field_values()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="480" message="Missing description of method Sidecar_Form::get_settings_values()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="487" message="Missing description of method Sidecar_Form::get_settings()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="497" message="Missing description of method Sidecar_Form::has_setting()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="505" message="Missing description of method Sidecar_Form::get_setting()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="warning" line="513" message="Existing documentation &quot;array&quot; of nonexistent return value of method Sidecar_Form::update_settings_value()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="513" message="Missing description of method Sidecar_Form::update_settings_value()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="522" message="Missing description of method Sidecar_Form::update_settings()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="warning" line="522" message="Existing documentation &quot;array&quot; of nonexistent return value of method Sidecar_Form::update_settings()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="529" message="Missing description of method Sidecar_Form::update_settings_values()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="warning" line="529" message="Existing documentation &quot;array&quot; of nonexistent return value of method Sidecar_Form::update_settings_values()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="537" message="Missing description of method Sidecar_Form::get_required_field_names()" source="ApiGen.Documentation.Documentation"/>
 	</file>
 	<file name="/Users/mikeschinkel/Libraries/sidecar/classes/class-plugin-base.php">
 		<error severity="error" line="2" message="Missing documentation of class Sidecar_Plugin_Base" source="ApiGen.Documentation.Documentation"/>
@@ -147,134 +150,148 @@
 		<error severity="error" line="118" message="Missing description of property Sidecar_Plugin_Base::$_current_admin_page" source="ApiGen.Documentation.Documentation"/>
 		<error severity="error" line="123" message="Missing description of property Sidecar_Plugin_Base::$_current_form" source="ApiGen.Documentation.Documentation"/>
 		<error severity="error" line="128" message="Missing description of property Sidecar_Plugin_Base::$_initialized" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="133" message="Missing description of property Sidecar_Plugin_Base::$_settings" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="138" message="Missing description of property Sidecar_Plugin_Base::$_default_settings_values" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="133" message="Missing description of property Sidecar_Plugin_Base::$_plugin_settings" source="ApiGen.Documentation.Documentation"/>
 		<error severity="warning" line="138" message="Invalid documentation &quot;&quot; of the data type of property Sidecar_Plugin_Base::$_default_settings_values" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="138" message="Missing description of property Sidecar_Plugin_Base::$_default_settings_values" source="ApiGen.Documentation.Documentation"/>
 		<error severity="error" line="143" message="Missing description of property Sidecar_Plugin_Base::$option_name" source="ApiGen.Documentation.Documentation"/>
 		<error severity="error" line="148" message="Missing description of property Sidecar_Plugin_Base::$needs_ajax" source="ApiGen.Documentation.Documentation"/>
 		<error severity="error" line="153" message="Missing description of property Sidecar_Plugin_Base::$needs_settings" source="ApiGen.Documentation.Documentation"/>
 		<error severity="error" line="158" message="Missing description of property Sidecar_Plugin_Base::$_admin_initialized" source="ApiGen.Documentation.Documentation"/>
 		<error severity="error" line="166" message="Missing description of method Sidecar_Plugin_Base::set_api_loader()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="warning" line="166" message="Invalid documentation &quot;$class_name&quot; of parameter Sidecar_Plugin_Base::set_api_loader($class_name)" source="ApiGen.Documentation.Documentation"/>
 		<error severity="warning" line="166" message="Invalid documentation &quot;$filepath&quot; of parameter Sidecar_Plugin_Base::set_api_loader($filepath)" source="ApiGen.Documentation.Documentation"/>
+		<error severity="warning" line="166" message="Invalid documentation &quot;$class_name&quot; of parameter Sidecar_Plugin_Base::set_api_loader($class_name)" source="ApiGen.Documentation.Documentation"/>
 		<error severity="error" line="177" message="Missing description of method Sidecar_Plugin_Base::has_api()" source="ApiGen.Documentation.Documentation"/>
 		<error severity="error" line="211" message="Missing description of method Sidecar_Plugin_Base::set_api()" source="ApiGen.Documentation.Documentation"/>
 		<error severity="error" line="236" message="Missing documentation of method Sidecar_Plugin_Base::is_saving_widget()" source="ApiGen.Documentation.Documentation"/>
 		<error severity="error" line="241" message="Missing description of method Sidecar_Plugin_Base::on_load()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="380" message="Missing documentation of parameter Sidecar_Plugin_Base::_save_post($post_id)" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="431" message="Missing documentation of method Sidecar_Plugin_Base::uninstall()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="511" message="Missing description of method Sidecar_Plugin_Base::get_forms()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="521" message="Missing description of method Sidecar_Plugin_Base::has_forms()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="528" message="Missing documentation of method Sidecar_Plugin_Base::_wp_print_styles()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="542" message="Missing description of method Sidecar_Plugin_Base::has_admin_pages()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="548" message="Missing description of method Sidecar_Plugin_Base::has_form()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="557" message="Missing documentation of method Sidecar_Plugin_Base::initialize()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="382" message="Missing documentation of parameter Sidecar_Plugin_Base::_save_post($post_id)" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="433" message="Missing documentation of method Sidecar_Plugin_Base::uninstall()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="513" message="Missing description of method Sidecar_Plugin_Base::get_forms()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="523" message="Missing description of method Sidecar_Plugin_Base::has_forms()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="530" message="Missing documentation of method Sidecar_Plugin_Base::_wp_print_styles()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="544" message="Missing description of method Sidecar_Plugin_Base::has_admin_pages()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="550" message="Missing description of method Sidecar_Plugin_Base::has_form()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="559" message="Missing documentation of method Sidecar_Plugin_Base::initialize()" source="ApiGen.Documentation.Documentation"/>
 		<error severity="error" line="598" message="Missing description of method Sidecar_Plugin_Base::get_default_settings_values()" source="ApiGen.Documentation.Documentation"/>
 		<error severity="error" line="615" message="Missing description of method Sidecar_Plugin_Base::update_settings_values()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="622" message="Missing description of method Sidecar_Plugin_Base::update_settings_option()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="630" message="Missing description of method Sidecar_Plugin_Base::get_form_settings_value()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="642" message="Missing description of method Sidecar_Plugin_Base::update_form_settings_value()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="654" message="Missing description of method Sidecar_Plugin_Base::has_required_settings()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="679" message="Missing description of method Sidecar_Plugin_Base::set_settings()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="686" message="Missing description of method Sidecar_Plugin_Base::get_settings()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="694" message="Missing description of method Sidecar_Plugin_Base::get_form_settings()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="warning" line="704" message="Existing documentation &quot;bool&quot; of nonexistent return value of method Sidecar_Plugin_Base::delete_settings()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="713" message="Missing documentation of method Sidecar_Plugin_Base::_wp_loaded()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="737" message="Missing documentation of method Sidecar_Plugin_Base::_admin_notices()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="755" message="Missing description of method Sidecar_Plugin_Base::_plugin_action_links()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="warning" line="755" message="Invalid documentation &quot;$links&quot; of parameter Sidecar_Plugin_Base::_plugin_action_links($links)" source="ApiGen.Documentation.Documentation"/>
-		<error severity="warning" line="755" message="Invalid documentation &quot;$file&quot; of parameter Sidecar_Plugin_Base::_plugin_action_links($file)" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="770" message="Missing description of method Sidecar_Plugin_Base::get_settings_url()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="783" message="Missing description of method Sidecar_Plugin_Base::_plugin_meta_links()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="warning" line="799" message="Invalid documentation &quot;$content&quot; of parameter Sidecar_Plugin_Base::_the_content($content)" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="799" message="Missing description of method Sidecar_Plugin_Base::_the_content()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="799" message="Missing documentation of return value of method Sidecar_Plugin_Base::_the_content()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="821" message="Missing documentation of method Sidecar_Plugin_Base::_init()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="851" message="Missing description of method Sidecar_Plugin_Base::transform_form_fields_to()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="872" message="Missing description of method Sidecar_Plugin_Base::transform_shortcode_attributes_to()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="891" message="Missing description of method Sidecar_Plugin_Base::initialize_form()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="897" message="Missing documentation of method Sidecar_Plugin_Base::initialize_shortcodes()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="903" message="Missing documentation of method Sidecar_Plugin_Base::initialize_postback()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="910" message="Missing documentation of method Sidecar_Plugin_Base::initialize_template()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="916" message="Missing documentation of method Sidecar_Plugin_Base::uninstall_plugin()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="923" message="Missing description of method Sidecar_Plugin_Base::initialize_plugin()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="929" message="Missing description of method Sidecar_Plugin_Base::initialize_admin()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="935" message="Missing description of method Sidecar_Plugin_Base::initialize_admin_page()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="942" message="Missing description of method Sidecar_Plugin_Base::initialize_shortcode()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="950" message="Missing description of method Sidecar_Plugin_Base::do_shortcode()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="warning" line="950" message="Invalid documentation &quot;array() $attributes&quot; of parameter Sidecar_Plugin_Base::do_shortcode($attributes)" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="964" message="Missing description of method Sidecar_Plugin_Base::add_default_button()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="976" message="Missing description of method Sidecar_Plugin_Base::add_button()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="warning" line="991" message="Existing documentation &quot;mixed&quot; of nonexistent return value of method Sidecar_Plugin_Base::add_admin_page()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="warning" line="991" message="Invalid documentation &quot;$page_name&quot; of parameter Sidecar_Plugin_Base::add_admin_page($page_name)" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="991" message="Missing description of method Sidecar_Plugin_Base::add_admin_page()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="1007" message="Missing description of method Sidecar_Plugin_Base::add_meta_link()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="1018" message="Missing description of method Sidecar_Plugin_Base::get_admin_page()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="1028" message="Missing documentation of method Sidecar_Plugin_Base::add_default_shortcode()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="warning" line="1035" message="Invalid documentation &quot;$shortcode_name&quot; of parameter Sidecar_Plugin_Base::add_shortcode($shortcode_name)" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="1035" message="Missing description of method Sidecar_Plugin_Base::add_shortcode()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="1044" message="Missing description of method Sidecar_Plugin_Base::get_shortcodes()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="1050" message="Missing description of method Sidecar_Plugin_Base::get_shortcode()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="1076" message="Missing description of method Sidecar_Plugin_Base::get_shortcode_attributes()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="1119" message="Missing description of method Sidecar_Plugin_Base::register_url()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="1132" message="Missing description of method Sidecar_Plugin_Base::has_url()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="warning" line="1140" message="Invalid documentation &quot;$url_name&quot; of parameter Sidecar_Plugin_Base::get_url($url_name)" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="1190" message="Missing description of method Sidecar_Plugin_Base::get_link_text()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="warning" line="1190" message="Invalid documentation &quot;$url_name&quot; of parameter Sidecar_Plugin_Base::get_link_text($url_name)" source="ApiGen.Documentation.Documentation"/>
-		<error severity="warning" line="1199" message="Invalid documentation &quot;$url_name&quot; of parameter Sidecar_Plugin_Base::get_link_class($url_name)" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="1199" message="Missing description of method Sidecar_Plugin_Base::get_link_class()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="1208" message="Missing description of method Sidecar_Plugin_Base::register_image()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="1221" message="Missing description of method Sidecar_Plugin_Base::has_image()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="warning" line="1230" message="Invalid documentation &quot;$image_name&quot; of parameter Sidecar_Plugin_Base::get_image_url($image_name)" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="1303" message="Missing description of method Sidecar_Plugin_Base::promote_form()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="1327" message="Missing description of method Sidecar_Plugin_Base::the_form_section()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="warning" line="1335" message="Invalid documentation &quot;$args&quot; of parameter Sidecar_Plugin_Base::get_form_field($field_name)" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="1335" message="Missing description of method Sidecar_Plugin_Base::get_form_field()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="1335" message="Missing documentation of parameter Sidecar_Plugin_Base::get_form_field($form_name)" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="1347" message="Missing description of method Sidecar_Plugin_Base::get_form_field_html()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="1347" message="Missing documentation of parameter Sidecar_Plugin_Base::get_form_field_html($form_name)" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="1347" message="Missing documentation of return value of method Sidecar_Plugin_Base::get_form_field_html()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="1358" message="Missing documentation of parameter Sidecar_Plugin_Base::the_form_field($form_name)" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="1358" message="Missing description of method Sidecar_Plugin_Base::the_form_field()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="1365" message="Missing description of method Sidecar_Plugin_Base::has_shortcode()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="1372" message="Missing description of method Sidecar_Plugin_Base::get_form()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="1385" message="Missing description of method Sidecar_Plugin_Base::add_form()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="1400" message="Missing description of method Sidecar_Plugin_Base::add_field()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="1413" message="Missing description of method Sidecar_Plugin_Base::needs_grant()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="1458" message="Missing description of method Sidecar_Plugin_Base::get_current_admin_page()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="1482" message="Missing description of method Sidecar_Plugin_Base::set_current_admin_page()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="1489" message="Missing description of method Sidecar_Plugin_Base::get_current_form()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="1496" message="Missing description of method Sidecar_Plugin_Base::set_current_form()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="1545" message="Missing description of method Sidecar_Plugin_Base::_activate()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="1630" message="Missing documentation of method Sidecar_Plugin_Base::_initialize_admin()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="1648" message="Missing description of method Sidecar_Plugin_Base::get_auth_form()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="warning" line="1667" message="Invalid documentation &quot;$property_name&quot; of parameter Sidecar_Plugin_Base::__get($property_name)" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="1667" message="Missing description of method Sidecar_Plugin_Base::__get()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="622" message="Missing description of method Sidecar_Plugin_Base::get_form_settings_value()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="634" message="Missing description of method Sidecar_Plugin_Base::update_form_settings_value()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="646" message="Missing description of method Sidecar_Plugin_Base::has_required_settings()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="671" message="Missing description of method Sidecar_Plugin_Base::set_settings()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="678" message="Missing description of method Sidecar_Plugin_Base::get_settings()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="687" message="Missing description of method Sidecar_Plugin_Base::get_form_field_values()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="695" message="Missing description of method Sidecar_Plugin_Base::get_form_field_value()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="704" message="Missing description of method Sidecar_Plugin_Base::set_form_field_values()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="warning" line="704" message="Existing documentation &quot;mixed|Sidecar_Form_Settings&quot; of nonexistent return value of method Sidecar_Plugin_Base::set_form_field_values()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="713" message="Missing description of method Sidecar_Plugin_Base::get_form_settings()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="723" message="Missing description of method Sidecar_Plugin_Base::set_form_settings()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="warning" line="723" message="Existing documentation &quot;mixed|Sidecar_Form_Settings&quot; of nonexistent return value of method Sidecar_Plugin_Base::set_form_settings()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="warning" line="734" message="Existing documentation &quot;bool&quot; of nonexistent return value of method Sidecar_Plugin_Base::delete_settings()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="743" message="Missing documentation of method Sidecar_Plugin_Base::_wp_loaded()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="767" message="Missing documentation of method Sidecar_Plugin_Base::_admin_notices()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="warning" line="785" message="Invalid documentation &quot;$file&quot; of parameter Sidecar_Plugin_Base::_plugin_action_links($file)" source="ApiGen.Documentation.Documentation"/>
+		<error severity="warning" line="785" message="Invalid documentation &quot;$links&quot; of parameter Sidecar_Plugin_Base::_plugin_action_links($links)" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="785" message="Missing description of method Sidecar_Plugin_Base::_plugin_action_links()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="800" message="Missing description of method Sidecar_Plugin_Base::get_settings_url()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="813" message="Missing description of method Sidecar_Plugin_Base::_plugin_meta_links()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="829" message="Missing documentation of return value of method Sidecar_Plugin_Base::_the_content()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="warning" line="829" message="Invalid documentation &quot;$content&quot; of parameter Sidecar_Plugin_Base::_the_content($content)" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="829" message="Missing description of method Sidecar_Plugin_Base::_the_content()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="851" message="Missing documentation of method Sidecar_Plugin_Base::_init()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="881" message="Missing description of method Sidecar_Plugin_Base::transform_form_fields_to()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="902" message="Missing description of method Sidecar_Plugin_Base::transform_shortcode_attributes_to()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="922" message="Missing description of method Sidecar_Plugin_Base::initialize_form()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="929" message="Missing documentation of method Sidecar_Plugin_Base::initialize_shortcodes()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="936" message="Missing documentation of method Sidecar_Plugin_Base::initialize_postback()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="943" message="Missing documentation of method Sidecar_Plugin_Base::initialize_template()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="950" message="Missing documentation of method Sidecar_Plugin_Base::uninstall_plugin()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="957" message="Missing description of method Sidecar_Plugin_Base::initialize_plugin()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="964" message="Missing description of method Sidecar_Plugin_Base::initialize_admin()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="971" message="Missing description of method Sidecar_Plugin_Base::initialize_admin_page()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="979" message="Missing description of method Sidecar_Plugin_Base::initialize_shortcode()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="warning" line="987" message="Invalid documentation &quot;array() $attributes&quot; of parameter Sidecar_Plugin_Base::do_shortcode($attributes)" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="987" message="Missing description of method Sidecar_Plugin_Base::do_shortcode()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="1001" message="Missing description of method Sidecar_Plugin_Base::add_default_button()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="1014" message="Missing description of method Sidecar_Plugin_Base::add_button()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="warning" line="1029" message="Existing documentation &quot;mixed&quot; of nonexistent return value of method Sidecar_Plugin_Base::add_admin_page()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="warning" line="1029" message="Invalid documentation &quot;$page_name&quot; of parameter Sidecar_Plugin_Base::add_admin_page($page_name)" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="1029" message="Missing description of method Sidecar_Plugin_Base::add_admin_page()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="1046" message="Missing description of method Sidecar_Plugin_Base::add_meta_link()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="1057" message="Missing description of method Sidecar_Plugin_Base::get_admin_page()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="1067" message="Missing documentation of method Sidecar_Plugin_Base::add_default_shortcode()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="warning" line="1074" message="Invalid documentation &quot;$shortcode_name&quot; of parameter Sidecar_Plugin_Base::add_shortcode($shortcode_name)" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="1074" message="Missing description of method Sidecar_Plugin_Base::add_shortcode()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="1083" message="Missing description of method Sidecar_Plugin_Base::get_shortcodes()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="1090" message="Missing description of method Sidecar_Plugin_Base::get_shortcode()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="1116" message="Missing description of method Sidecar_Plugin_Base::get_shortcode_attributes()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="1159" message="Missing description of method Sidecar_Plugin_Base::register_url()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="1172" message="Missing description of method Sidecar_Plugin_Base::has_url()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="warning" line="1180" message="Invalid documentation &quot;$url_name&quot; of parameter Sidecar_Plugin_Base::get_url($url_name)" source="ApiGen.Documentation.Documentation"/>
+		<error severity="warning" line="1230" message="Invalid documentation &quot;$url_name&quot; of parameter Sidecar_Plugin_Base::get_link_text($url_name)" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="1230" message="Missing description of method Sidecar_Plugin_Base::get_link_text()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="warning" line="1239" message="Invalid documentation &quot;$url_name&quot; of parameter Sidecar_Plugin_Base::get_link_class($url_name)" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="1239" message="Missing description of method Sidecar_Plugin_Base::get_link_class()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="1248" message="Missing description of method Sidecar_Plugin_Base::register_image()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="1261" message="Missing description of method Sidecar_Plugin_Base::has_image()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="warning" line="1270" message="Invalid documentation &quot;$image_name&quot; of parameter Sidecar_Plugin_Base::get_image_url($image_name)" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="1343" message="Missing description of method Sidecar_Plugin_Base::promote_form()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="1367" message="Missing description of method Sidecar_Plugin_Base::the_form_section()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="1375" message="Missing description of method Sidecar_Plugin_Base::get_form_field()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="warning" line="1375" message="Invalid documentation &quot;$args&quot; of parameter Sidecar_Plugin_Base::get_form_field($field_name)" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="1375" message="Missing documentation of parameter Sidecar_Plugin_Base::get_form_field($form_name)" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="1387" message="Missing documentation of return value of method Sidecar_Plugin_Base::get_form_field_html()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="1387" message="Missing documentation of parameter Sidecar_Plugin_Base::get_form_field_html($form_name)" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="1387" message="Missing description of method Sidecar_Plugin_Base::get_form_field_html()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="1398" message="Missing description of method Sidecar_Plugin_Base::the_form_field()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="1398" message="Missing documentation of parameter Sidecar_Plugin_Base::the_form_field($form_name)" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="1405" message="Missing description of method Sidecar_Plugin_Base::has_shortcode()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="1412" message="Missing description of method Sidecar_Plugin_Base::get_form()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="1425" message="Missing description of method Sidecar_Plugin_Base::add_form()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="1442" message="Missing description of method Sidecar_Plugin_Base::add_field()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="1478" message="Missing description of method Sidecar_Plugin_Base::needs_grant()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="1511" message="Missing description of method Sidecar_Plugin_Base::get_current_admin_page()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="1542" message="Missing description of method Sidecar_Plugin_Base::set_current_admin_page()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="1549" message="Missing description of method Sidecar_Plugin_Base::get_current_form()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="1556" message="Missing description of method Sidecar_Plugin_Base::set_current_form()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="1592" message="Missing description of method Sidecar_Plugin_Base::_activate()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="1677" message="Missing documentation of method Sidecar_Plugin_Base::_initialize_admin()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="1695" message="Missing description of method Sidecar_Plugin_Base::get_auth_form()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="warning" line="1714" message="Invalid documentation &quot;$property_name&quot; of parameter Sidecar_Plugin_Base::__get($property_name)" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="1714" message="Missing description of method Sidecar_Plugin_Base::__get()" source="ApiGen.Documentation.Documentation"/>
 	</file>
-	<file name="/Users/mikeschinkel/Libraries/sidecar/classes/class-settings.php">
-		<error severity="error" line="8" message="Missing description of property Sidecar_Settings::$option_name" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="33" message="Missing description of property Sidecar_Settings::$_is_dirty" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="43" message="Missing description of property Sidecar_Settings::$installed_version" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="48" message="Missing description of property Sidecar_Settings::$configured" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="53" message="Missing description of method Sidecar_Settings::__construct()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="120" message="Missing description of method Sidecar_Settings::set_decrypted()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="128" message="Missing description of method Sidecar_Settings::decrypt_settings()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="143" message="Missing description of method Sidecar_Settings::has_setting()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="152" message="Missing description of method Sidecar_Settings::get_setting()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="171" message="Missing description of method Sidecar_Settings::get_settings_values()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="199" message="Missing description of method Sidecar_Settings::update_settings_values()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="209" message="Missing description of method Sidecar_Settings::update_settings_value()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="warning" line="209" message="Existing documentation &quot;array&quot; of nonexistent return value of method Sidecar_Settings::update_settings_value()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="warning" line="221" message="Invalid documentation &quot;$settings_array&quot; of parameter Sidecar_Settings::update_settings_array($settings_array)" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="237" message="Missing documentation of method Sidecar_Settings::update_settings()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="243" message="Missing description of method Sidecar_Settings::update_settings_option()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="warning" line="243" message="Existing documentation &quot;array&quot; of nonexistent return value of method Sidecar_Settings::update_settings_option()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="258" message="Missing description of method Sidecar_Settings::set_required_setting_names()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="265" message="Missing description of method Sidecar_Settings::has_required_settings()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="288" message="Missing description of method Sidecar_Settings::get_empty_settings_values()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="295" message="Missing description of method Sidecar_Settings::is_dirty()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="302" message="Missing description of method Sidecar_Settings::get_settings_array()" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="355" message="Missing documentation of method Sidecar_Settings::delete_settings()" source="ApiGen.Documentation.Documentation"/>
+	<file name="/Users/mikeschinkel/Libraries/sidecar/classes/class-plugin-settings.php">
+		<error severity="error" line="5" message="Missing description of property Sidecar_Plugin_Settings::$option_name" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="10" message="Missing description of property Sidecar_Plugin_Settings::$installed_version" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="15" message="Missing description of property Sidecar_Plugin_Settings::$configured" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="20" message="Missing description of property Sidecar_Plugin_Settings::$_is_encrypted" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="30" message="Missing description of method Sidecar_Plugin_Settings::__construct()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="59" message="Missing description of method Sidecar_Plugin_Settings::get_setting()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="warning" line="122" message="Existing documentation &quot;array&quot; of nonexistent return value of method Sidecar_Plugin_Settings::set_data()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="164" message="Missing documentation of return value of method Sidecar_Plugin_Settings::get_data()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="193" message="Missing description of method Sidecar_Plugin_Settings::set_encrypted()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="222" message="Missing description of method Sidecar_Plugin_Settings::set_dirty()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="warning" line="222" message="Invalid documentation &quot;$is_dirty&quot; of parameter Sidecar_Plugin_Settings::set_dirty($is_dirty)" source="ApiGen.Documentation.Documentation"/>
+	</file>
+	<file name="/Users/mikeschinkel/Libraries/sidecar/classes/class-settings-base.php">
+		<error severity="error" line="8" message="Missing description of property Sidecar_Settings_Base::$_parent" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="13" message="Missing description of property Sidecar_Settings_Base::$_is_dirty" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="18" message="Missing description of method Sidecar_Settings_Base::__construct()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="33" message="Missing description of method Sidecar_Settings_Base::has_setting()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="42" message="Missing description of method Sidecar_Settings_Base::get_setting()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="51" message="Missing description of method Sidecar_Settings_Base::set_setting()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="60" message="Missing description of method Sidecar_Settings_Base::get_values()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="67" message="Missing description of method Sidecar_Settings_Base::get_value()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="75" message="Missing description of method Sidecar_Settings_Base::get_values_deep()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="89" message="Missing description of method Sidecar_Settings_Base::set_dirty()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="warning" line="89" message="Invalid documentation &quot;$is_dirty&quot; of parameter Sidecar_Settings_Base::set_dirty($is_dirty)" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="96" message="Missing description of method Sidecar_Settings_Base::set_values()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="warning" line="116" message="Existing documentation &quot;array&quot; of nonexistent return value of method Sidecar_Settings_Base::update_settings_value()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="116" message="Missing description of method Sidecar_Settings_Base::update_settings_value()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="128" message="Missing documentation of method Sidecar_Settings_Base::update_settings()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="134" message="Missing description of method Sidecar_Settings_Base::is_dirty()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="141" message="Missing description of method Sidecar_Settings_Base::is_encrypted()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="150" message="Missing description of method Sidecar_Settings_Base::set_encrypted()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="158" message="Missing description of method Sidecar_Settings_Base::offsetGet()" source="ApiGen.Documentation.Documentation"/>
 	</file>
 	<file name="/Users/mikeschinkel/Libraries/sidecar/classes/class-shortcode.php">
 		<error severity="error" line="2" message="Missing documentation of class Sidecar_Shortcode" source="ApiGen.Documentation.Documentation"/>
@@ -306,7 +323,9 @@
 		<error severity="error" line="78" message="Missing description of function format_gmt_string()" source="ApiGen.Documentation.Documentation"/>
 	</file>
 	<file name="/Users/mikeschinkel/Libraries/sidecar/sidecar.php">
-		<error severity="error" line="47" message="Missing documentation of class Sidecar" source="ApiGen.Documentation.Documentation"/>
-		<error severity="error" line="67" message="Missing description of method Sidecar::show_error()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="35" message="Missing documentation of class Sidecar" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="54" message="Missing documentation of method Sidecar::on_load()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="61" message="Missing documentation of method Sidecar::autoloader()" source="ApiGen.Documentation.Documentation"/>
+		<error severity="error" line="73" message="Missing description of method Sidecar::show_error()" source="ApiGen.Documentation.Documentation"/>
 	</file>
 </checkstyle>

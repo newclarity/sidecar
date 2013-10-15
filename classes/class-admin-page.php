@@ -445,7 +445,8 @@ class Sidecar_Admin_Page {
    * @return bool|mixed
    */
   protected function _get_plugin_value( $method ) {
-    return call_user_func_array( array( $this, '_do_plugin_action' ), func_get_args() );
+    $args = func_get_args();
+    return call_user_func_array( array( $this, '_do_plugin_action' ), $args );
   }
 
   /**
