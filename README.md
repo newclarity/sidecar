@@ -1,6 +1,6 @@
 #NOTICE:
 
-This was a great research project, but we have decided to abandon it.  All our current effort is being directed to [**The WPLib Platform**](http://github.com/wplib).
+This was a great research project, but we have abandoned it.  All our current effort is being directed to [**The WPLib Platform**](http://github.com/wplib).
 
 
 Sidecar _(beta)_
